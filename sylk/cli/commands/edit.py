@@ -455,7 +455,7 @@ def edit_field(resource,action,sub_actions,sylk_json:helpers.SylkJson,architect:
                     label = label['label']
                     for f in _msg.get('fields'):
                         if f.get('fullName') == resource.get('fullName'):
-                            f['label'] = protos.WebezyFieldLabel.Name(label)
+                            f['label'] = protos.SylkField.SylkFieldLabels.Name(label)
                             print_success("Changing field label for {} -> {}".format(f.get('fullName'),f['label']))
 
                     architect.EditMessage(_pkg, _msg.get('name'),
@@ -554,7 +554,7 @@ def add_fields(resource,sylk_json:helpers.SylkJson,architect=SylkArchitect,expan
     temp_fields = []
     msg_fields =[]
     for f in resource.get('fields'):
-        msg_fields.append(helpers.WZField(f.get('name'),f.get('fieldType'),f.get('label'),f.get('messageType'),f.get('enumType'),f.get('extensions'),f.get('description'),key_type=f.get('keyType'),value_type=f.get('valueType'),oneof_fields=f.get('oneofFields')).to_dict())
+        msg_fields.append(helpers.SylkField(f.get('name'),f.get('fieldType'),f.get('label'),f.get('messageType'),f.get('enumType'),f.get('extensions'),f.get('description'),key_type=f.get('keyType'),value_type=f.get('valueType'),oneof_fields=f.get('oneofFields')).to_dict())
     for msg in package.messages:
         if msg.extension_type == 0 and msg.full_name != msg_full_name:
             if msg.description is not None:
@@ -563,7 +563,7 @@ def add_fields(resource,sylk_json:helpers.SylkJson,architect=SylkArchitect,expan
                 desc=''
             avail_msgs.append((f'{msg.name}{desc}', msg.full_name))
         else:
-            if protos.WebezyExtension.Name(msg.extension_type) == 'FieldOptions':
+            if protos.SylkCommons.SylkExtensions.Name(msg.extension_type) == 'FieldOptions':
                 for f in msg.fields:
                     avail_field_ext.append((f.name,f.full_name))
 
@@ -595,18 +595,18 @@ def add_fields(resource,sylk_json:helpers.SylkJson,architect=SylkArchitect,expan
     
             for m in d_package.messages:
                 if m.extension_type is not None:
-                    if protos.WebezyExtension.Name(m.extension_type) == 'FieldOptions':
+                    if protos.SylkCommons.SylkExtensions.Name(m.extension_type) == 'FieldOptions':
                         for f in m.fields:
                             avail_field_ext.append((f.name,f.full_name))
     extend = None
     if resource.get('extensionType') is not None:
-        extend=protos.WebezyExtension.Value(resource.get('extensionType'))
+        extend=protos.SylkCommons.SylkExtensions.Value(resource.get('extensionType'))
 
     if expand:
         extend = inquirer.prompt([inquirer.Confirm('extend',message='Do you want to extend a message?')],theme=SylkTheme())
         if extend.get('extend'):
-            extend = inquirer.prompt([inquirer.List('extend','Choose message extension',choices=[protos.WebezyExtension.Name(protos.WebezyExtension.FieldOptions),protos.WebezyExtension.Name(protos.WebezyExtension.MessageOptions),protos.WebezyExtension.Name(protos.WebezyExtension.FileOptions),protos.WebezyExtension.Name(protos.WebezyExtension.ServiceOptions)])],theme=SylkTheme())
-            extend=protos.WebezyExtension.Value(extend['extend'])
+            extend = inquirer.prompt([inquirer.List('extend','Choose message extension',choices=[protos.SylkCommons.SylkExtensions.Name(protos.SylkCommons.SylkExtensions.FieldOptions),protos.SylkCommons.SylkExtensions.Name(protos.SylkCommons.SylkExtensions.MessageOptions),protos.SylkCommons.SylkExtensions.Name(protos.SylkCommons.SylkExtensions.FileOptions),protos.SylkCommons.SylkExtensions.Name(protos.SylkCommons.SylkExtensions.ServiceOptions)])],theme=SylkTheme())
+            extend=protos.SylkCommons.SylkExtensions.Value(extend['extend'])
         else:
             extend = None
         description = inquirer.prompt([inquirer.Text('description','Enter message description','')],theme=SylkTheme())
@@ -637,7 +637,7 @@ def add_fields(resource,sylk_json:helpers.SylkJson,architect=SylkArchitect,expan
         message_type = None
         enum_type = None
 
-        if field['fieldType'] == protos.WebezyFieldType.Name(protos.WebezyFieldType.TYPE_MESSAGE):
+        if field['fieldType'] == protos.SylkField_pb2.SylkFieldTypes.Name(protos.SylkField_pb2.SylkFieldTypes.TYPE_MESSAGE):
             if len(avail_msgs) == 0:
                 print_warning("No messages availabe for field")
                 exit(1)
@@ -648,7 +648,7 @@ def add_fields(resource,sylk_json:helpers.SylkJson,architect=SylkArchitect,expan
                 ], theme=SylkTheme())
                 message_type = message['message']
 
-        elif field['fieldType'] == protos.WebezyFieldType.Name(protos.WebezyFieldType.TYPE_ENUM):
+        elif field['fieldType'] == protos.SylkField_pb2.SylkFieldTypes.Name(protos.SylkField_pb2.SylkFieldTypes.TYPE_ENUM):
             if len(avail_enums) == 0:
                 print_warning("No enums available for field")
                 exit(1)
@@ -674,23 +674,23 @@ def add_fields(resource,sylk_json:helpers.SylkJson,architect=SylkArchitect,expan
                         temp_pkg = sylk_json.get_package(f_ext['extensions'].split('.')[1],False)
                         temp_msg = next((m for m in temp_pkg.messages if m.name == f_ext['extensions'].split('.')[3]),None)
                         temp_field = next((f for f in temp_msg.fields if f.name == f_ext['extensions'].split('.')[-1]),None)
-                        if protos.WebezyFieldType.Name(temp_field.field_type) == 'TYPE_BOOL':
+                        if protos.SylkField_pb2.SylkFieldTypes.Name(temp_field.field_type) == 'TYPE_BOOL':
                             f_ext_v = inquirer.prompt([inquirer.Confirm('ext_value','Enter extension bool value',default=False)],theme=SylkTheme())
-                        elif protos.WebezyFieldType.Name(temp_field.field_type) == 'TYPE_DOUBLE' or protos.WebezyFieldType.Name(temp_field.field_type) == 'TYPE_FLOAT':
+                        elif protos.SylkField_pb2.SylkFieldTypes.Name(temp_field.field_type) == 'TYPE_DOUBLE' or protos.SylkField_pb2.SylkFieldTypes.Name(temp_field.field_type) == 'TYPE_FLOAT':
                             f_ext_v = inquirer.prompt([inquirer.Text('ext_value','Enter extension float value',validate=helpers.float_value_validate)],theme=SylkTheme())
                             try:
                                 f_ext_v = float(f_ext_v['ext_value'])
                             except Exception as e:
                                 logging.exception(e)
                                 exit(1)
-                        elif protos.WebezyFieldType.Name(temp_field.field_type) == 'TYPE_INT32' or protos.WebezyFieldType.Name(temp_field.field_type) == 'TYPE_INT64':
+                        elif protos.SylkField_pb2.SylkFieldTypes.Name(temp_field.field_type) == 'TYPE_INT32' or protos.SylkField_pb2.SylkFieldTypes.Name(temp_field.field_type) == 'TYPE_INT64':
                             f_ext_v = inquirer.prompt([inquirer.Text('ext_value','Enter extension integer value',validate=helpers.int_value_validate)],theme=SylkTheme())
                             try:
                                 f_ext_v = int(f_ext_v['ext_value'])
                             except Exception as e:
                                 logging.exception(e)
                                 exit(1)
-                        elif protos.WebezyFieldType.Name(temp_field.field_type) == 'TYPE_STRING':
+                        elif protos.SylkField_pb2.SylkFieldTypes.Name(temp_field.field_type) == 'TYPE_STRING':
                             f_ext_v = inquirer.prompt([inquirer.Text('ext_value','Enter extension string value')],theme=SylkTheme())
                         temp_ext_name = f_ext['extensions'].split('.')
                         if '.'.join(temp_ext_name[:-2]) == pkg:
@@ -741,7 +741,7 @@ def add_fields(resource,sylk_json:helpers.SylkJson,architect=SylkArchitect,expan
                 add_field_oneof = True
                 oneof_fields = add_fields_oneof(add_field_oneof,avail_msgs=avail_msgs,avail_enums=avail_enums,pre_fields=temp_fields_oneof,msg_full_name=msg_full_name)
 
-            msg_fields.append(helpers.WZField(
+            msg_fields.append(helpers.SylkField(
                 new_field, field['fieldType'], label['fieldLabel'] if label is not None else 'LABEL_OPTIONAL',
                 message_type=message_type, enum_type=enum_type, description=f_description,
                 extensions=f_ext, key_type=map_types.get('keyType') if map_types is not None else None, value_type=map_types.get('valueType') if map_types is not None else None, oneof_fields=oneof_fields).to_dict())
@@ -781,7 +781,7 @@ def add_fields_oneof(add_field:bool,avail_msgs,avail_enums,pre_fields,msg_full_n
         message_type = None
         enum_type = None
 
-        if field['fieldType'] == resources.WebezyFieldType.Name(resources.WebezyFieldType.TYPE_MESSAGE):
+        if field['fieldType'] == resources.SylkField_pb2.SylkFieldTypes.Name(resources.SylkField_pb2.SylkFieldTypes.TYPE_MESSAGE):
             if len(avail_msgs) == 0:
                 print_warning("[ONEOF] No messages availabe for field")
                 exit(1)
@@ -792,7 +792,7 @@ def add_fields_oneof(add_field:bool,avail_msgs,avail_enums,pre_fields,msg_full_n
                 ], theme=SylkTheme())
                 message_type = message['message']
 
-        elif field['fieldType'] == resources.WebezyFieldType.Name(resources.WebezyFieldType.TYPE_ENUM):
+        elif field['fieldType'] == resources.SylkField_pb2.SylkFieldTypes.Name(resources.SylkField_pb2.SylkFieldTypes.TYPE_ENUM):
             if len(avail_enums) == 0:
                 print_warning("[ONEOF] No enums available for field")
                 exit(1)
@@ -810,7 +810,7 @@ def add_fields_oneof(add_field:bool,avail_msgs,avail_enums,pre_fields,msg_full_n
             helpers.field_exists_validation(
                 new_field, final_fields, msg_full_name+'.'+new_field)
 
-        final_fields.append(helpers.WZField(
+        final_fields.append(helpers.SylkField(
                 new_field, field['fieldType'], label['fieldLabel'] if label is not None else 'LABEL_OPTIONAL',
                 message_type=message_type, enum_type=enum_type, description=None,
                 extensions=None, key_type=None, value_type=None, oneof_fields=[]).to_dict())
@@ -837,7 +837,7 @@ def add_values(resource,sylk_json:helpers.SylkJson,architect=SylkArchitect,expan
     add_value = True
     e_values = []
     for ev in resource.get('values'):
-        e_values.append(helpers.WZEnumValue(ev.get('name'),ev.get('number')).to_dict())
+        e_values.append(helpers.SylkEnumValue(ev.get('name'),ev.get('number')).to_dict())
     while add_value:
         ev = inquirer.prompt([
             inquirer.Text(
@@ -866,12 +866,12 @@ def add_values(resource,sylk_json:helpers.SylkJson,architect=SylkArchitect,expan
                     exit(1)
             
 
-            e_values.append(helpers.WZEnumValue(ev['name'],int(ev['value'])).to_dict())
+            e_values.append(helpers.SylkEnumValue(ev['name'],int(ev['value'])).to_dict())
         else:
             print_error("Enum values are required")
             exit(1)
     if next((v for v in e_values if v['number'] == None or v['number'] == 0),None) is None:
-        e_values.insert(0,helpers.WZEnumValue(f'UNKNOWN_{enum_name.upper()}',0).to_dict())
+        e_values.insert(0,helpers.SylkEnumValue(f'UNKNOWN_{enum_name.upper()}',0).to_dict())
         print_warning(f'Adding default enum value "UNKNOWN_{enum_name.upper()}" : 0')
 
     architect.EditEnum(package, enum_name, e_values)

@@ -6,7 +6,7 @@ import sys
 import pluggy
 
 from sylk.builder.src import hookspecs, lru
-from sylk.builder.plugins import SylkBase, SylkGoClient, SylkGoServer, SylkProto, SylkPyClient, SylkPyServer, SylkReadme, SylkTsClient, SylkTsServer
+from sylk.builder.plugins import SylkBase, SylkGoClient, SylkGoServer, SylkJsClient, SylkJsServer, SylkProto, SylkPyClient, SylkPyServer, SylkReadme, SylkTsClient, SylkTsServer
 from sylk.commons import file_system, helpers, resources, errors
 from sylk.commons.pretty import print_error, print_info, print_warning
 
@@ -22,7 +22,7 @@ class SylkBuilder:
     Defined on :module:`sylk.builder.src.hookspecs`
     """
 
-    def __init__(self, path, hooks=None, project_name=None, server_language=None, clients=None, configs:resources.SylkConfig_pb2.SylkProjectConfigs=None):
+    def __init__(self, path, hooks=None, project_name=None, server_language=None, clients=None, configs:resources.SylkConfigs_pb2.SylkProjectConfigs=None):
         self._configs = configs
         self._pm = pluggy.PluginManager("sylk")
         self._sylk_context = None
@@ -120,6 +120,7 @@ class SylkBuilder:
         client_py = next((c for c in self._sylk_json.project.get('clients') if c.get('language') == 'python'),False)
         client_ts = next((c for c in self._sylk_json.project.get('clients') if c.get('language') == 'typescript'),False)
         client_go = next((c for c in self._sylk_json.project.get('clients') if c.get('language') == 'go'),False)
+        client_js = next((c for c in self._sylk_json.project.get('clients') if c.get('language') == 'nodejs'),False)
         client_webpack = next((c for c in self._sylk_json.project.get('clients') if c.get('language') == 'webpack'),False)
 
         # Default docker
@@ -145,7 +146,9 @@ class SylkBuilder:
 
         if client_go:
             self._pm.register(SylkGoClient)
-
+        
+        if client_js:
+            self._pm.register(SylkJsClient)
         # if client_webpack:
             # self._pm.register(WebezyWebpack)
 
@@ -153,7 +156,9 @@ class SylkBuilder:
             self._pm.register(SylkTsServer)
         if server_lang == 'go':
             self._pm.register(SylkGoServer)
-        
+        if server_lang == 'nodejs':
+            self._pm.register(SylkJsServer)
+            
         for p in _WELL_KNOWN_PLUGINS:
             plug_name = self._pm.get_name(p)
             if plug_name is not None:
@@ -172,13 +177,13 @@ class SylkBuilder:
             context = old_context
             file_system.wFile(path, context, json=True, overwrite=True)
             self._sylk_context = helpers.SylkContext(context)
-            # print(self._sylk_context)
+            print(self._sylk_context)
 
         except Exception:
             log.warning(
                 "No .sylk/context.json file ! - Init .sylk/context.json")
             results = self._pm.hook.init_context(
-                sylk_json=self._sylk_json, sylk_context=None)
+                sylk_json=self._sylk_json, sylk_context=None,pre_data=None)
             results = list(itertools.chain(*results))
             # print(results)
             try:

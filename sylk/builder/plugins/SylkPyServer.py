@@ -96,29 +96,6 @@ def compile_protos(sylk_json: helpers.SylkJson, sylk_context: helpers.SylkContex
                            file_system.join_path(sylk_json.path, 'services', 'protos', file))
 
 
-# @builder.hookimpl
-# def write_clients(sylk_json: helpers.SylkJson, sylk_context: helpers.SylkContext):
-#     for f in file_system.walkFiles(file_system.join_path(sylk_json.path, 'services', 'protos')):
-#         if '.py' in f:
-#             file = file_system.rFile(file_system.join_path(
-#                 sylk_json.path, 'services', 'protos', f))
-#             if '_grpc' not in f:
-#                 index = 13
-#             else:
-#                 index = 0
-#             for l in file[index:]:
-
-#                 if 'import ' in  l and 'grpc' not in l and 'typing' not in l and 'google.protobuf' not in l:
-#                     file[index] = l.replace('import ','from . import ')
-
-#                 index += 1
-#             file_system.wFile(file_system.join_path(sylk_json.path, 'clients', 'python', f), ''.join(file),True)
-
-#     client = helpers.WZClientPy(sylk_json.project.get(
-#         'packageName'), sylk_json.services, sylk_json.packages, sylk_context)
-#     file_system.wFile(file_system.join_path(
-#         sylk_json.path, 'clients', 'python', 'client.py'), client.__str__(), overwrite=True)
-
 
 @builder.hookimpl
 def write_server(sylk_json: helpers.SylkJson, sylk_context: helpers.SylkContext,pre_data):
@@ -138,10 +115,11 @@ def write_server(sylk_json: helpers.SylkJson, sylk_context: helpers.SylkContext,
         svcs = ', '.join(svcs)
         imports.append(f'import {svcs}')
         services_bindings = '\n\t'.join(services_bindings)
+        port = sylk_json._config.get('port')
         imports = '\n'.join(imports)
         server_code = f'"""sylk.build Generated Server Code"""\n\
 {imports}\n\n\
-def serve(host="0.0.0.0:50051"):\n\
+def serve(host="0.0.0.0:{port}"):\n\
 \tserver = grpc.server(futures.ThreadPoolExecutor(max_workers=10))\n\
 \t{services_bindings}\n\
 \tserver.add_insecure_port(host)\n\
@@ -215,15 +193,16 @@ def rebuild_context(sylk_json: helpers.SylkJson, sylk_context: helpers.SylkConte
                                 methods_i += 1
 
             except Exception as e:
+                print(e)
                 logging.debug(e)
-
-    file_system.wFile(file_system.join_path(
-        sylk_json.path, '.sylk', 'context.json'), sylk_context.dump(), True, True)
+    if sylk_context is not None:
+        file_system.wFile(file_system.join_path(
+            sylk_json.path, '.sylk', 'context.json'), sylk_context.dump(), True, True)
 
 
 @builder.hookimpl
 def override_generated_classes(sylk_json: helpers.SylkJson, sylk_context: helpers.SylkContext):
-
+    
     for f in file_system.walkFiles(file_system.join_path(sylk_json.path, 'services', 'protos')):
         name = f.split('_pb2')
         if '_grpc' not in name:
@@ -260,7 +239,7 @@ def override_generated_classes(sylk_json: helpers.SylkJson, sylk_context: helper
                                     if field['fieldType'].split(
                                         '_')[-1].lower() == 'enum':
                                         temp_fields.append(
-                                            f'{fName} = {fType} # type: enum_type_wrapper.EnumTypeWrapper')
+                                            f'{fName} = {fType} # type: int')
                                     elif field['fieldType'].split(
                                         '_')[-1].lower() == 'oneof':
                                         for f_oneof in field.get('oneofFields'):
@@ -270,7 +249,7 @@ def override_generated_classes(sylk_json: helpers.SylkJson, sylk_context: helper
                                             if f_oneof['fieldType'].split(
                                                 '_')[-1].lower() == 'enum':
                                                 temp_fields.append(
-                                                    f'{fOneofName} = {fOneofType} # type: enum_type_wrapper.EnumTypeWrapper')
+                                                    f'{fOneofName} = {fOneofType} # type: int')
                                             else:
                                                 temp_fields.append(
                                                     f'{fOneofName} = {fOneofType} # type: {fOneofType}')
@@ -297,54 +276,13 @@ def override_generated_classes(sylk_json: helpers.SylkJson, sylk_context: helper
                                 #     init_fields.append(f'{fName}={fType}')
                                 temp_fields = '\n\t'.join(temp_fields)
                                 init_fields = ', '.join(init_fields)
-                                docstring = 'Attributes:\n\t\t----------\n\t\t{0}'.format('\n\t\t'.join(docstring_fields))
+                                docstring = '{0}\n\n\t\tAttributes:\n\t\t----------\n\t\t{1}'.format(message_description,'\n\t\t'.join(docstring_fields))
                                 file_content.insert(
                                     index, f'\n@overload\nclass {message_name}(_message.Message):\n\t"""sylk.build generated message [{sylk_json.domain}.{pkg_proto_name}.v1.{message_name}]\n\tA class respresent a {message_name} type\n\t{message_description}\n\t"""\n\t{temp_fields}\n\n\tdef __init__(self, {init_fields}):\n\t\t"""\n\t\t{docstring}\n\t\t"""\n\t\tpass\n')
                                 break
                             index += 1
                     file_system.wFile(file_system.join_path(
                         sylk_json.path, 'services', 'protos', f), ''.join(file_content), True)
-
-
-# @builder.hookimpl
-# def init_context(sylk_json: helpers.SylkJson, sylk_context: helpers.SylkContext):
-#     files = []
-
-#     path = sylk_json.project.get('uri')
-#     if sylk_json.services is not None:
-#         for svc in sylk_json.services:
-#             methods = []
-#             if  sylk_json.services[svc].get('methods') is not None and len(sylk_json.services[svc].get('methods')) > 0 :
-#                 for rpc in sylk_json.services[svc].get('methods'):
-#                     rpc_name = rpc.get('name')
-#                     rpc_type_out = rpc.get('serverStreaming')
-#                     rpc_out_name = rpc.get('inputType').split('.')[-1]
-#                     rpc_out_pkg = rpc.get('outputType').split('.')[1]
-#                     rpc_output = rpc.get('outputType')
-#                     msg = sylk_json.get_message(rpc_output)
-#                     fields = []
-#                     for f in msg.get('fields'):
-#                         fields.append('{0}=None'.format(f.get('name')))
-#                     fields = ','.join(fields)
-#                     if rpc_type_out:
-#                         out_prototype = f'\t\t# responses = [{rpc_out_pkg}_pb2.{rpc_out_name}({fields})]\n\t\t# for res in responses:\n\t\t#    yield res\n'
-#                     else:
-#                         out_prototype = f'\t\t# response = {rpc_out_pkg}_pb2.{rpc_out_name}({fields})\n\t\t# return response\n'
-#                     code = f'{out_prototype}\n\t\tsuper().{rpc_name}(request, context)\n\n'
-#                     # methods.append(protos.WebezyMethodContext(
-#                     #     name=rpc_name, code=code, type='rpc'))
-#                 # files.append(protos.WebezyFileContext(
-#                 #     file=f'./services/{svc}.py', methods=methods))
-#             else:
-#                 pretty.print_warning("No available RPC's for -> {}".format(svc))
-            
-#     context = resources.proto_to_dict(protos.WebezyContext(files=files))
-#     logging.debug("Writing new context")
-#     file_system.mkdir(file_system.join_path(path, '.sylk'))
-#     file_system.wFile(file_system.join_path(
-#         path, '.sylk', 'context.json'), context, json=True, overwrite=True)
-#     sylk_json = helpers.SylkContext(context)
-#     return context
 
 
 def parse_proto_type_to_py(type, label, messageType=None, enumType=None,current_pkg=None,key_type=None,value_type=None):
@@ -379,7 +317,7 @@ def parse_proto_type_to_py(type, label, messageType=None, enumType=None,current_
         else:
             temp_type = '{1}'.format(
                 enumType.split('.')[1], enumType.split('.')[-1])
-        temp_type = 'enum_type_wrapper.EnumTypeWrapper'
+        temp_type = 'int'
     elif type == 'bool':
         temp_type = 'bool'
     elif type == 'map':
@@ -394,7 +332,7 @@ def parse_proto_type_to_py(type, label, messageType=None, enumType=None,current_
 
 bash_init_script = '#!/bin/bash\n\n\
 declare -a services=("protos")\n\
-echo "[sylk.build] init-py.sh starting protoc compiler"\n\
+echo "[sylk.build] init.sh starting protoc compiler"\n\
 DESTDIR="./protos"\n\
 for SERVICE in "${services[@]}"; do\n\
     python3 -m grpc_tools.protoc --proto_path=$SERVICE/ --python_out=$DESTDIR --grpc_python_out=$DESTDIR $SERVICE/*.proto\n\

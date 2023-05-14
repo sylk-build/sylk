@@ -23,16 +23,16 @@ from sylk.architect import SylkArchitect
 from sylk.commons.helpers import SylkJson,MessageToDict
 from sylk.commons.pretty import print_info,print_warning,print_error,print_note,print_success
 
-def import_package(source,target,path,webezy_json:SylkJson):
+def import_package(source,target,path,sylk_json:SylkJson):
     importing_into_pkg = False
     old_pkg = None
     old_svc = None
     ARCHITECT = SylkArchitect(
-        path=path,domain=webezy_json.domain,project_name=webezy_json.project.get('name'))
+        path=path,domain=sylk_json.domain,project_name=sylk_json.project.get('name'))
 
     if len(target.split('.')) > 2:
         importing_into_pkg = True
-        old_pkg = webezy_json.get_package(
+        old_pkg = sylk_json.get_package(
             target.split('.')[1])
         dep = []
         if old_pkg is None:
@@ -49,7 +49,7 @@ def import_package(source,target,path,webezy_json:SylkJson):
                 exit(1)
         else:
             dep.append(source)
-        pkg = webezy_json.get_package(old_pkg.get('name'),False)
+        pkg = sylk_json.get_package(old_pkg.get('name'),False)
         temp_msgs = []
         for m in pkg.messages:
             temp_msgs.append(MessageToDict(m))
@@ -58,7 +58,7 @@ def import_package(source,target,path,webezy_json:SylkJson):
 
     else:
         dep = []
-        old_svc = webezy_json.get_service(target,wz_json=webezy_json._webezy_json)
+        old_svc = sylk_json.get_service(target,sylk_json=sylk_json._sylk_json)
         if old_svc is None:
             print_error(f"Service '{target}' not exists")
             exit(1)
@@ -81,12 +81,12 @@ def import_package(source,target,path,webezy_json:SylkJson):
     print_info(
         f"Attaching package '{source}' -> '{target}' {importing_into_pkg}")
 
-def remove_import(source,target,path,webezy_json:SylkJson):
+def remove_import(source,target,path,sylk_json:SylkJson):
     ARCHITECT = SylkArchitect(
-        path=path,domain=webezy_json.domain,project_name=webezy_json.project.get('name'))
+        path=path,domain=sylk_json.domain,project_name=sylk_json.project.get('name'))
 
     if len(target.split('.')) > 2:
-        old_pkg = webezy_json.get_package(
+        old_pkg = sylk_json.get_package(
             target.split('.')[1])
         dep = []
         if old_pkg is None:
@@ -105,7 +105,7 @@ def remove_import(source,target,path,webezy_json:SylkJson):
             print_error(f"'{source}' cannot be found under '{target}'")
             exit(1)
             
-        pkg = webezy_json.get_package(old_pkg.get('name'),False)
+        pkg = sylk_json.get_package(old_pkg.get('name'),False)
         temp_msgs = []
         for m in pkg.messages:
             temp_msgs.append(MessageToDict(m))
@@ -114,7 +114,7 @@ def remove_import(source,target,path,webezy_json:SylkJson):
 
     else:
         dep = []
-        old_svc = webezy_json.get_service(target,wz_json=webezy_json._webezy_json)
+        old_svc = sylk_json.get_service(target,sylk_json=sylk_json._sylk_json)
         if old_svc is None:
             print_error(f"Service '{target}' not exists")
             exit(1)

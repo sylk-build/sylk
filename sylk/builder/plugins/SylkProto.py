@@ -51,7 +51,7 @@ def write_protos(sylk_json: helpers.SylkJson):
 
     for svc in sylk_json.services:
         if sylk_json.services[svc].get('methods') is None:
-            print_error(f"Cannot build service [{svc}] proto file with 0 RPC !")
+            print_error(f"Cannot build service [{svc}] proto file with 0 methods!")
             exit(1)
 
         svc_def = helpers.SylkProto(svc, sylk_json.services[svc].get(
@@ -65,7 +65,7 @@ def write_protos(sylk_json: helpers.SylkJson):
         pkg_name = sylk_json.packages[pkg].get('name')
         pkg_full_name = package = sylk_json.packages[pkg].get('package')
         if sylk_json.packages[pkg].get('messages') is None:
-            print_error(f"Cannot build package [{sylk_json.packages[pkg].get('package')}] proto file with 0 Messages !")
+            print_error(f"Cannot build package [{sylk_json.packages[pkg].get('package')}] proto file with 0 messages!")
             exit(1)
         pkg_def = helpers.SylkProto(pkg_name,
                                   sylk_json.packages[pkg].get('dependencies'),

@@ -142,11 +142,12 @@ def write_server(sylk_json: helpers.SylkJson, sylk_context: helpers.SylkContext,
             f'{svc}Servicer.Register{temp_svc_name}Server(grpcServer, new({svc}.{temp_svc_name}));')
     services_bindings = '\n\t'.join(services_bindings)
     imports = '\n\t'.join(imports)
+    port = sylk_json._config.get('port')
     server_code = f'// sylk.build Generated Server Code\n\
 package main\n\n\
 import (\n\t{imports}\n)\n\
 var (\n\
-	port = flag.Int("port", 50051, "The server port")\n\
+	port = flag.Int("port", {port}, "The server port")\n\
 )\n\n\
 func main() {_OPEN_BRCK}\n\
 \tflag.Parse()\n\

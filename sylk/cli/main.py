@@ -37,10 +37,11 @@ from sylk.cli import theme,prompter
 from sylk.commons import client_wrapper, helpers,file_system,errors,resources, parser, config as prj_conf, protos
 from sylk.commons.pretty import print_info, print_note, print_version, print_success, print_warning, print_error
 from sylk.commons.protos import SylkField_pb2
-from sylk.cli.commands import call, extend, migrate, new,build,generate,ls,package as pack,run,edit,template, config as config_command
+from sylk.cli.commands import call, extend, migrate, new,build,generate,ls,package as pack,run,edit,template, config as config_command,cloud
 from pathlib import Path
 
 _TEMPLATES = config.configs.sylk_templates
+# _TEMPLATES = []
 # templates_dir = os.path.dirname(os.path.dirname(__file__))+'/commons/templates'
 # for d in file_system.walkDirs(templates_dir):
 #     if d != templates_dir:
@@ -59,7 +60,7 @@ def enum_value_validate(answers, current):
     try:
         int(current)
     except Exception:
-        raise errors.ValidationError(
+        raise errors.SylkValidationError(
             current, reason='Enum Value MUST be an integer value')
     return True
 
@@ -67,17 +68,17 @@ def enum_value_validate(answers, current):
 def validation(answers, current):
 
     if len(current) == 0:
-        raise errors.ValidationError(
+        raise prompter.inquirer_errors.ValidationError(
             current, reason='Resource name must not be blank')
     if len(re.findall('\s', current)) > 0:
-        raise errors.ValidationError(
+        raise prompter.inquirer_errors.ValidationError(
             current, reason='Resource name must not include blank spaces')
     if len(re.findall('-', current)) > 0:
-        raise errors.ValidationError(
+        raise prompter.inquirer_errors.ValidationError(
             current, reason='Resource name must not include hyphens, underscores are allowed')
     regex = re.compile('[@_!#$%^&*()<>?/\|}{~:]')
     if(regex.search(current) != None):
-        raise errors.ValidationError(
+        raise prompter.inquirer_errors.ValidationError(
             current, reason='Resource name must not include special charcters')
     
     return True
@@ -86,19 +87,19 @@ log = logging.getLogger(__name__)
 well_known_type = helpers._WellKnowns
 
 fields_opt = [
-    SylkField_pb2.SylkFieldType.Name(SylkField_pb2.TYPE_DOUBLE),
-    SylkField_pb2.SylkFieldType.Name(SylkField_pb2.TYPE_FLOAT),
-    SylkField_pb2.SylkFieldType.Name(SylkField_pb2.TYPE_INT64),
-    SylkField_pb2.SylkFieldType.Name(SylkField_pb2.TYPE_INT32),
-    SylkField_pb2.SylkFieldType.Name(SylkField_pb2.TYPE_BOOL),
-    SylkField_pb2.SylkFieldType.Name(SylkField_pb2.TYPE_STRING),
-    SylkField_pb2.SylkFieldType.Name(SylkField_pb2.TYPE_MESSAGE),
-    SylkField_pb2.SylkFieldType.Name(SylkField_pb2.TYPE_BYTES),
-    SylkField_pb2.SylkFieldType.Name(SylkField_pb2.TYPE_ENUM),
+    SylkField_pb2.SylkFieldTypes.Name(SylkField_pb2.TYPE_DOUBLE),
+    SylkField_pb2.SylkFieldTypes.Name(SylkField_pb2.TYPE_FLOAT),
+    SylkField_pb2.SylkFieldTypes.Name(SylkField_pb2.TYPE_INT64),
+    SylkField_pb2.SylkFieldTypes.Name(SylkField_pb2.TYPE_INT32),
+    SylkField_pb2.SylkFieldTypes.Name(SylkField_pb2.TYPE_BOOL),
+    SylkField_pb2.SylkFieldTypes.Name(SylkField_pb2.TYPE_STRING),
+    SylkField_pb2.SylkFieldTypes.Name(SylkField_pb2.TYPE_MESSAGE),
+    SylkField_pb2.SylkFieldTypes.Name(SylkField_pb2.TYPE_BYTES),
+    SylkField_pb2.SylkFieldTypes.Name(SylkField_pb2.TYPE_ENUM),
 ]
 field_label = [
-    SylkField_pb2.SylkFieldLabel.Name(SylkField_pb2.LABEL_OPTIONAL),
-    SylkField_pb2.SylkFieldLabel.Name(SylkField_pb2.LABEL_REPEATED)
+    SylkField_pb2.SylkFieldLabels.Name(SylkField_pb2.LABEL_OPTIONAL),
+    SylkField_pb2.SylkFieldLabels.Name(SylkField_pb2.LABEL_REPEATED)
 ]
 
 
@@ -121,6 +122,8 @@ sylk_g_e_q = [
     prompter.QText(name="enum",message="Enter enum name",validate=validation)
 ]
 
+
+DEFAULT_PORT = 44880
 
 def main(args=None):
     # Print sylk 'Logo'
@@ -157,42 +160,57 @@ def main(args=None):
     subparsers = parser.add_subparsers(
         help='Main modules to interact with sylk CLI.')
 
+    """Cloud commands"""
+    parser_login = subparsers.add_parser('login', help='Login to sylk cloud organziation')
+    parser_login.add_argument('organization', help='Set the login by organization id')
+
+    parser_cloud = subparsers.add_parser('registry', help='Interact with sylk\'s cloud API')
+    parser_cloud.add_argument('project_id', help='Set you sylk cli to default organization via personal access token')
+    group_cloud = parser_cloud.add_argument_group('Projects')
+    group_cloud.add_argument('action', help='Pull / Push a sylk project',default='pull',choices=['pull','push'])
+    # group_cloud.add_argument('push', help='Set you sylk cli to default organization via personal access token')
+
+
+
     """New command"""
     parser_new = subparsers.add_parser('new', help='Create new project')
     parser_new.add_argument('project', help='Project name')
     parser_new.add_argument('-p', '--path', required=False,
                             help='Path for the project root directory')
-    parser_new.add_argument('--port', default=50051,
+    parser_new.add_argument('--port', default=DEFAULT_PORT,
                             required=False, help='Port server will run on')
     parser_new.add_argument('--host', default='localhost',
                             required=False, help='Host name for server')
     parser_new.add_argument('--domain',
                             required=False, help='Project domain')
-    parser_new.add_argument('--server-language',
+    parser_new.add_argument('-s','--server',
                             required=False, help='Server language')
-    parser_new.add_argument('--clients', nargs='*',
+    parser_new.add_argument('-c','--clients', nargs='*',
                             required=False, help='Clients language list seprated by spaces')
-    parser_new.add_argument('--template', default=_TEMPLATES[0],
+    parser_new.add_argument('--template', default=_TEMPLATES[0] if len(_TEMPLATES) > 0 else None,
                             required=False, help='Create new project based on template')
-  
+    parser_new.add_argument('--project-id', default=None,
+                            required=False, help='The project id from sylk.build cloud platform')
 
     parser_n = subparsers.add_parser('n', help='A shortend for new commands')
     parser_n.add_argument('project', help='Project name')
     parser_n.add_argument('-p', '--path', required=False,
                           help='Path for the project root directory')
-    parser_n.add_argument('--port', default=50051,
+    parser_n.add_argument('--port', default=DEFAULT_PORT,
                             required=False, help='Port server will run on')
     parser_n.add_argument('--host', default='localhost',
                             required=False, help='Host name for server')
     parser_n.add_argument('--domain',
                             required=False, help='Project domain')
-    parser_n.add_argument('--server-language',
+    parser_n.add_argument('-s','--server',
                             required=False, help='Server language')
-    parser_n.add_argument('--clients', nargs='*',
+    parser_n.add_argument('-c','--clients', nargs='*',
                             required=False, help='Clients language list seprated by spaces')
-   
-    parser_n.add_argument('--template', choices=_TEMPLATES,default=_TEMPLATES[0],
+    parser_n.add_argument('--template', choices=_TEMPLATES,default=_TEMPLATES[0] if len(_TEMPLATES) > 0 else None,
                             required=False, help='Create new project based on template')
+    parser_n.add_argument('--project-id', default=None,
+                            required=False, help='The project id from sylk.build cloud platform')
+    
     """Generate command"""
 
     parser_generate = subparsers.add_parser(
@@ -222,6 +240,7 @@ def main(args=None):
     parser_list.add_argument('-t', '--type', choices=['service', 'package', 'message',
                              'rpc', 'enum','extension'], help='List a sylk.build resource from specific resource type')
     parser_list.add_argument('-d', '--dependencies',action='store_true', help='List the dependencies graph for your project')
+    parser_list.add_argument('-c', '--cloud',action='store_true', help='List the cloud project for your sylk.build account')
     
     """Package command"""
     
@@ -261,7 +280,7 @@ def main(args=None):
     parser_call.add_argument('rpc', help='RPC name')
     parser_call.add_argument('--debug',action='store_true', help='Debug the call process')
     parser_call.add_argument('--host',default='localhost', help='Pass a host of service')
-    parser_call.add_argument('--port',default=50051, help='Pass a port for service')
+    parser_call.add_argument('--port',default=DEFAULT_PORT, help='Pass a port for service')
     parser_call.add_argument('--timeout',default=10, help='An optional duration of time in seconds to allow for the RPC')
 
     """Extend command"""
@@ -290,6 +309,7 @@ def main(args=None):
         'configs', help='Display sylk.build Configurations')
     parse_configs.add_argument('--edit',action="store_true", help='Edit configurations')
     parse_configs.add_argument('--dict',action="store_true",default=False, help='Display all configs of of current project in dictionary mode')
+    parse_configs.add_argument('--token', action="store_true",help="Refresh 'Personal Access Token' with new one")
 
 
     # Utils
@@ -333,21 +353,25 @@ def main(args=None):
 
     if hasattr(args, 'project'):
         """New command process"""
+        sylk_project_config = prj_conf.parse_project_config(os.getcwd())
 
         # print_info(args,True)
-        new.create_new_project(args.project,args.path,args.host,args.port,args.server_language,args.clients,args.domain,template=args.template)
+        new.create_new_project(args.project,args.path,args.host,args.port,args.server,args.clients,domain=args.domain,template=args.template,project_id=args.project_id,configs=sylk_project_config)
         exit(0)
     else:
         if helpers.check_if_under_project():
             
-            # sylk_project_config = prj_conf.parse_project_config(os.getcwd())
+            sylk_project_config = prj_conf.parse_project_config(os.getcwd())
+            # print_info(sylk_project_config,True)
             sylk_json_path = file_system.join_path(os.getcwd(), 'sylk.json')
 
             try:
+                # print_note(sylk_json_path)
                 SYLK_JSON = file_system.rFile(sylk_json_path, json=True)
                 SYLK_JSON = helpers.SylkJson(sylk_json=SYLK_JSON)
-            except:
+            except Exception as e:
                 print_error("Error - sylk.json file is not valid !")
+                print_error(e)
                 exit(1)
                 
             if args.expand:
@@ -356,7 +380,23 @@ def main(args=None):
             if args.verbose:
                 print_note(SYLK_JSON._sylk_json, True, 'sylk.json')
 
-            if hasattr(args, 'resource'):
+            """Cloud commands"""
+            if hasattr(args, 'project_id'):
+                if args.action == 'pull':
+                    sylkCloud = cloud.SylkCloud(token=sylk_project_config.get('token'),SylkJson=SYLK_JSON)
+                    sylkCloud.pull_project(overwrite=True)
+                else:
+                    print_error('Pushing local project to registry is not supported yet.')            
+                    exit(1)
+                    
+            elif hasattr(args, 'organization'):
+                sylk_project_config = prj_conf.parse_project_config(os.getcwd())
+                # print_note(sylk_project_config,True)
+                print_info(f'Logging into "{args.organization}"')
+                cloud.SylkCloud(sylk_project_config.get('token'),args.organization,None)
+                print_success(f'Logged into: "{args.organization}"')
+
+            elif hasattr(args, 'resource'):
                 """Generate command process"""
 
                 # Small validations:
@@ -375,11 +415,11 @@ def main(args=None):
                     f"Generating new resource '{namespace[0]}'{resource_name}")
                 results = prompter.ask_user_question(
                     questions=namespace[1] if args.name is None else namespace[1][1:])
-
                 if results is None:
                     print_error('Must answer all questions')
                     exit(1)
-
+                elif args.name is not None:
+                    results[namespace[0]] = args.name
                 ARCHITECT = SylkArchitect(
                     path=sylk_json_path,domain=SYLK_JSON.domain,project_name=SYLK_JSON.project.get('name'))
                 if namespace[0] == 'package':
@@ -428,7 +468,7 @@ def main(args=None):
             
                 cache_files = file_system.walkFiles(path)
                 cache_files.sort(reverse=True)
-                logging.error(cache_files)
+                # logging.error(cache_files)
                 # ARCHITECT = SylkArchitect(
                 #     path=sylk_json_path,save=cache_files[len(cache_files)-2 if len(cache_files) > 1 else 1])
                 # ARCHITECT.Save()
@@ -505,7 +545,9 @@ def main(args=None):
             elif hasattr(args, 'edit'):
                 """Config command"""
                 if args.edit:
-                    print_warning('Nout supporting editing of sylk.build configurations through the CLI yet...')
+                    print_warning('Not supporting editing of sylk.build configurations through the CLI yet...')
+                if args.token:
+                    config_command.set_global_token(args.token)
                 else:
                     config_command.display_configs(SYLK_JSON.path,dictionary=args.dict)
             else:
@@ -514,10 +556,21 @@ def main(args=None):
                     if args.full_name is None:
                         if args.dependencies == True:
                             ls.list_dependencies(args.type,SYLK_JSON)
+                        elif args.cloud:
+                            sylk_project_config = prj_conf.parse_project_config(os.getcwd())
+                            print_info(f'Listing all projects')
+                            sylkCloud = cloud.SylkCloud(sylk_project_config.get('token'),None,None)
+                            cloud_projects = []
+                            for prj in sylkCloud.listProjects():
+                                cloud_projects.append(prj)
+
+                            ls.list_projects(sylkCloud._org_id,cloud_projects) 
+                            # ls.list_cloud_projects(args.full_name,SYLK_JSON)
                         elif hasattr(args, 'type'):
                             ls.list_by_resource(args.type,SYLK_JSON)
                     else:
                         ls.list_by_name(args.full_name,SYLK_JSON)
+
                 else:
                     if hasattr(args,'protos'):
                         print_warning("Cant migrate existing sylk.build project !")
@@ -525,10 +578,37 @@ def main(args=None):
                     parser.print_help()
             
         else:
+            # Global sylk cli commands
+            # sylk_project_config = prj_conf.parse_project_config(os.getcwd())
+            # print_note(sylk_project_config,True)
             if hasattr(args,'protos'):
+                """Migrations commands"""
                 migrate.migrate_project(args.protos,output_path=file_system.get_current_location(),format='json',server_language=args.server_language,clients=args.clients)
             elif hasattr(args, 'path'):
+                """Templates command"""
                 template_commands(args)
+            elif hasattr(args, 'organization'):
+                """Cloud commands - login"""
+                sylk_project_config = prj_conf.parse_project_config(os.getcwd())
+                # print_note(sylk_project_config,True)
+                print_info(f'Logging into "{args.organization}"')
+                cloud.SylkCloud(sylk_project_config.get('token'),args.organization,None)
+                print_success(f'Logged into: "{args.organization}"')
+            elif hasattr(args,'cloud'):
+                """Cloud commands - list projects"""
+                sylk_project_config = prj_conf.parse_project_config(os.getcwd())
+                print_info(f'Listing cloud projects')
+                sylkCloud = cloud.SylkCloud(sylk_project_config.get('token'),None,None)
+                cloud_projects = []
+                for prj in sylkCloud.listProjects():
+                    cloud_projects.append(prj)
+
+                ls.list_projects(sylkCloud._org_id,cloud_projects) 
+            elif hasattr(args,'edit'):
+                """Configs commands"""
+                if args.token is not None:
+                    # print(args.token)
+                    config_command.refresh_global_token()
             else:
                 print_warning(
                     'Not under valid sylk.build project !\n\tMake sure you are on the root directory of your project')
@@ -718,7 +798,8 @@ def template_commands(args,sylk_json:helpers.SylkJson=None,architect=None):
                     template.load_template(args.path)
                 else:
                     if 'sylk.json' in args.path:
-                        prj_configs = prj_conf.parse_project_config(sylk_json.path,proto=True)
+                        prj_configs = prj_conf.parse_sylk_config(sylk_json.path,proto=True)
+                        print(prj_configs)
                         SYLK_JSON = file_system.rFile(args.path, json=True)
                         SYLK_JSON = helpers.SylkJson(sylk_json=SYLK_JSON)
                         filename = SYLK_JSON.project.get('packageName') if args.template_name is None else args.template_name

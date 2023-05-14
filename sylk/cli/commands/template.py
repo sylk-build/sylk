@@ -28,7 +28,7 @@ from sylk.commons.helpers import SylkJson,MessageToDict
 from sylk.commons.pretty import print_info,print_warning,print_error,print_note,print_success
 import zlib
 
-from sylk.commons.protos.SylkConfig_pb2 import SylkCliConfigs
+from sylk.commons.protos.SylkConfigs_pb2 import SylkCliConfigs, SylkProjectConfigs
 
 _OPEN_BRCK = '{'
 _CLOSING_BRCK = '}'
@@ -36,7 +36,7 @@ _CLOSING_BRCK = '}'
 def parse_sylk_json():
     pass
 
-def create_sylk_template_py(sylk_json:SylkJson,include_code:bool,prj_configs:SylkCliConfigs):
+def create_sylk_template_py(sylk_json:SylkJson,include_code:bool,prj_configs:SylkProjectConfigs):
     
     opt_template = prj_configs.template
     opts = None
@@ -82,7 +82,7 @@ Author: {3}
 # Main sylk.build class to create gRPC services programmatically
 # (Same inteface that sylk.build cli is built as wrapper for
 # SylkArchitect whenever you generate new resource / create new project)
-from sylk.build.architect import SylkArchitect
+from sylk import SylkArchitect
 
 # Some common utils modules to help us build the services faster
 # and adds an validations to object before they created
@@ -100,7 +100,7 @@ import zlib
 
     """.format(project_name,theme.logo_ascii_art,description if description is not None else '',author)
 
-def create_constants(domain, project_name, server_language:str='python', host:str = 'localhost', port:int = 50051):
+def create_constants(domain, project_name, server_language:str='python', host:str = 'localhost', port:int = 44880):
     return f"""
 \"\"\"Initialize constants and SylkArchitect class\"\"\"
 parser = argparse.ArgumentParser(
@@ -116,7 +116,7 @@ args = parser.parse_args()
 _PATH = file_system.join_path(os.getcwd(), 'sylk.json') 
 _DOMAIN = args.domain
 _PROJECT_NAME = args.project_name
-_SERVER_LANGUAGE = SylkServer_pb2.ServerLanguages.Name(SylkServer_pb2.ServerLanguages.{server_language})
+_SERVER_LANGUAGE = SylkServer_pb2.SylkServerLanguages.Name(SylkServer_pb2.SylkServerLanguages.{server_language})
 _HOST = '{host}'
 _PORT = {port}
 
@@ -135,7 +135,7 @@ def create_clients(clients):
     temp_clients = []
     langauges = []
     for c in clients:
-        temp_clients.append({'language':c['language'],'out_dir':'file_system.join_path(_PATH, \'clients\', SylkClient_pb2.ClientLanguages.Name(SylkClient_pb2.ClientLanguages.{0}))'.format(c['language'])})
+        temp_clients.append({'language':c['language'],'out_dir':'file_system.join_path(_PATH, \'clients\', SylkClient_pb2.SylkClientLanguages.Name(SylkClient_pb2.SylkClientLanguages.{0}))'.format(c['language'])})
         langauges.append(c['language'])
     return """
 # Init all the client to be used with your services
@@ -155,7 +155,7 @@ _project = _architect.AddProject(server_language=_SERVER_LANGUAGE,
 # which can be used to enrich the sylk base structure
 # or debug easly whats going on beneath the surface
 # print(type(_project))
-# <class 'sylk.Project'>
+# <class 'sylk.SylkProject'>
 
     """
 
@@ -407,7 +407,7 @@ def create_file_context(root_path,include,exclude):
                 if f not in exclude and '.template.py' not in f and 'sylk.json' not in f:
                     code = ''.join(file_system.rFile(f))
                     code = bytes(code, 'utf-8')
-                    list_files.append('SylkFileContext(file=\'{0}\',code={1})'.format(f,zlib.compress(code)))
+                    list_files.append('SylkCommons_pb2.SylkFileContext(file=\'{0}\',code={1})'.format(f,zlib.compress(code)))
                     print_note("Added file to template -> 'file':{0}".format(f),True)
 
         if '**/*' in include:
@@ -418,7 +418,7 @@ def create_file_context(root_path,include,exclude):
                         for f in file_system.walkFiles(d):
                             code = ''.join(file_system.rFile(file_system.join_path(d,f)))
                             code = bytes(code, 'utf-8')
-                            list_files.append('SylkFileContext(file=\'{0}\',code={1})'.format(file_system.join_path(file_relative_path,f),zlib.compress(code)))
+                            list_files.append('SylkCommons_pb2.SylkFileContext(file=\'{0}\',code={1})'.format(file_system.join_path(file_relative_path,f),zlib.compress(code)))
                             print_note("Added file to template -> 'path':{0},'file':{1}".format(file_relative_path,f),True)
 
 
@@ -428,7 +428,7 @@ def create_file_context(root_path,include,exclude):
                     if file_system.check_if_file_exists(inc) and check_exclude(exclude,None,inc):
                         code = ''.join(file_system.rFile(inc))
                         code = bytes(code, 'utf-8')
-                        list_files.append('SylkFileContext(file=\'{0}\',code={1})'.format(inc,zlib.compress(code)))
+                        list_files.append('SylkCommons_pb2.SylkFileContext(file=\'{0}\',code={1})'.format(inc,zlib.compress(code)))
                         print_note("Added file to template -> 'file':{0}".format(inc),True)
 
                 else:
@@ -437,7 +437,7 @@ def create_file_context(root_path,include,exclude):
                             if check_exclude(exclude,inc,f):
                                 code = ''.join(file_system.rFile(file_system.join_path(file_system.get_current_location(),inc,f)))
                                 code = bytes(code, 'utf-8')
-                                list_files.append('SylkFileContext(file=\'{0}\',code={1})'.format(file_system.join_path(inc,f),zlib.compress(code)))
+                                list_files.append('SylkCommons_pb2.SylkFileContext(file=\'{0}\',code={1})'.format(file_system.join_path(inc,f),zlib.compress(code)))
                                 print_note("Added file to template -> 'path':{0},'file':{1}".format(inc,f),True)
 
             else:
@@ -454,7 +454,7 @@ def create_file_context(root_path,include,exclude):
                                     if suffix in f:
                                         code = ''.join(file_system.rFile(file_system.join_path(relative,f)))
                                         code = bytes(code, 'utf-8')
-                                        list_files.append('SylkFileContext(file=\'{0}\',code={1})'.format(file_system.join_path(relative,f),zlib.compress(code)))
+                                        list_files.append('SylkCommons_pb2.SylkFileContext(file=\'{0}\',code={1})'.format(file_system.join_path(relative,f),zlib.compress(code)))
                                         print_note("Added file to template -> 'path':{0},'file':{1}".format(relative,f),True)
                         else:
                             if '/**' in relative:
@@ -466,12 +466,12 @@ def create_file_context(root_path,include,exclude):
                                                 if suffix in f:
                                                     code = ''.join(file_system.rFile(file_system.join_path(d,f)))
                                                     code = bytes(code, 'utf-8')
-                                                    list_files.append('SylkFileContext(file=\'{0}\',code={1})'.format(file_system.join_path(d,f),zlib.compress(code)))
+                                                    list_files.append('SylkCommons_pb2.SylkFileContext(file=\'{0}\',code={1})'.format(file_system.join_path(d,f),zlib.compress(code)))
                                                     print_note("Added file to template -> 'path':{0},'file':{1}".format(d,f),True)
                                             elif paths[-1] == f:
                                                 code = ''.join(file_system.rFile(file_system.join_path(d,f)))
                                                 code = bytes(code, 'utf-8')
-                                                list_files.append('SylkFileContext(file=\'{0}\',code={1})'.format(file_system.join_path(d,f),zlib.compress(code)))
+                                                list_files.append('SylkCommons_pb2.SylkFileContext(file=\'{0}\',code={1})'.format(file_system.join_path(d,f),zlib.compress(code)))
                                                 print_note("Added file to template -> 'path':{0},'file':{1}".format(d,f),True)
 
                     elif len(paths) < 2:
@@ -483,12 +483,12 @@ def create_file_context(root_path,include,exclude):
                                         if suffix in f:
                                             code = ''.join(file_system.rFile(file_system.join_path(paths[0],f)))
                                             code = bytes(code, 'utf-8')
-                                            list_files.append('SylkFileContext(file=\'{0}\',code={1})'.format(file_system.join_path(paths[0],f),zlib.compress(code)))
+                                            list_files.append('SylkCommons_pb2.SylkFileContext(file=\'{0}\',code={1})'.format(file_system.join_path(paths[0],f),zlib.compress(code)))
                                             print_note("Added file to template -> 'path':{0},'file':{1}".format(paths[0],f),True)
                                     elif paths[1] == f:
                                         code = ''.join(file_system.rFile(file_system.join_path(paths[0],f)))
                                         code = bytes(code, 'utf-8')
-                                        list_files.append('SylkFileContext(file=\'{0}\',code={1})'.format(file_system.join_path(paths[0],f),zlib.compress(code)))
+                                        list_files.append('SylkCommons_pb2.SylkFileContext(file=\'{0}\',code={1})'.format(file_system.join_path(paths[0],f),zlib.compress(code)))
                                         print_note("Added file to template -> 'path':{0},'file':{1}".format(paths[0],f),True)
 
 
@@ -503,7 +503,7 @@ def create_file_context(root_path,include,exclude):
                                                 if suffix in f:
                                                     code = ''.join(file_system.rFile(file_system.join_path(paths[0],f)))
                                                     code = bytes(code, 'utf-8')
-                                                    list_files.append('SylkFileContext(file=\'{0}\',code={1})'.format(file_system.join_path(paths[0],f),zlib.compress(code)))
+                                                    list_files.append('SylkCommons_pb2.SylkFileContext(file=\'{0}\',code={1})'.format(file_system.join_path(paths[0],f),zlib.compress(code)))
                                                     print_note("Added file to template -> 'path':{0},'file':{1}".format(paths[0],f),True)
                     else:
                         print_warning("Relative path is to deep !\n\tMax allowed recursion of directories is 2 from root directory of your project")
@@ -527,7 +527,7 @@ def create_file_context(root_path,include,exclude):
 
     return """
 # Initalize all code files 
-_context = SylkContext(files=[{0}]) 
+_context = SylkCommons_pb2.SylkContext(files=[{0}]) 
 
 # Creating all code files on target project
 for f in _context.files:

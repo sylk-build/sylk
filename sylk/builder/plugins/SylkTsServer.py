@@ -129,55 +129,6 @@ def parse_proto_type_to_ts(type, label, messageType=None, enumType=None):
 _OPEN_BRCK = '{'
 _CLOSING_BRCK = '}'
 
-# @builder.hookimpl
-# def init_context(sylk_json: helpers.SylkJson, sylk_context: helpers.SylkContext):
-#     files = []
-#     pretty.print_error("Initialize sylk.context file")
-
-#     path = sylk_json.project.get('uri')
-#     if sylk_json.services is not None:
-#         for svc in sylk_json.services:
-#             methods = []
-#             if sylk_json.services[svc].get('methods') is not None and len(sylk_json.services[svc].get('methods')) > 0 :
-#                 for rpc in sylk_json.services[svc].get('methods'):
-#                     rpc_name = rpc.get('name')
-#                     rpc_type_out = rpc.get('serverStreaming')
-#                     rpc_out_name = rpc.get('inputType').split('.')[-1]
-#                     rpc_out_pkg = rpc.get('outputType').split('.')[1]
-#                     rpc_output = rpc.get('outputType')
-#                     msg = sylk_json.get_message(rpc_output)
-#                     fields = []
-#                     for f in msg.get('fields'):
-#                         F_VALUE = 'null'
-#                         if f.get('fieldType') == 'TYPE_STRING':
-#                             F_VALUE = '"SomeString"'
-#                         elif f.get('fieldType') == 'TYPE_BOOL':
-#                             F_VALUE = 'false'
-#                         elif f.get('fieldType') == 'TYPE_INT32' or f.get('fieldType') ==  'TYPE_INT64':
-#                             F_VALUE = '1'
-#                         elif f.get('fieldType') == 'TYPE_FLOAT' or f.get('fieldType') == 'TYPE_DOUBLE':
-#                             F_VALUE = '1.0'
-
-#                         fields.append('{0}: {1}'.format(f.get('name'), F_VALUE))
-#                     fields = ','.join(fields)
-#                     if rpc_type_out:
-#                         out_prototype = f'\t\tcall.destroy(new ServiceError(status.UNIMPLEMENTED,"Method is not yet implemented"))'
-#                     else:
-#                         out_prototype = f'\t\t// let response:{rpc_out_pkg}.{rpc_out_name} = {_OPEN_BRCK} {fields} {_CLOSING_BRCK};\n\t\t// callback(null,response);\n\t\tcallback(new ServiceError(status.UNIMPLEMENTED,"Method is not yet implemented"))'
-#                     code = f'{out_prototype}\n'
-#                     methods.append(protos.WebezyMethodContext(
-#                         name=rpc_name, code=code, type='rpc'))
-#                 files.append(protos.WebezyFileContext(
-#                     file=f'./services/{svc}.ts', methods=methods))
-#             else:
-#                 pretty.print_warning("No available RPC's for -> {}".format(svc))
-#     context = resources.proto_to_dict(protos.WebezyContext(files=files))
-#     logging.debug("Writing new context")
-#     file_system.mkdir(file_system.join_path(path, '.webezy'))
-#     file_system.wFile(file_system.join_path(
-#         path, '.webezy', 'context.json'), context, json=True, overwrite=True)
-#     sylk_json = helpers.SylkContext(context)
-#     return context
 
 @builder.hookimpl
 def rebuild_context(sylk_json: helpers.SylkJson, sylk_context: helpers.SylkContext):
@@ -259,10 +210,9 @@ def rebuild_context(sylk_json: helpers.SylkJson, sylk_context: helpers.SylkConte
 
             except Exception as e:
                 pretty.print_error(e)
-
-    # pretty.print_note(sylk_context.dump(),True)
-    file_system.wFile(file_system.join_path(
-        sylk_json.path, '.sylk', 'context.json'), sylk_context.dump(), True, True)
+    if sylk_context is not None:
+        file_system.wFile(file_system.join_path(
+            sylk_json.path, '.sylk', 'context.json'), sylk_context.dump(), True, True)
 
 @builder.hookimpl
 def write_server(sylk_json: helpers.SylkJson, sylk_context: helpers.SylkContext,pre_data):
@@ -363,11 +313,12 @@ def write_server(sylk_json: helpers.SylkJson, sylk_context: helpers.SylkContext,
     services_bindings = '\n\t'.join(services_bindings)
     services_init_impl = '\n\t'.join(services_init_impl)
     imports = '\n'.join(imports)
+    port = sylk_json._config.get('port')
     startup_promises = ',\n\t'.join(startup_promises)
     server_options = '\n\t'.join(list(map(lambda opt: '"{}": {},'.format(opt[0],opt[1]),server_options)))
     server_code = f'// sylk.build Generated Server Code\n\
 {imports}\n\n\
-let _PORT:number = 50051;\n\
+let _PORT:number = {port};\n\
 let _HOST:string = \'0.0.0.0\';\n\
 let _ADDR = `${_OPEN_BRCK}_HOST{_CLOSING_BRCK}:${_OPEN_BRCK}_PORT{_CLOSING_BRCK}`\n\
 {before_init}\n\

@@ -14,73 +14,32 @@ from google.protobuf import symbol_database as _symbol_database
 _sym_db = _symbol_database.Default()
 
 
-from google.protobuf import struct_pb2 as google_dot_protobuf_dot_struct__pb2
+from . import SylkEnumValue_pb2 as SylkEnumValue__pb2
+from google.protobuf import timestamp_pb2 as google_dot_protobuf_dot_timestamp__pb2
 
 
-DESCRIPTOR = _descriptor_pool.Default().AddSerializedFile(b'\n\x0eSylkEnum.proto\x12\x10sylk.SylkEnum.v1\x1a\x1cgoogle/protobuf/struct.proto\"\x85\x01\n\x08SylkEnum\x12\x0b\n\x03uri\x18\x01 \x01(\t\x12\x0c\n\x04name\x18\x02 \x01(\t\x12\x11\n\tfull_name\x18\x03 \x01(\t\x12/\n\x06values\x18\x04 \x03(\x0b\x32\x1f.sylk.SylkEnum.v1.SylkEnumValue\x12\x0c\n\x04type\x18\x05 \x01(\t\x12\x0c\n\x04kind\x18\x06 \x01(\t\"z\n\rSylkEnumValue\x12\x0b\n\x03uri\x18\x01 \x01(\t\x12\x0c\n\x04name\x18\x02 \x01(\t\x12\x0e\n\x06number\x18\x03 \x01(\x05\x12\r\n\x05index\x18\x04 \x01(\x05\x12\x0c\n\x04type\x18\x05 \x01(\t\x12\x0c\n\x04kind\x18\x06 \x01(\t\x12\x13\n\x0b\x64\x65scription\x18\x07 \x01(\tB/Z-github.com/sylk/core/services/protos/SylkEnumb\x06proto3')
+DESCRIPTOR = _descriptor_pool.Default().AddSerializedFile(b'\n\x0eSylkEnum.proto\x12\x10sylk.SylkEnum.v1\x1a\x13SylkEnumValue.proto\x1a\x1fgoogle/protobuf/timestamp.proto\"\x9f\x01\n\x08SylkEnum\x12\x0b\n\x03uri\x18\x01 \x01(\t\x12\x0c\n\x04name\x18\x02 \x01(\t\x12\x11\n\tfull_name\x18\x03 \x01(\t\x12\x13\n\x0b\x64\x65scription\x18\x04 \x01(\t\x12\x34\n\x06values\x18\x05 \x03(\x0b\x32$.sylk.SylkEnumValue.v1.SylkEnumValue\x12\x0c\n\x04type\x18\x06 \x01(\t\x12\x0c\n\x04kind\x18\x07 \x01(\t\"\x9b\x01\n\x0fSylkEnumDisplay\x12(\n\x04\x65num\x18\x01 \x01(\x0b\x32\x1a.sylk.SylkEnum.v1.SylkEnum\x12.\n\ncreated_at\x18\x02 \x01(\x0b\x32\x1a.google.protobuf.Timestamp\x12.\n\nupdated_at\x18\x03 \x01(\x0b\x32\x1a.google.protobuf.TimestampB\x1bZ\x19/services/protos/SylkEnumb\x06proto3')
 
 
 
 _SYLKENUM = DESCRIPTOR.message_types_by_name['SylkEnum']
-_SYLKENUMVALUE = DESCRIPTOR.message_types_by_name['SylkEnumValue']
-
-
-
-@overload
-class SylkEnumValue(_message.Message):
-	"""webezyio generated message [sylk.SylkEnum.v1.SylkEnumValue]
-	A class respresent a SylkEnumValue type
-	
-	"""
-	uri = str # type: str
-	name = str # type: str
-	number = int # type: int
-	index = int # type: int
-	type = str # type: str
-	kind = str # type: str
-	description = str # type: str
-
-	def __init__(self, uri=str, name=str, number=int, index=int, type=str, kind=str, description=str):
-		"""
-		Attributes:
-		----------
-		uri : str
-			
-		name : str
-			
-		number : int
-			
-		index : int
-			
-		type : str
-			
-		kind : str
-			
-		description : str
-			
-		"""
-		pass
-SylkEnumValue = _reflection.GeneratedProtocolMessageType('SylkEnumValue', (_message.Message,), {
-  'DESCRIPTOR' : _SYLKENUMVALUE,
-  '__module__' : 'SylkEnum_pb2'
-  # @@protoc_insertion_point(class_scope:sylk.SylkEnum.v1.SylkEnumValue)
-  })
-_sym_db.RegisterMessage(SylkEnumValue)
+_SYLKENUMDISPLAY = DESCRIPTOR.message_types_by_name['SylkEnumDisplay']
 
 @overload
 class SylkEnum(_message.Message):
 	"""webezyio generated message [sylk.SylkEnum.v1.SylkEnum]
 	A class respresent a SylkEnum type
 	
-	"""
+		"""
 	uri = str # type: str
 	name = str # type: str
 	full_name = str # type: str
-	values = List[SylkEnumValue] # type: List[SylkEnumValue]
+	description = str # type: str
+	values = List[SylkEnumValue__pb2.SylkEnumValue] # type: List[SylkEnumValue__pb2.SylkEnumValue]
 	type = str # type: str
 	kind = str # type: str
 
-	def __init__(self, uri=str, name=str, full_name=str, values=List[SylkEnumValue], type=str, kind=str):
+	def __init__(self, uri=str, name=str, full_name=str, description=str, values=List[SylkEnumValue__pb2.SylkEnumValue], type=str, kind=str):
 		"""
 		Attributes:
 		----------
@@ -90,7 +49,9 @@ class SylkEnum(_message.Message):
 			
 		full_name : str
 			
-		values : List[SylkEnumValue]
+		description : str
+			
+		values : List[SylkEnumValue__pb2.SylkEnumValue]
 			
 		type : str
 			
@@ -106,12 +67,41 @@ SylkEnum = _reflection.GeneratedProtocolMessageType('SylkEnum', (_message.Messag
 _sym_db.RegisterMessage(SylkEnum)
 
 
+@overload
+class SylkEnumDisplay(_message.Message):
+	"""webezyio generated message [sylk.SylkEnum.v1.SylkEnumDisplay]
+	A class respresent a SylkEnumDisplay type
+	
+		"""
+	enum = SylkEnum # type: SylkEnum
+	created_at = google_dot_protobuf_dot_timestamp__pb2.Timestamp # type: google_dot_protobuf_dot_timestamp__pb2.Timestamp
+	updated_at = google_dot_protobuf_dot_timestamp__pb2.Timestamp # type: google_dot_protobuf_dot_timestamp__pb2.Timestamp
+
+	def __init__(self, enum=SylkEnum, created_at=google_dot_protobuf_dot_timestamp__pb2.Timestamp, updated_at=google_dot_protobuf_dot_timestamp__pb2.Timestamp):
+		"""
+		Attributes:
+		----------
+		enum : SylkEnum
+			
+		created_at : google_dot_protobuf_dot_timestamp__pb2.Timestamp
+			
+		updated_at : google_dot_protobuf_dot_timestamp__pb2.Timestamp
+			
+		"""
+		pass
+SylkEnumDisplay = _reflection.GeneratedProtocolMessageType('SylkEnumDisplay', (_message.Message,), {
+  'DESCRIPTOR' : _SYLKENUMDISPLAY,
+  '__module__' : 'SylkEnum_pb2'
+  # @@protoc_insertion_point(class_scope:sylk.SylkEnum.v1.SylkEnumDisplay)
+  })
+_sym_db.RegisterMessage(SylkEnumDisplay)
+
 if _descriptor._USE_C_DESCRIPTORS == False:
 
   DESCRIPTOR._options = None
-  DESCRIPTOR._serialized_options = b'Z-github.com/sylk/core/services/protos/SylkEnum'
-  _SYLKENUM._serialized_start=67
-  _SYLKENUM._serialized_end=200
-  _SYLKENUMVALUE._serialized_start=202
-  _SYLKENUMVALUE._serialized_end=324
+  DESCRIPTOR._serialized_options = b'Z\031/services/protos/SylkEnum'
+  _SYLKENUM._serialized_start=91
+  _SYLKENUM._serialized_end=250
+  _SYLKENUMDISPLAY._serialized_start=253
+  _SYLKENUMDISPLAY._serialized_end=408
 # @@protoc_insertion_point(module_scope)

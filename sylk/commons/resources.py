@@ -38,11 +38,11 @@ from sylk.cli import prompter
 from sylk.commons import errors
 from sylk.commons.pretty import print_error, print_info, print_note, print_warning
 
-from sylk.commons.protos import SylkCore_pb2, SylkOrganization_pb2, \
+from sylk.commons.protos import  Sylk_pb2,SylkOrganization_pb2, \
     SylkProject_pb2, \
     SylkService_pb2, \
     SylkPackage_pb2, \
-    SylkConfig_pb2, \
+    SylkConfigs_pb2, \
     SylkEnum_pb2, \
     SylkServer_pb2, \
     SylkClient_pb2, \
@@ -77,7 +77,7 @@ class ResourceKinds(Enum):
     service_client_java = 'sylk.service/client/java'
     service_client_webpack = 'sylk.service/client/webpack'
     file_proto = 'sylk.file/proto'
-    file_js = 'sylk.file/javascript'
+    file_js = 'sylk.file/nodejs'
     file_ts = 'sylk.file/typescript'
     file_py = 'sylk.file/python'
     file_cs = 'sylk.file/csharp'
@@ -95,46 +95,48 @@ class ResourceKinds(Enum):
 
 
 fields_opt = [
-    SylkField_pb2.SylkFieldType.Name(SylkField_pb2.SylkFieldType.TYPE_DOUBLE),
-    SylkField_pb2.SylkFieldType.Name(SylkField_pb2.SylkFieldType.TYPE_FLOAT),
-    SylkField_pb2.SylkFieldType.Name(SylkField_pb2.SylkFieldType.TYPE_INT64),
-    SylkField_pb2.SylkFieldType.Name(SylkField_pb2.SylkFieldType.TYPE_INT32),
-    SylkField_pb2.SylkFieldType.Name(SylkField_pb2.SylkFieldType.TYPE_BOOL),
-    SylkField_pb2.SylkFieldType.Name(SylkField_pb2.SylkFieldType.TYPE_STRING),
-    SylkField_pb2.SylkFieldType.Name(SylkField_pb2.SylkFieldType.TYPE_MESSAGE),
-    SylkField_pb2.SylkFieldType.Name(SylkField_pb2.SylkFieldType.TYPE_BYTES),
-    SylkField_pb2.SylkFieldType.Name(SylkField_pb2.SylkFieldType.TYPE_ENUM),
-    SylkField_pb2.SylkFieldType.Name(SylkField_pb2.SylkFieldType.TYPE_ONEOF),
-    SylkField_pb2.SylkFieldType.Name(SylkField_pb2.SylkFieldType.TYPE_MAP),
+    SylkField_pb2.SylkFieldTypes.Name(SylkField_pb2.SylkFieldTypes.TYPE_DOUBLE),
+    SylkField_pb2.SylkFieldTypes.Name(SylkField_pb2.SylkFieldTypes.TYPE_FLOAT),
+    SylkField_pb2.SylkFieldTypes.Name(SylkField_pb2.SylkFieldTypes.TYPE_INT64),
+    SylkField_pb2.SylkFieldTypes.Name(SylkField_pb2.SylkFieldTypes.TYPE_INT32),
+    SylkField_pb2.SylkFieldTypes.Name(SylkField_pb2.SylkFieldTypes.TYPE_BOOL),
+    SylkField_pb2.SylkFieldTypes.Name(SylkField_pb2.SylkFieldTypes.TYPE_STRING),
+    SylkField_pb2.SylkFieldTypes.Name(SylkField_pb2.SylkFieldTypes.TYPE_MESSAGE),
+    SylkField_pb2.SylkFieldTypes.Name(SylkField_pb2.SylkFieldTypes.TYPE_BYTES),
+    SylkField_pb2.SylkFieldTypes.Name(SylkField_pb2.SylkFieldTypes.TYPE_ENUM),
+    SylkField_pb2.SylkFieldTypes.Name(SylkField_pb2.SylkFieldTypes.TYPE_ONEOF),
+    SylkField_pb2.SylkFieldTypes.Name(SylkField_pb2.SylkFieldTypes.TYPE_MAP),
 ]
 field_label = [
-    SylkField_pb2.SylkFieldLabel.Name(SylkField_pb2.SylkFieldLabel.LABEL_OPTIONAL),
-    SylkField_pb2.SylkFieldLabel.Name(SylkField_pb2.SylkFieldLabel.LABEL_REPEATED)
+    SylkField_pb2.SylkFieldLabels.Name(SylkField_pb2.SylkFieldLabels.LABEL_OPTIONAL),
+    SylkField_pb2.SylkFieldLabels.Name(SylkField_pb2.SylkFieldLabels.LABEL_REPEATED)
 ]
 
 def get_blank_sylk_json(json=False):
-    sylkJson = SylkCore_pb2.Sylk(
+    sylkJson = Sylk_pb2.SylkJson(
         organization=SylkOrganization_pb2.SylkOrganization(domain='sylk'),
         project=SylkProject_pb2.SylkProject(),
         services={},
         packages={},
-        config=SylkConfig_pb2.SylkProjectConfigs())
+        configs=SylkConfigs_pb2.SylkProjectConfigs())
     return sylkJson if json == False else MessageToDict(sylkJson)
 
 
 def generate_project(path, name, server_langauge='python', clients=[], package_name=None, json=False):
     path = path.split('/sylk.json')[0]
     # Init server
-    if server_langauge == 'python':
+    if server_langauge == 'python' or server_langauge == SylkServer_pb2.SylkServerLanguages.python:
         temp_langugae = SylkServer_pb2.python
-    elif server_langauge == 'typescript':
+    elif server_langauge == 'typescript' or server_langauge == SylkServer_pb2.SylkServerLanguages.typescript:
         temp_langugae = SylkServer_pb2.typescript
-    elif server_langauge == 'go':
+    elif server_langauge == 'go' or server_langauge == SylkServer_pb2.SylkServerLanguages.go:
         temp_langugae = SylkServer_pb2.go
+    elif server_langauge == 'nodejs' or server_langauge == SylkServer_pb2.SylkServerLanguages.nodejs:
+        temp_langugae = SylkServer_pb2.nodejs
     # Add more language support here...
     else:
-        raise errors.sylkValidationError('Server Language Error','Must pass a valid server language for your new project')
-    server = SylkServer_pb2.SylkServer(language=SylkServer_pb2.ServerLanguages.Name(temp_langugae))
+        raise errors.SylkValidationError('Server Language Error',f'Must pass a valid server language for your new project: "{server_langauge}"')
+    server = SylkServer_pb2.SylkServer(language=SylkServer_pb2.SylkServerLanguages.Name(temp_langugae))
     
     # Creating packaeg name for project
     if package_name is None:
@@ -145,11 +147,13 @@ def generate_project(path, name, server_langauge='python', clients=[], package_n
     temp_clients = []
     if len(clients) > 0:
         for c in clients:
-            if c['language'] == 'python':
+            if c.language == SylkClient_pb2.python if hasattr(c,'language') else c['language'] == 'python':
                 temp_c_lang = SylkClient_pb2.python
-            elif c['language'] == 'typescript':
-                temp_c_lang = SylkClient_pb2.typescript
-            elif c['language'] == 'go':
+            elif c.language == SylkClient_pb2.typescript if hasattr(c,'language') else c['language'] == 'typescript':
+                temp_c_lang  = SylkClient_pb2.typescript
+            elif c.language == SylkClient_pb2.nodejs if hasattr(c,'language') else c['language'] == 'nodejs':
+                temp_c_lang = SylkClient_pb2.nodejs
+            elif c.language == SylkClient_pb2.go if hasattr(c,'language') else c['language'] == 'go':
                 temp_c_lang = SylkClient_pb2.go
                 if json:
                     go_package_input = prompter.QText(name='go_package',message='Enter a prefix to support Go package',default='github.com')
@@ -164,8 +168,8 @@ def generate_project(path, name, server_langauge='python', clients=[], package_n
             else:
                 raise errors.SylkValidationError('Client Language Error','Client {} is not supported'.format(c['language']))
             client = SylkClient_pb2.SylkClient(
-                out_dir=get_uri_client(path, c['language']),
-                language=SylkClient_pb2.ClientLanguages.Name(temp_c_lang))
+                out_dir=get_uri_client(path, c.language if hasattr(c,'language') else c['language']),
+                language=SylkClient_pb2.SylkClientLanguages.Name(temp_c_lang))
             temp_clients.append(client)
     # Default client
     else:
@@ -174,9 +178,17 @@ def generate_project(path, name, server_langauge='python', clients=[], package_n
         temp_clients.append(client)
   
     # Init project
-    project = SylkProject_pb2.SylkProject(uri=get_uri_project(path, name), name=name, package_name=package_name,
-                      version='0.0.1', type=ResourceTypes.project.value, kind=ResourceKinds.sylk_1.value,
-                      server=server, clients=temp_clients,go_package=go_package)
+    project = SylkProject_pb2.SylkProject(
+        uri=get_uri_project(path, name),
+        name=name,
+        package_name=package_name,
+        # version='0.0.1',
+        # type=ResourceTypes.project.value,
+        # kind=ResourceKinds.sylk_1.value,
+        server=server,
+        clients=temp_clients,
+        go_package=go_package
+    )
     # Return project as message or dict
     return project if json == False else MessageToDict(project)
 
@@ -214,7 +226,7 @@ def generate_service(path, domain, name, service_language, dependencies, descrip
                                   methods=temp_methods,
                                   description=description,
                                   type= ResourceTypes.service.value,
-                                  version='0.0.1',
+                                #   version='0.0.1',
                                   extensions=temp_ext)
     # Init methods
     # service.methods = dependencies
@@ -257,8 +269,18 @@ def generate_package(path, domain, name, dependencies=[],messages=[],enums=[],de
                 print_error("Cannot parse extension value without context to sylk.json file !")
                 exit(1)
 
-    package = SylkPackage_pb2.Package(uri=get_uri_package(
-        path, full_name),type= ResourceTypes.package.value, name=name, package=full_name, version='0.0.1', dependencies=dependencies, messages=temp_msgs,enums=temp_enums,description=description,extensions=temp_ext)
+    package = SylkPackage_pb2.SylkPackage(
+        uri= get_uri_package(path, full_name),
+        type= ResourceTypes.package.value,
+        name=name,
+        package=full_name,
+        # version='0.0.1',
+        dependencies=dependencies,
+        messages=temp_msgs,
+        enums=temp_enums,
+        description=description,
+        extensions=temp_ext
+    )
 
     return package if json == False else MessageToDict(package)
 
@@ -328,7 +350,7 @@ def generate_message(path, domain, package, name, fields=[], option=0, descripti
                     else:
                         print_error("Cannot parse extension value without context to sylk.json file !")
                         exit(1)
-            temp_fields.append(SylkField_pb2.Field(uri=f_uri, name=f.get('name'), full_name=f_fName,
+            temp_fields.append(SylkField_pb2.SylkField(uri=f_uri, name=f.get('name'), full_name=f_fName,
                                                  description=f.get(
                                                      'description'),
                                                  index=index, field_type=f.get(
@@ -386,7 +408,7 @@ def generate_enum(path, domain, package, name, enum_values, json=False,descripti
         ev_fName = get_enum_value_full_name(
             domain, package, name, ev.get('name'))
         ev_uri = get_uri_enum_value(path, ev_fName)
-        temp_values.append(SylkEnum_pb2.SylkEnumValue(uri=ev_uri, name=ev.get(
+        temp_values.append(SylkEnum_pb2.SylkEnumValue__pb2.SylkEnumValue(uri=ev_uri, name=ev.get(
             'name'), number=ev.get('number'), index=index,type=ResourceTypes.descriptor.value,kind=ResourceKinds.enum_value.value,description=ev.get('description')))
         index = + 1
 
@@ -467,12 +489,14 @@ def get_uri_project(path, name):
 
 def get_uri_client(path, language):
     uri = 'unknown'
-    if language == 'python':
+    if language == 'python' or language == SylkClient_pb2.SylkClientLanguages.python:
         uri = construct_uri(path, ResourceTypes.client, ResourceKinds.file_py)
-    elif language == 'typescript':
+    elif language == 'typescript' or language == SylkClient_pb2.SylkClientLanguages.typescript:
         uri = construct_uri(path, ResourceTypes.client, ResourceKinds.file_ts)
-    elif language == 'go':
+    elif language == 'go' or language == SylkClient_pb2.SylkClientLanguages.go:
         uri = construct_uri(path, ResourceTypes.client, ResourceKinds.file_go)
+    elif language == 'nodejs' or language == SylkClient_pb2.SylkClientLanguages.nodejs:
+        uri = construct_uri(path, ResourceTypes.client, ResourceKinds.file_js)
     elif language == 'webpack':
         uri = construct_uri(path, ResourceTypes.client, ResourceKinds.file_webpack)
     else:

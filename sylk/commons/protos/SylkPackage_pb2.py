@@ -14,37 +14,37 @@ from google.protobuf import symbol_database as _symbol_database
 _sym_db = _symbol_database.Default()
 
 
-from google.protobuf import struct_pb2 as google_dot_protobuf_dot_struct__pb2
 from . import SylkMessage_pb2 as SylkMessage__pb2
 from . import SylkEnum_pb2 as SylkEnum__pb2
+from google.protobuf import timestamp_pb2 as google_dot_protobuf_dot_timestamp__pb2
+from google.protobuf import struct_pb2 as google_dot_protobuf_dot_struct__pb2
 
 
-DESCRIPTOR = _descriptor_pool.Default().AddSerializedFile(b'\n\x11SylkPackage.proto\x12\x13sylk.SylkPackage.v1\x1a\x1cgoogle/protobuf/struct.proto\x1a\x11SylkMessage.proto\x1a\x0eSylkEnum.proto\"\xf9\x02\n\x07Package\x12\x0b\n\x03uri\x18\x01 \x01(\t\x12\x0c\n\x04name\x18\x02 \x01(\t\x12\x0f\n\x07package\x18\x03 \x01(\t\x12\x32\n\x08messages\x18\x04 \x03(\x0b\x32 .sylk.SylkMessage.v1.SylkMessage\x12)\n\x05\x65nums\x18\x05 \x03(\x0b\x32\x1a.sylk.SylkEnum.v1.SylkEnum\x12\x13\n\x0b\x64\x65scription\x18\x06 \x01(\t\x12\x14\n\x0c\x64\x65pendencies\x18\x07 \x03(\t\x12\x0c\n\x04type\x18\x08 \x01(\t\x12\x0c\n\x04kind\x18\t \x01(\t\x12\x0f\n\x07version\x18\n \x01(\t\x12@\n\nextensions\x18\x0b \x03(\x0b\x32,.sylk.SylkPackage.v1.Package.ExtensionsEntry\x1aI\n\x0f\x45xtensionsEntry\x12\x0b\n\x03key\x18\x01 \x01(\t\x12%\n\x05value\x18\x02 \x01(\x0b\x32\x16.google.protobuf.Value:\x02\x38\x01\x42\x32Z0github.com/sylk/core/services/protos/SylkPackageb\x06proto3')
+DESCRIPTOR = _descriptor_pool.Default().AddSerializedFile(b'\n\x11SylkPackage.proto\x12\x13sylk.SylkPackage.v1\x1a\x11SylkMessage.proto\x1a\x0eSylkEnum.proto\x1a\x1fgoogle/protobuf/timestamp.proto\x1a\x1cgoogle/protobuf/struct.proto\"\xe3\x02\n\x0bSylkPackage\x12\x0b\n\x03uri\x18\x01 \x01(\t\x12\x0c\n\x04name\x18\x02 \x01(\t\x12\x0f\n\x07package\x18\x03 \x01(\t\x12\x32\n\x08messages\x18\x04 \x03(\x0b\x32 .sylk.SylkMessage.v1.SylkMessage\x12)\n\x05\x65nums\x18\x05 \x03(\x0b\x32\x1a.sylk.SylkEnum.v1.SylkEnum\x12\x13\n\x0b\x64\x65scription\x18\x06 \x01(\t\x12\x0c\n\x04type\x18\x07 \x01(\t\x12\x14\n\x0c\x64\x65pendencies\x18\x08 \x03(\t\x12\x44\n\nextensions\x18\t \x03(\x0b\x32\x30.sylk.SylkPackage.v1.SylkPackage.ExtensionsEntry\x1aJ\n\x0f\x45xtensionsEntry\x12\x0b\n\x03key\x18\x01 \x01(\t\x12&\n\x05value\x18\x02 \x01(\x0b\x32\x17.google.protobuf.Struct:\x02\x38\x01\"\xa7\x01\n\x12SylkPackageDisplay\x12\x31\n\x07package\x18\x01 \x01(\x0b\x32 .sylk.SylkPackage.v1.SylkPackage\x12.\n\ncreated_at\x18\x02 \x01(\x0b\x32\x1a.google.protobuf.Timestamp\x12.\n\nupdated_at\x18\x03 \x01(\x0b\x32\x1a.google.protobuf.TimestampB\x1eZ\x1c/services/protos/SylkPackageb\x06proto3')
 
 
 
-_PACKAGE = DESCRIPTOR.message_types_by_name['Package']
-_PACKAGE_EXTENSIONSENTRY = _PACKAGE.nested_types_by_name['ExtensionsEntry']
+_SYLKPACKAGE = DESCRIPTOR.message_types_by_name['SylkPackage']
+_SYLKPACKAGE_EXTENSIONSENTRY = _SYLKPACKAGE.nested_types_by_name['ExtensionsEntry']
+_SYLKPACKAGEDISPLAY = DESCRIPTOR.message_types_by_name['SylkPackageDisplay']
 
 @overload
-class Package(_message.Message):
-	"""webezyio generated message [sylk.SylkPackage.v1.Package]
-	A class respresent a Package type
+class SylkPackage(_message.Message):
+	"""webezyio generated message [sylk.SylkPackage.v1.SylkPackage]
+	A class respresent a SylkPackage type
 	
-	"""
+		"""
 	uri = str # type: str
 	name = str # type: str
 	package = str # type: str
 	messages = List[SylkMessage__pb2.SylkMessage] # type: List[SylkMessage__pb2.SylkMessage]
 	enums = List[SylkEnum__pb2.SylkEnum] # type: List[SylkEnum__pb2.SylkEnum]
 	description = str # type: str
-	dependencies = List[str] # type: List[str]
 	type = str # type: str
-	kind = str # type: str
-	version = str # type: str
-	extensions = Dict[str,google_dot_protobuf_dot_struct__pb2.Value] # type: Dict[str,google_dot_protobuf_dot_struct__pb2.Value]
+	dependencies = List[str] # type: List[str]
+	extensions = Dict[str,google_dot_protobuf_dot_struct__pb2.Struct] # type: Dict[str,google_dot_protobuf_dot_struct__pb2.Struct]
 
-	def __init__(self, uri=str, name=str, package=str, messages=List[SylkMessage__pb2.SylkMessage], enums=List[SylkEnum__pb2.SylkEnum], description=str, dependencies=List[str], type=str, kind=str, version=str, extensions=Dict[str,google_dot_protobuf_dot_struct__pb2.Value]):
+	def __init__(self, uri=str, name=str, package=str, messages=List[SylkMessage__pb2.SylkMessage], enums=List[SylkEnum__pb2.SylkEnum], description=str, type=str, dependencies=List[str], extensions=Dict[str,google_dot_protobuf_dot_struct__pb2.Struct]):
 		"""
 		Attributes:
 		----------
@@ -60,41 +60,69 @@ class Package(_message.Message):
 			
 		description : str
 			
-		dependencies : List[str]
-			
 		type : str
 			
-		kind : str
+		dependencies : List[str]
 			
-		version : str
-			
-		extensions : Dict[str,google_dot_protobuf_dot_struct__pb2.Value]
+		extensions : Dict[str,google_dot_protobuf_dot_struct__pb2.Struct]
 			
 		"""
 		pass
-Package = _reflection.GeneratedProtocolMessageType('Package', (_message.Message,), {
+SylkPackage = _reflection.GeneratedProtocolMessageType('SylkPackage', (_message.Message,), {
 
   'ExtensionsEntry' : _reflection.GeneratedProtocolMessageType('ExtensionsEntry', (_message.Message,), {
-    'DESCRIPTOR' : _PACKAGE_EXTENSIONSENTRY,
+    'DESCRIPTOR' : _SYLKPACKAGE_EXTENSIONSENTRY,
     '__module__' : 'SylkPackage_pb2'
-    # @@protoc_insertion_point(class_scope:sylk.SylkPackage.v1.Package.ExtensionsEntry)
+    # @@protoc_insertion_point(class_scope:sylk.SylkPackage.v1.SylkPackage.ExtensionsEntry)
     })
   ,
-  'DESCRIPTOR' : _PACKAGE,
+  'DESCRIPTOR' : _SYLKPACKAGE,
   '__module__' : 'SylkPackage_pb2'
-  # @@protoc_insertion_point(class_scope:sylk.SylkPackage.v1.Package)
+  # @@protoc_insertion_point(class_scope:sylk.SylkPackage.v1.SylkPackage)
   })
-_sym_db.RegisterMessage(Package)
-_sym_db.RegisterMessage(Package.ExtensionsEntry)
+_sym_db.RegisterMessage(SylkPackage)
+_sym_db.RegisterMessage(SylkPackage.ExtensionsEntry)
+
+
+@overload
+class SylkPackageDisplay(_message.Message):
+	"""webezyio generated message [sylk.SylkPackage.v1.SylkPackageDisplay]
+	A class respresent a SylkPackageDisplay type
+	
+		"""
+	package = SylkPackage # type: SylkPackage
+	created_at = google_dot_protobuf_dot_timestamp__pb2.Timestamp # type: google_dot_protobuf_dot_timestamp__pb2.Timestamp
+	updated_at = google_dot_protobuf_dot_timestamp__pb2.Timestamp # type: google_dot_protobuf_dot_timestamp__pb2.Timestamp
+
+	def __init__(self, package=SylkPackage, created_at=google_dot_protobuf_dot_timestamp__pb2.Timestamp, updated_at=google_dot_protobuf_dot_timestamp__pb2.Timestamp):
+		"""
+		Attributes:
+		----------
+		package : SylkPackage
+			
+		created_at : google_dot_protobuf_dot_timestamp__pb2.Timestamp
+			
+		updated_at : google_dot_protobuf_dot_timestamp__pb2.Timestamp
+			
+		"""
+		pass
+SylkPackageDisplay = _reflection.GeneratedProtocolMessageType('SylkPackageDisplay', (_message.Message,), {
+  'DESCRIPTOR' : _SYLKPACKAGEDISPLAY,
+  '__module__' : 'SylkPackage_pb2'
+  # @@protoc_insertion_point(class_scope:sylk.SylkPackage.v1.SylkPackageDisplay)
+  })
+_sym_db.RegisterMessage(SylkPackageDisplay)
 
 if _descriptor._USE_C_DESCRIPTORS == False:
 
   DESCRIPTOR._options = None
-  DESCRIPTOR._serialized_options = b'Z0github.com/sylk/core/services/protos/SylkPackage'
-  _PACKAGE_EXTENSIONSENTRY._options = None
-  _PACKAGE_EXTENSIONSENTRY._serialized_options = b'8\001'
-  _PACKAGE._serialized_start=108
-  _PACKAGE._serialized_end=485
-  _PACKAGE_EXTENSIONSENTRY._serialized_start=412
-  _PACKAGE_EXTENSIONSENTRY._serialized_end=485
+  DESCRIPTOR._serialized_options = b'Z\034/services/protos/SylkPackage'
+  _SYLKPACKAGE_EXTENSIONSENTRY._options = None
+  _SYLKPACKAGE_EXTENSIONSENTRY._serialized_options = b'8\001'
+  _SYLKPACKAGE._serialized_start=141
+  _SYLKPACKAGE._serialized_end=496
+  _SYLKPACKAGE_EXTENSIONSENTRY._serialized_start=422
+  _SYLKPACKAGE_EXTENSIONSENTRY._serialized_end=496
+  _SYLKPACKAGEDISPLAY._serialized_start=499
+  _SYLKPACKAGEDISPLAY._serialized_end=666
 # @@protoc_insertion_point(module_scope)

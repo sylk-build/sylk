@@ -56,6 +56,7 @@ class SylkArchitect():
         if 'sylk.json' not in path:
             raise SylkProtoError('sylk.json file path is not valid','Make sure you pass in your architect class the right path to your sylk.json file')
         self._path = path
+        self._org_id = None
         self._project = None
         self._domain = domain
         self._project_name = project_name
@@ -75,10 +76,14 @@ class SylkArchitect():
         self._domain = domain
         self._sylk.execute(CommandMap._ADD_RESOURCE, {'organization': { 'domain' : domain }})
     
+    def SetOrgId(self,orgId):
+        self._org_id = orgId
+        self._sylk.execute(CommandMap._ADD_RESOURCE, {'organization': { 'orgId' : orgId }})
+    
     def SetConfig(self,config):
-        self._sylk.execute(CommandMap._ADD_RESOURCE, { 'config' : config })
+        self._sylk.execute(CommandMap._ADD_RESOURCE, { 'configs' : config })
 
-    def AddProject(self,name=None,server_language=SylkServer_pb2.ServerLanguages.Name(SylkServer_pb2.python),clients=[]) -> SylkProject_pb2.SylkProject:
+    def AddProject(self,name=None,server_language=SylkServer_pb2.SylkServerLanguages.Name(SylkServer_pb2.python),clients=[]) -> SylkProject_pb2.SylkProject:
         name = name if name is not None else self._project_name
         dict = generate_project(self._path,name,server_language,clients,json=True)
         project = generate_project(self._path,name,server_language,clients)
@@ -121,7 +126,6 @@ class SylkArchitect():
 
     def AddMessage(self,package,name,fields,description=None,options=None,extensions=None,domain=None):
         message = generate_message(self._path,self._domain if domain is None else domain,package,name,fields,option=options,description=description,extensions=extensions,sylk_json=self._sylk.sylkJson)
-        print(package)
         if next((m for m in package.messages if m.name == message.name), None) is None:
             package.messages.append(message)
             self._sylk.execute(CommandMap._ADD_RESOURCE,{'packages':{f'protos/v1/{package.name}.proto': MessageToDict(package)}})

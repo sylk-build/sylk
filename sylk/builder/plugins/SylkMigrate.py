@@ -120,7 +120,7 @@ def parse_protos_to_resource(protos_dir, project_name, server_language, clients:
                         for svc_ext in service_options.Extensions._extended_message.ListFields():
                             ext_desc, ext_value = svc_ext
                             temp_extensions[ext_desc.full_name] = None
-                            field_opt_type = SylkField_pb2.SylkFieldType.Name(ext_desc.type)
+                            field_opt_type = SylkField_pb2.SylkFieldTypes.Name(ext_desc.type)
                             field_opt_label = SylkField_pb2.SylkFieldLabel.Name(ext_desc.label)
                             temp_extensions = parse_proto_extension(field_opt_type,field_opt_label,ext_desc,ext_value,temp_extensions)
                         service._extensions = temp_extensions
@@ -149,7 +149,7 @@ def parse_protos_to_resource(protos_dir, project_name, server_language, clients:
 
                         ext_desc, ext_value = pkg_ext
                         temp_extensions[ext_desc.full_name] = None
-                        field_opt_type = SylkField_pb2.SylkFieldType.Name(ext_desc.type)
+                        field_opt_type = SylkField_pb2.SylkFieldTypes.Name(ext_desc.type)
                         field_opt_label = SylkField_pb2.SylkFieldLabel.Name(ext_desc.label)
                         temp_extensions = parse_proto_extension(field_opt_type,field_opt_label,ext_desc,ext_value,temp_extensions)
                        
@@ -175,7 +175,7 @@ def parse_protos_to_resource(protos_dir, project_name, server_language, clients:
                         message._extension_type = extension_type
                         for field_extended in ext.extension_scope.extensions:
                             extended_field_desc = helpers.SylkField(field_extended.name,
-                                type=SylkField_pb2.SylkFieldType.Name(field_extended.type),
+                                type=SylkField_pb2.SylkFieldTypes.Name(field_extended.type),
                                 label=SylkField_pb2.SylkFieldLabel.Name(field_extended.label),
                                 enum_type=field_extended.enum_type.full_name if field_extended.enum_type is not None else None,message_type=field_extended.message_type.full_name if field_extended.message_type is not None else None)
                             
@@ -195,9 +195,9 @@ def parse_protos_to_resource(protos_dir, project_name, server_language, clients:
                                 is_map_field = True
                                 for entry in field.message_type.fields_by_name:
                                     if 'key' == entry:
-                                        field_key_type = SylkField_pb2.SylkFieldType.Name(field.message_type.fields_by_name[entry].type)
+                                        field_key_type = SylkField_pb2.SylkFieldTypes.Name(field.message_type.fields_by_name[entry].type)
                                     elif 'value' == entry:
-                                        field_value_type = SylkField_pb2.SylkFieldType.Name(field.message_type.fields_by_name[entry].type)
+                                        field_value_type = SylkField_pb2.SylkFieldTypes.Name(field.message_type.fields_by_name[entry].type)
                                     else:
                                         # Not a map message
                                         field_key_type = None
@@ -212,7 +212,7 @@ def parse_protos_to_resource(protos_dir, project_name, server_language, clients:
                             field_options = field.GetOptions()
                             
                             for f_ext in field_options.Extensions._extended_message.ListFields():
-                                field_opt_type = SylkField_pb2.SylkFieldType.Name(f_ext[0].type)
+                                field_opt_type = SylkField_pb2.SylkFieldTypes.Name(f_ext[0].type)
                                 field_opt_label = SylkField_pb2.SylkFieldLabel.Name(f_ext[0].label)
                                 field_extensions = parse_proto_extension(field_opt_type,field_opt_label,f_ext[0],f_ext[1],field_extensions)
                               
@@ -222,13 +222,13 @@ def parse_protos_to_resource(protos_dir, project_name, server_language, clients:
                         field_enum_type = field.enum_type.full_name if hasattr(field.enum_type,'full_name') else None
                         if field_message_type == None:
                             if hasattr(field.message_type,'fields_by_name'):
-                                if SylkField_pb2.SylkFieldType.Name(field.message_type.fields_by_name.get('value').type) == 'TYPE_MESSAGE':
+                                if SylkField_pb2.SylkFieldTypes.Name(field.message_type.fields_by_name.get('value').type) == 'TYPE_MESSAGE':
                                     field_message_type = field.message_type.fields_by_name.get('value').message_type.full_name
-                                elif SylkField_pb2.SylkFieldType.Name(field.message_type.fields_by_name.get('value').type) == 'TYPE_ENUM':
+                                elif SylkField_pb2.SylkFieldTypes.Name(field.message_type.fields_by_name.get('value').type) == 'TYPE_ENUM':
                                     field_enum_type = field.message_type.fields_by_name.get('value').enum_type.full_name
                                 
                         field = helpers.SylkField(field.name,
-                                                type=SylkField_pb2.SylkFieldType.Name(field.type if is_map_field == False else SylkField_pb2.SylkFieldType.TYPE_MAP),
+                                                type=SylkField_pb2.SylkFieldTypes.Name(field.type if is_map_field == False else SylkField_pb2.SylkFieldTypes.TYPE_MAP),
                                                 label=SylkField_pb2.SylkFieldLabel.Name(field.label if field_key_type is None else 1),
                                                 message_type=field_message_type,
                                                 enum_type=field_enum_type,

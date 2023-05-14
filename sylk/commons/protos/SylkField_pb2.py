@@ -15,26 +15,18 @@ from google.protobuf import symbol_database as _symbol_database
 _sym_db = _symbol_database.Default()
 
 
+from google.protobuf import timestamp_pb2 as google_dot_protobuf_dot_timestamp__pb2
 from google.protobuf import struct_pb2 as google_dot_protobuf_dot_struct__pb2
+from google.protobuf import descriptor_pb2 as google_dot_protobuf_dot_descriptor__pb2
 
 
-DESCRIPTOR = _descriptor_pool.Default().AddSerializedFile(b'\n\x0fSylkField.proto\x12\x11sylk.SylkField.v1\x1a\x1cgoogle/protobuf/struct.proto\"\xc6\x01\n\x0eSylkOneOfField\x12\x0b\n\x03uri\x18\x01 \x01(\t\x12\x0c\n\x04name\x18\x02 \x01(\t\x12\x11\n\tfull_name\x18\x03 \x01(\t\x12\x13\n\x0b\x64\x65scription\x18\x04 \x01(\t\x12:\n\nfield_type\x18\x05 \x01(\x0e\x32&.sylk.SylkField.v1.SylkOneOfFieldTypes\x12\x35\n\x05label\x18\x06 \x01(\x0e\x32&.sylk.SylkField.v1.SylkOneOfFieldLabel\"\xb3\x04\n\x05\x46ield\x12\x0b\n\x03uri\x18\x01 \x01(\t\x12\x0c\n\x04name\x18\x02 \x01(\t\x12\x11\n\tfull_name\x18\x03 \x01(\t\x12\x13\n\x0b\x64\x65scription\x18\x04 \x01(\t\x12\x34\n\nfield_type\x18\x05 \x01(\x0e\x32 .sylk.SylkField.v1.SylkFieldType\x12\x30\n\x05label\x18\x06 \x01(\x0e\x32!.sylk.SylkField.v1.SylkFieldLabel\x12\r\n\x05index\x18\x07 \x01(\x05\x12\x11\n\tenum_type\x18\x08 \x01(\t\x12\x14\n\x0cmessage_type\x18\t \x01(\t\x12\x32\n\x08key_type\x18\n \x01(\x0e\x32 .sylk.SylkField.v1.SylkFieldType\x12\x34\n\nvalue_type\x18\x0b \x01(\x0e\x32 .sylk.SylkField.v1.SylkFieldType\x12<\n\nextensions\x18\x0c \x03(\x0b\x32(.sylk.SylkField.v1.Field.ExtensionsEntry\x12\x37\n\x0coneof_fields\x18\r \x03(\x0b\x32!.sylk.SylkField.v1.SylkOneOfField\x12\x0c\n\x04type\x18\x0e \x01(\t\x12\x0c\n\x04kind\x18\x0f \x01(\t\x1aJ\n\x0f\x45xtensionsEntry\x12\x0b\n\x03key\x18\x01 \x01(\t\x12&\n\x05value\x18\x02 \x01(\x0b\x32\x17.google.protobuf.Struct:\x02\x38\x01*h\n\x0eSylkFieldLabel\x12\x1a\n\x16UNKNOWN_SYLKFIELDLABEL\x10\x00\x12\x12\n\x0eLABEL_OPTIONAL\x10\x01\x12\x12\n\x0eLABEL_REQUIRED\x10\x02\x12\x12\n\x0eLABEL_REPEATED\x10\x03*\xf8\x02\n\rSylkFieldType\x12\x19\n\x15UNKNOWN_SylkFieldTYPE\x10\x00\x12\x0f\n\x0bTYPE_DOUBLE\x10\x01\x12\x0e\n\nTYPE_FLOAT\x10\x02\x12\x0e\n\nTYPE_INT64\x10\x03\x12\x0f\n\x0bTYPE_UINT64\x10\x04\x12\x0e\n\nTYPE_INT32\x10\x05\x12\x10\n\x0cTYPE_FIXED64\x10\x06\x12\x10\n\x0cTYPE_FIXED32\x10\x07\x12\r\n\tTYPE_BOOL\x10\x08\x12\x0f\n\x0bTYPE_STRING\x10\t\x12\x0e\n\nTYPE_GROUP\x10\n\x12\x10\n\x0cTYPE_MESSAGE\x10\x0b\x12\x0e\n\nTYPE_BYTES\x10\x0c\x12\x0f\n\x0bTYPE_UINT32\x10\r\x12\r\n\tTYPE_ENUM\x10\x0e\x12\x11\n\rTYPE_SFIXED32\x10\x0f\x12\x11\n\rTYPE_SFIXED64\x10\x10\x12\x0f\n\x0bTYPE_SINT32\x10\x11\x12\x0f\n\x0bTYPE_SINT64\x10\x12\x12\x0c\n\x08TYPE_MAP\x10\x13\x12\x0e\n\nTYPE_ONEOF\x10\x14*\x93\x01\n\x0fSylkMapKeyTypes\x12\x1b\n\x17UNKNOWN_SYLKMAPKEYTYPES\x10\x00\x12\x13\n\x0fKEY_TYPE_DOUBLE\x10\x01\x12\x12\n\x0eKEY_TYPE_INT64\x10\x03\x12\x12\n\x0eKEY_TYPE_INT32\x10\x05\x12\x11\n\rKEY_TYPE_BOOL\x10\x08\x12\x13\n\x0fKEY_TYPE_STRING\x10\t*\xd5\x02\n\x13SylkOneOfFieldTypes\x12\x1e\n\x1aUNKNOWN_SYLKONEOFFIELDTYPE\x10\x00\x12\x15\n\x11ONEOF_TYPE_DOUBLE\x10\x01\x12\x14\n\x10ONEOF_TYPE_FLOAT\x10\x02\x12\x12\n\x0eONE_TYPE_INT64\x10\x03\x12\x13\n\x0fONE_TYPE_UINT64\x10\x04\x12\x12\n\x0eONE_TYPE_INT32\x10\x05\x12\x16\n\x12ONEOF_TYPE_FIXED64\x10\x06\x12\x16\n\x12ONEOF_TYPE_FIXED32\x10\x07\x12\x13\n\x0fONEOF_TYPE_BOOL\x10\x08\x12\x15\n\x11ONEOF_TYPE_STRING\x10\t\x12\x16\n\x12ONEOF_TYPE_MESSAGE\x10\x0b\x12\x14\n\x10ONEOF_TYPE_BYTES\x10\x0c\x12\x15\n\x11ONEOF_TYPE_UINT32\x10\r\x12\x13\n\x0fONEOF_TYPE_ENUM\x10\x0e*P\n\x13SylkOneOfFieldLabel\x12\x1f\n\x1bUNKNOWN_SYLKONEOFFIELDLABEL\x10\x00\x12\x18\n\x14ONEOF_LABEL_OPTIONAL\x10\x01\x42\x30Z.github.com/sylk/core/services/protos/SylkFieldb\x06proto3')
+DESCRIPTOR = _descriptor_pool.Default().AddSerializedFile(b'\n\x0fSylkField.proto\x12\x11sylk.SylkField.v1\x1a\x1fgoogle/protobuf/timestamp.proto\x1a\x1cgoogle/protobuf/struct.proto\x1a google/protobuf/descriptor.proto\"\xe6\x01\n\x0eSylkOneOfField\x12\x0b\n\x03uri\x18\x01 \x01(\t\x12\x0c\n\x04name\x18\x02 \x01(\t\x12\x11\n\tfull_name\x18\x03 \x01(\t\x12\x13\n\x0b\x64\x65scription\x18\x04 \x01(\t\x12\x35\n\nfield_type\x18\x05 \x01(\x0e\x32!.sylk.SylkField.v1.SylkFieldTypes\x12\x31\n\x05label\x18\x06 \x01(\x0e\x32\".sylk.SylkField.v1.SylkFieldLabels\x12\x14\n\x0cmessage_type\x18\x07 \x01(\t\x12\x11\n\tenum_type\x18\x08 \x01(\t\"\xbf\x04\n\tSylkField\x12\x0b\n\x03uri\x18\x01 \x01(\t\x12\x0c\n\x04name\x18\x02 \x01(\t\x12\x11\n\tfull_name\x18\x03 \x01(\t\x12\x13\n\x0b\x64\x65scription\x18\x04 \x01(\t\x12\x35\n\nfield_type\x18\x05 \x01(\x0e\x32!.sylk.SylkField.v1.SylkFieldTypes\x12\x31\n\x05label\x18\x06 \x01(\x0e\x32\".sylk.SylkField.v1.SylkFieldLabels\x12\x33\n\x08key_type\x18\x07 \x01(\x0e\x32!.sylk.SylkField.v1.SylkFieldTypes\x12\x35\n\nvalue_type\x18\x08 \x01(\x0e\x32!.sylk.SylkField.v1.SylkFieldTypes\x12\x14\n\x0cmessage_type\x18\t \x01(\t\x12\x11\n\tenum_type\x18\n \x01(\t\x12\x0c\n\x04type\x18\x0b \x01(\t\x12\x0c\n\x04kind\x18\x0c \x01(\t\x12\r\n\x05index\x18\r \x01(\x05\x12@\n\nextensions\x18\x0e \x03(\x0b\x32,.sylk.SylkField.v1.SylkField.ExtensionsEntry\x12\x37\n\x0coneof_fields\x18\x0f \x03(\x0b\x32!.sylk.SylkField.v1.SylkOneOfField\x1aJ\n\x0f\x45xtensionsEntry\x12\x0b\n\x03key\x18\x01 \x01(\t\x12&\n\x05value\x18\x02 \x01(\x0b\x32\x17.google.protobuf.Struct:\x02\x38\x01\"\x9f\x01\n\x10SylkFieldDisplay\x12+\n\x05\x66ield\x18\x01 \x01(\x0b\x32\x1c.sylk.SylkField.v1.SylkField\x12.\n\ncreated_at\x18\x02 \x01(\x0b\x32\x1a.google.protobuf.Timestamp\x12.\n\nupdated_at\x18\x03 \x01(\x0b\x32\x1a.google.protobuf.Timestamp*\xfa\x02\n\x0eSylkFieldTypes\x12\x1a\n\x16\x44\x45\x46\x41ULT_SYLKFIELDTYPES\x10\x00\x12\x0f\n\x0bTYPE_DOUBLE\x10\x01\x12\x0e\n\nTYPE_FLOAT\x10\x02\x12\x0e\n\nTYPE_INT64\x10\x03\x12\x0f\n\x0bTYPE_UINT64\x10\x04\x12\x0e\n\nTYPE_INT32\x10\x05\x12\x10\n\x0cTYPE_FIXED64\x10\x06\x12\x10\n\x0cTYPE_FIXED32\x10\x07\x12\r\n\tTYPE_BOOL\x10\x08\x12\x0f\n\x0bTYPE_STRING\x10\t\x12\x0e\n\nTYPE_GROUP\x10\n\x12\x10\n\x0cTYPE_MESSAGE\x10\x0b\x12\x0e\n\nTYPE_BYTES\x10\x0c\x12\x0f\n\x0bTYPE_UINT32\x10\r\x12\r\n\tTYPE_ENUM\x10\x0e\x12\x11\n\rTYPE_SFIXED32\x10\x0f\x12\x11\n\rTYPE_SFIXED64\x10\x10\x12\x0f\n\x0bTYPE_SINT32\x10\x11\x12\x0f\n\x0bTYPE_SINT64\x10\x12\x12\x0c\n\x08TYPE_MAP\x10\x13\x12\x0e\n\nTYPE_ONEOF\x10\x14*j\n\x0fSylkFieldLabels\x12\x1b\n\x17\x44\x45\x46\x41ULT_SYLKFIELDLABELS\x10\x00\x12\x12\n\x0eLABEL_OPTIONAL\x10\x01\x12\x12\n\x0eLABEL_REQUIRED\x10\x02\x12\x12\n\x0eLABEL_REPEATED\x10\x03\x42\x1cZ\x1a/services/protos/SylkFieldb\x06proto3')
 
-_SYLKFIELDLABEL = DESCRIPTOR.enum_types_by_name['SylkFieldLabel']
-SylkFieldLabel = enum_type_wrapper.EnumTypeWrapper(_SYLKFIELDLABEL)
-_SYLKFIELDTYPE = DESCRIPTOR.enum_types_by_name['SylkFieldType']
-SylkFieldType = enum_type_wrapper.EnumTypeWrapper(_SYLKFIELDTYPE)
-_SYLKMAPKEYTYPES = DESCRIPTOR.enum_types_by_name['SylkMapKeyTypes']
-SylkMapKeyTypes = enum_type_wrapper.EnumTypeWrapper(_SYLKMAPKEYTYPES)
-_SYLKONEOFFIELDTYPES = DESCRIPTOR.enum_types_by_name['SylkOneOfFieldTypes']
-SylkOneOfFieldTypes = enum_type_wrapper.EnumTypeWrapper(_SYLKONEOFFIELDTYPES)
-_SYLKONEOFFIELDLABEL = DESCRIPTOR.enum_types_by_name['SylkOneOfFieldLabel']
-SylkOneOfFieldLabel = enum_type_wrapper.EnumTypeWrapper(_SYLKONEOFFIELDLABEL)
-UNKNOWN_SYLKFIELDLABEL = 0
-LABEL_OPTIONAL = 1
-LABEL_REQUIRED = 2
-LABEL_REPEATED = 3
-UNKNOWN_SylkFieldTYPE = 0
+_SYLKFIELDTYPES = DESCRIPTOR.enum_types_by_name['SylkFieldTypes']
+SylkFieldTypes = enum_type_wrapper.EnumTypeWrapper(_SYLKFIELDTYPES)
+_SYLKFIELDLABELS = DESCRIPTOR.enum_types_by_name['SylkFieldLabels']
+SylkFieldLabels = enum_type_wrapper.EnumTypeWrapper(_SYLKFIELDLABELS)
+DEFAULT_SYLKFIELDTYPES = 0
 TYPE_DOUBLE = 1
 TYPE_FLOAT = 2
 TYPE_INT64 = 3
@@ -55,48 +47,33 @@ TYPE_SINT32 = 17
 TYPE_SINT64 = 18
 TYPE_MAP = 19
 TYPE_ONEOF = 20
-UNKNOWN_SYLKMAPKEYTYPES = 0
-KEY_TYPE_DOUBLE = 1
-KEY_TYPE_INT64 = 3
-KEY_TYPE_INT32 = 5
-KEY_TYPE_BOOL = 8
-KEY_TYPE_STRING = 9
-UNKNOWN_SYLKONEOFFIELDTYPE = 0
-ONEOF_TYPE_DOUBLE = 1
-ONEOF_TYPE_FLOAT = 2
-ONE_TYPE_INT64 = 3
-ONE_TYPE_UINT64 = 4
-ONE_TYPE_INT32 = 5
-ONEOF_TYPE_FIXED64 = 6
-ONEOF_TYPE_FIXED32 = 7
-ONEOF_TYPE_BOOL = 8
-ONEOF_TYPE_STRING = 9
-ONEOF_TYPE_MESSAGE = 11
-ONEOF_TYPE_BYTES = 12
-ONEOF_TYPE_UINT32 = 13
-ONEOF_TYPE_ENUM = 14
-UNKNOWN_SYLKONEOFFIELDLABEL = 0
-ONEOF_LABEL_OPTIONAL = 1
+DEFAULT_SYLKFIELDLABELS = 0
+LABEL_OPTIONAL = 1
+LABEL_REQUIRED = 2
+LABEL_REPEATED = 3
 
 
 _SYLKONEOFFIELD = DESCRIPTOR.message_types_by_name['SylkOneOfField']
-_FIELD = DESCRIPTOR.message_types_by_name['Field']
-_FIELD_EXTENSIONSENTRY = _FIELD.nested_types_by_name['ExtensionsEntry']
+_SYLKFIELD = DESCRIPTOR.message_types_by_name['SylkField']
+_SYLKFIELD_EXTENSIONSENTRY = _SYLKFIELD.nested_types_by_name['ExtensionsEntry']
+_SYLKFIELDDISPLAY = DESCRIPTOR.message_types_by_name['SylkFieldDisplay']
 
 @overload
 class SylkOneOfField(_message.Message):
 	"""webezyio generated message [sylk.SylkField.v1.SylkOneOfField]
 	A class respresent a SylkOneOfField type
 	
-	"""
+		"""
 	uri = str # type: str
 	name = str # type: str
 	full_name = str # type: str
 	description = str # type: str
 	field_type = enum_type_wrapper.EnumTypeWrapper # type: enum_type_wrapper.EnumTypeWrapper
 	label = enum_type_wrapper.EnumTypeWrapper # type: enum_type_wrapper.EnumTypeWrapper
+	message_type = str # type: str
+	enum_type = str # type: str
 
-	def __init__(self, uri=str, name=str, full_name=str, description=str, field_type=enum_type_wrapper.EnumTypeWrapper, label=enum_type_wrapper.EnumTypeWrapper):
+	def __init__(self, uri=str, name=str, full_name=str, description=str, field_type=enum_type_wrapper.EnumTypeWrapper, label=enum_type_wrapper.EnumTypeWrapper, message_type=str, enum_type=str):
 		"""
 		Attributes:
 		----------
@@ -111,6 +88,10 @@ class SylkOneOfField(_message.Message):
 		field_type : enum_type_wrapper.EnumTypeWrapper
 			
 		label : enum_type_wrapper.EnumTypeWrapper
+			
+		message_type : str
+			
+		enum_type : str
 			
 		"""
 		pass
@@ -123,28 +104,28 @@ _sym_db.RegisterMessage(SylkOneOfField)
 
 
 @overload
-class Field(_message.Message):
-	"""webezyio generated message [sylk.SylkField.v1.Field]
-	A class respresent a Field type
+class SylkField(_message.Message):
+	"""webezyio generated message [sylk.SylkField.v1.SylkField]
+	A class respresent a SylkField type
 	
-	"""
+		"""
 	uri = str # type: str
 	name = str # type: str
 	full_name = str # type: str
 	description = str # type: str
 	field_type = enum_type_wrapper.EnumTypeWrapper # type: enum_type_wrapper.EnumTypeWrapper
 	label = enum_type_wrapper.EnumTypeWrapper # type: enum_type_wrapper.EnumTypeWrapper
-	index = int # type: int
-	enum_type = str # type: str
-	message_type = str # type: str
 	key_type = enum_type_wrapper.EnumTypeWrapper # type: enum_type_wrapper.EnumTypeWrapper
 	value_type = enum_type_wrapper.EnumTypeWrapper # type: enum_type_wrapper.EnumTypeWrapper
-	extensions = Dict[str,google_dot_protobuf_dot_struct__pb2.Struct] # type: Dict[str,google_dot_protobuf_dot_struct__pb2.Struct]
-	oneof_fields = List[SylkOneOfField] # type: List[SylkOneOfField]
+	message_type = str # type: str
+	enum_type = str # type: str
 	type = str # type: str
 	kind = str # type: str
+	index = int # type: int
+	extensions = Dict[str,google_dot_protobuf_dot_struct__pb2.Struct] # type: Dict[str,google_dot_protobuf_dot_struct__pb2.Struct]
+	oneof_fields = List[SylkOneOfField] # type: List[SylkOneOfField]
 
-	def __init__(self, uri=str, name=str, full_name=str, description=str, field_type=enum_type_wrapper.EnumTypeWrapper, label=enum_type_wrapper.EnumTypeWrapper, index=int, enum_type=str, message_type=str, key_type=enum_type_wrapper.EnumTypeWrapper, value_type=enum_type_wrapper.EnumTypeWrapper, extensions=Dict[str,google_dot_protobuf_dot_struct__pb2.Struct], oneof_fields=List[SylkOneOfField], type=str, kind=str):
+	def __init__(self, uri=str, name=str, full_name=str, description=str, field_type=enum_type_wrapper.EnumTypeWrapper, label=enum_type_wrapper.EnumTypeWrapper, key_type=enum_type_wrapper.EnumTypeWrapper, value_type=enum_type_wrapper.EnumTypeWrapper, message_type=str, enum_type=str, type=str, kind=str, index=int, extensions=Dict[str,google_dot_protobuf_dot_struct__pb2.Struct], oneof_fields=List[SylkOneOfField]):
 		"""
 		Attributes:
 		----------
@@ -160,61 +141,87 @@ class Field(_message.Message):
 			
 		label : enum_type_wrapper.EnumTypeWrapper
 			
-		index : int
-			
-		enum_type : str
-			
-		message_type : str
-			
 		key_type : enum_type_wrapper.EnumTypeWrapper
 			
 		value_type : enum_type_wrapper.EnumTypeWrapper
 			
-		extensions : Dict[str,google_dot_protobuf_dot_struct__pb2.Struct]
+		message_type : str
 			
-		oneof_fields : List[SylkOneOfField]
+		enum_type : str
 			
 		type : str
 			
 		kind : str
 			
+		index : int
+			
+		extensions : Dict[str,google_dot_protobuf_dot_struct__pb2.Struct]
+			
+		oneof_fields : List[SylkOneOfField]
+			
 		"""
 		pass
-Field = _reflection.GeneratedProtocolMessageType('Field', (_message.Message,), {
+SylkField = _reflection.GeneratedProtocolMessageType('SylkField', (_message.Message,), {
 
   'ExtensionsEntry' : _reflection.GeneratedProtocolMessageType('ExtensionsEntry', (_message.Message,), {
-    'DESCRIPTOR' : _FIELD_EXTENSIONSENTRY,
+    'DESCRIPTOR' : _SYLKFIELD_EXTENSIONSENTRY,
     '__module__' : 'SylkField_pb2'
-    # @@protoc_insertion_point(class_scope:sylk.SylkField.v1.Field.ExtensionsEntry)
+    # @@protoc_insertion_point(class_scope:sylk.SylkField.v1.SylkField.ExtensionsEntry)
     })
   ,
-  'DESCRIPTOR' : _FIELD,
+  'DESCRIPTOR' : _SYLKFIELD,
   '__module__' : 'SylkField_pb2'
-  # @@protoc_insertion_point(class_scope:sylk.SylkField.v1.Field)
+  # @@protoc_insertion_point(class_scope:sylk.SylkField.v1.SylkField)
   })
-_sym_db.RegisterMessage(Field)
-_sym_db.RegisterMessage(Field.ExtensionsEntry)
+_sym_db.RegisterMessage(SylkField)
+_sym_db.RegisterMessage(SylkField.ExtensionsEntry)
+
+
+@overload
+class SylkFieldDisplay(_message.Message):
+	"""webezyio generated message [sylk.SylkField.v1.SylkFieldDisplay]
+	A class respresent a SylkFieldDisplay type
+	
+		"""
+	field = SylkField # type: SylkField
+	created_at = google_dot_protobuf_dot_timestamp__pb2.Timestamp # type: google_dot_protobuf_dot_timestamp__pb2.Timestamp
+	updated_at = google_dot_protobuf_dot_timestamp__pb2.Timestamp # type: google_dot_protobuf_dot_timestamp__pb2.Timestamp
+
+	def __init__(self, field=SylkField, created_at=google_dot_protobuf_dot_timestamp__pb2.Timestamp, updated_at=google_dot_protobuf_dot_timestamp__pb2.Timestamp):
+		"""
+		Attributes:
+		----------
+		field : SylkField
+			
+		created_at : google_dot_protobuf_dot_timestamp__pb2.Timestamp
+			
+		updated_at : google_dot_protobuf_dot_timestamp__pb2.Timestamp
+			
+		"""
+		pass
+SylkFieldDisplay = _reflection.GeneratedProtocolMessageType('SylkFieldDisplay', (_message.Message,), {
+  'DESCRIPTOR' : _SYLKFIELDDISPLAY,
+  '__module__' : 'SylkField_pb2'
+  # @@protoc_insertion_point(class_scope:sylk.SylkField.v1.SylkFieldDisplay)
+  })
+_sym_db.RegisterMessage(SylkFieldDisplay)
 
 if _descriptor._USE_C_DESCRIPTORS == False:
 
   DESCRIPTOR._options = None
-  DESCRIPTOR._serialized_options = b'Z.github.com/sylk/core/services/protos/SylkField'
-  _FIELD_EXTENSIONSENTRY._options = None
-  _FIELD_EXTENSIONSENTRY._serialized_options = b'8\001'
-  _SYLKFIELDLABEL._serialized_start=835
-  _SYLKFIELDLABEL._serialized_end=939
-  _SYLKFIELDTYPE._serialized_start=942
-  _SYLKFIELDTYPE._serialized_end=1318
-  _SYLKMAPKEYTYPES._serialized_start=1321
-  _SYLKMAPKEYTYPES._serialized_end=1468
-  _SYLKONEOFFIELDTYPES._serialized_start=1471
-  _SYLKONEOFFIELDTYPES._serialized_end=1812
-  _SYLKONEOFFIELDLABEL._serialized_start=1814
-  _SYLKONEOFFIELDLABEL._serialized_end=1894
-  _SYLKONEOFFIELD._serialized_start=69
-  _SYLKONEOFFIELD._serialized_end=267
-  _FIELD._serialized_start=270
-  _FIELD._serialized_end=833
-  _FIELD_EXTENSIONSENTRY._serialized_start=759
-  _FIELD_EXTENSIONSENTRY._serialized_end=833
+  DESCRIPTOR._serialized_options = b'Z\032/services/protos/SylkField'
+  _SYLKFIELD_EXTENSIONSENTRY._options = None
+  _SYLKFIELD_EXTENSIONSENTRY._serialized_options = b'8\001'
+  _SYLKFIELDTYPES._serialized_start=1109
+  _SYLKFIELDTYPES._serialized_end=1487
+  _SYLKFIELDLABELS._serialized_start=1489
+  _SYLKFIELDLABELS._serialized_end=1595
+  _SYLKONEOFFIELD._serialized_start=136
+  _SYLKONEOFFIELD._serialized_end=366
+  _SYLKFIELD._serialized_start=369
+  _SYLKFIELD._serialized_end=944
+  _SYLKFIELD_EXTENSIONSENTRY._serialized_start=870
+  _SYLKFIELD_EXTENSIONSENTRY._serialized_end=944
+  _SYLKFIELDDISPLAY._serialized_start=947
+  _SYLKFIELDDISPLAY._serialized_end=1106
 # @@protoc_insertion_point(module_scope)

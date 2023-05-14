@@ -20,7 +20,8 @@
 # WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 
 from sylk.commons.config import parse_project_config
-from sylk.commons.pretty import print_info
+from sylk.commons.pretty import print_info, print_success
+from sylk.cli.commands import cloud
 
 def display_configs(path:str,dictionary=False):
     """Displaying all sylk.build configurations - Global | Project | SylkJson
@@ -32,3 +33,14 @@ def display_configs(path:str,dictionary=False):
         dictionary: True / False for printing the results as dict value. If specified False it will print the values as `proto`
     """
     print_info(parse_project_config(path,proto=True if dictionary == False else False),True,'Sylk Configs')
+
+def refresh_global_token():
+    """Setting sylk personal access token at global level
+    
+    Parameters:
+    -----------
+    
+        token: The sylk.build generated personal access token
+    """
+    cloud.SylkCloud(token=None)
+    print_success('Personal access token has been refreshed')

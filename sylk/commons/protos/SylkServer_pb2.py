@@ -17,11 +17,11 @@ _sym_db = _symbol_database.Default()
 
 
 
-DESCRIPTOR = _descriptor_pool.Default().AddSerializedFile(b'\n\x10SylkServer.proto\x12\x12sylk.SylkServer.v1\"C\n\nSylkServer\x12\x35\n\x08language\x18\x01 \x01(\x0e\x32#.sylk.SylkServer.v1.ServerLanguages*^\n\x0fServerLanguages\x12\x1b\n\x17UNKNOWN_SERVERLANGUAGES\x10\x00\x12\n\n\x06python\x10\x01\x12\n\n\x06nodejs\x10\x02\x12\x0e\n\ntypescript\x10\x03\x12\x06\n\x02go\x10\x04\x42\x31Z/github.com/sylk/core/services/protos/SylkServerb\x06proto3')
+DESCRIPTOR = _descriptor_pool.Default().AddSerializedFile(b'\n\x10SylkServer.proto\x12\x12sylk.SylkServer.v1\"G\n\nSylkServer\x12\x39\n\x08language\x18\x01 \x01(\x0e\x32\'.sylk.SylkServer.v1.SylkServerLanguages*f\n\x13SylkServerLanguages\x12\x1f\n\x1b\x44\x45\x46\x41ULT_SYLKSERVERLANGUAGES\x10\x00\x12\n\n\x06python\x10\x01\x12\n\n\x06nodejs\x10\x02\x12\x0e\n\ntypescript\x10\x03\x12\x06\n\x02go\x10\x04\x42\x1dZ\x1b/services/protos/SylkServerb\x06proto3')
 
-_SERVERLANGUAGES = DESCRIPTOR.enum_types_by_name['ServerLanguages']
-ServerLanguages = enum_type_wrapper.EnumTypeWrapper(_SERVERLANGUAGES)
-UNKNOWN_SERVERLANGUAGES = 0
+_SYLKSERVERLANGUAGES = DESCRIPTOR.enum_types_by_name['SylkServerLanguages']
+SylkServerLanguages = enum_type_wrapper.EnumTypeWrapper(_SYLKSERVERLANGUAGES)
+DEFAULT_SYLKSERVERLANGUAGES = 0
 python = 1
 nodejs = 2
 typescript = 3
@@ -35,7 +35,7 @@ class SylkServer(_message.Message):
 	"""webezyio generated message [sylk.SylkServer.v1.SylkServer]
 	A class respresent a SylkServer type
 	
-	"""
+		"""
 	language = enum_type_wrapper.EnumTypeWrapper # type: enum_type_wrapper.EnumTypeWrapper
 
 	def __init__(self, language=enum_type_wrapper.EnumTypeWrapper):
@@ -56,9 +56,9 @@ _sym_db.RegisterMessage(SylkServer)
 if _descriptor._USE_C_DESCRIPTORS == False:
 
   DESCRIPTOR._options = None
-  DESCRIPTOR._serialized_options = b'Z/github.com/sylk/core/services/protos/SylkServer'
-  _SERVERLANGUAGES._serialized_start=109
-  _SERVERLANGUAGES._serialized_end=203
+  DESCRIPTOR._serialized_options = b'Z\033/services/protos/SylkServer'
+  _SYLKSERVERLANGUAGES._serialized_start=113
+  _SYLKSERVERLANGUAGES._serialized_end=215
   _SYLKSERVER._serialized_start=40
-  _SYLKSERVER._serialized_end=107
+  _SYLKSERVER._serialized_end=111
 # @@protoc_insertion_point(module_scope)

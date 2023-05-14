@@ -26,7 +26,7 @@ dev   = ["bumpver"]
 sylk = "sylk.cli.__main__:main"
 
 [project.urls]
-repository    = "https://github.com/sylk/sylk"
+repository    = "https://github.com/sylk-build/sylk"
 homepage = "https://www.sylk.build/"
 documentation = "https://docs.sylk.build"
 

@@ -21,8 +21,12 @@
 
 import subprocess
 from sylk.commons.helpers import SylkJson
+from sylk.commons.pretty import print_warning
 
 
-def run_server(webezy_json:SylkJson,debug:bool):
-    commands = ['bash',webezy_json.path+'/bin/run-server.sh'] if debug == False else ['bash',webezy_json.path+'/bin/run-server.sh','debug']
-    subprocess.run(commands)
+def run_server(sylk_json:SylkJson,debug:bool):
+    commands = ['bash',sylk_json.path+'/bin/run-server.sh'] if debug == False else ['bash',sylk_json.path+'/bin/run-server.sh','debug']
+    try:
+        subprocess.run(commands)
+    except KeyboardInterrupt:
+        print_warning("Sylk Server Stopped By User.")

@@ -20,12 +20,43 @@
 # WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 
 import logging
+from typing import List
 from prettytable import PrettyTable
 from sylk.commons.pretty import print_info,print_warning,print_error,print_note,print_success
 from sylk.commons.helpers import Graph, SylkJson
+from sylk.commons.protos.SylkApi_pb2 import GetProjectResponse
+from sylk.commons.protos.SylkClient_pb2 import SylkClientLanguages
+from sylk.commons.protos.SylkProject_pb2 import SylkProject, SylkProjectDisplay
+from sylk.commons.protos.SylkServer_pb2 import SylkServerLanguages
 # from sylk.commons.protos import SylkCommons_pb2
 
+def display_resource(resource_name,sylk_json:SylkJson,count,level=None,nested=False):
+    tabs = '\t'
+    pipe = f'{(tabs*level)}|' if level is not None else ''
+    empty = ''
+    level_temp =  f'{pipe if nested == True else empty}{tabs*(level - 1 if nested == True else level)}|-- ' if level is not None else tabs*count
+    is_level =level_temp if level is not None else tabs*count
+    spacer = is_level
+    if len(resource_name.split('.')) == 1:
+        print_success('|| Service: {}'.format(resource_name))
+        if 'google.protobuf.' not in resource_name:
+            for d in sylk_json.services[resource_name].get('dependencies'):
+                count += 1
+                display_resource(d,sylk_json,count,level=count)
+        else:
+            display_resource(d,sylk_json,count,level=count)
+    else:
+        count += 1
+        print_success(spacer+'Package: {}'.format(resource_name))
+        if 'google.protobuf.' not in resource_name:
+            pkg_name = resource_name.split('.')[1]
+            pkg_ver = resource_name.split('.')[2]
+            count_pkgs_dep = 0
+            for d in sylk_json.packages[f'protos/{pkg_ver}/{pkg_name}.proto'].get('dependencies'):
+                count_pkgs_dep +=1
+                display_resource(d,sylk_json,count,level=count,nested=nested if nested ==True else len(sylk_json.packages[f'protos/{pkg_ver}/{pkg_name}.proto'].get('dependencies'))>count_pkgs_dep )
 
+        
 def list_dependencies(resource,sylk_json:SylkJson):
     resources = []
 
@@ -49,15 +80,28 @@ def list_dependencies(resource,sylk_json:SylkJson):
     print_info('Listing Dependencies {}'.format(resource if resource is not None else 'All'),True)
     
     for dep in resourcesSorted:
-
         if len(dep.split('.')) == 1:
             if resource is None or resource == 'service':
                 print()
+                # display_resource(dep,sylk_json,1)
                 print_success('|| Service: {}'.format(dep))
 
                 if sylk_json.services[dep].get('dependencies'):
                     for d in sylk_json.services[dep].get('dependencies'):
-                        print('    ||\t     |\n    ||\t      -- {}'.format(d))
+                        print('    ||\t     |\n    ||\t     Package -- {}'.format(d))
+                        if 'google.protobuf.' not in d:
+                            deep_pkg = d.split('.')[1]
+                            deep_pkg_version = d.split('.')[2]
+                            pkg_proto_path = f'protos/{deep_pkg_version}/{deep_pkg}.proto'
+                            for deep_dep in sylk_json.packages[pkg_proto_path].get('dependencies'):
+                                if 'google.protobuf.' not in deep_dep:
+                                    print('    ||\t\t     |\n    ||\t             Package -- {}'.format(deep_dep))
+                                else: 
+                                    print('    ||\t\t     |\n    ||\t             Package -- {}'.format(deep_dep))
+
+                            # for deep_dep in sylk_json.packages[f'protos/{deep_pkg_version}/{deep_pkg}.proto'].get('dependencies'):
+                        else:
+                            print('    ||\t     |\n    ||\t      Package -- {}'.format(d))
         elif resource is None or resource == 'package':
             print()
             print_note('| Package: {}'.format(dep))
@@ -88,7 +132,7 @@ def list_by_name(full_name,sylk_json:SylkJson):
     elif args_split > 1 and args_split <=2:
         try:
             header = ['Service','RPC\'s','Dependencies']
-            svc = sylk_json.get_service(full_name.split('.')[1],wz_json=sylk_json._sylk_json)
+            svc = sylk_json.get_service(full_name.split('.')[1],sylk_json=sylk_json._sylk_json)
             tab = PrettyTable(header)
             add_service_desc(tab,svc)
             # tab.add_row([svc['name'],len(svc.get('methods') if svc.get('methods') is not None else []),svc.get('dependencies')])
@@ -152,6 +196,14 @@ def list_by_name(full_name,sylk_json:SylkJson):
             print_info(field,True)
         except Exception:
             print_warning(f'Field {full_name} wasnt found on message')
+
+def list_projects(org,project:List[GetProjectResponse]):
+    header = ['ID','Name','Server','Clients','# Services','# Packages','# Methods','# Messages']
+    tab = PrettyTable(header)
+    for p in project:
+        add_project_desc(tab,p.result,org)
+    print_info(tab,True,'Listing projects')
+
 
 def list_by_resource(type,sylk_json:SylkJson):
     """Will print in pretty table the resource description and child descriptions from a resource type
@@ -324,6 +376,10 @@ def list_all(sylk_json:SylkJson):
         print_warning("No packages on project")
     print_info(tab,True,'Listing packages enums')
 
+
+def add_project_desc(tab,prj,org):
+    
+    tab.add_row([f'{org}.{prj.project.package_name}',prj.project.name, SylkServerLanguages.Name(prj.project.server.language),[SylkClientLanguages.Name(c.language) for c in prj.project.clients],prj.numServices,prj.numPackages,prj.numMethods,prj.numMessages])
 
 def add_service_desc(tab,svc_description,extensions=None):
     tab.add_row([svc_description.get('name'),len(svc_description.get('methods') if svc_description.get('methods') is not None else []),svc_description.get('dependencies'),extensions])

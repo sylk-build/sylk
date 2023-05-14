@@ -109,9 +109,9 @@ class Sylk(IUndoRedo):
                     else:
                         path = join_path(self._sylk_json.get('project').get(
                             'uri'), '.sylk', 'cache', f'{loaded_save}')
-                        wzJson = SylkJsonToMessage(rFile(path, json=True))
-                        logging.error(wzJson)
-                        self._sylk_json = MessageToDict(wzJson) 
+                        sylkJson = SylkJsonToMessage(rFile(path, json=True))
+                        # logging.error(sylkJson)
+                        self._sylk_json = MessageToDict(sylkJson) 
 
     def registerCommand(self, command_name, command):
         """All commands are registered in the Invoker Class"""
@@ -258,10 +258,10 @@ class Sylk(IUndoRedo):
         return self._sylk_json
 
 
-    def validate_sylk_json(self,wzjson):
-        if  wzjson.packages is not None:
-            for p in wzjson.packages:
-                pkg = wzjson.packages[p]
+    def validate_sylk_json(self,sylkJson):
+        if  sylkJson.packages is not None:
+            for p in sylkJson.packages:
+                pkg = sylkJson.packages[p]
                 reorder = []
                 index = 0
                 for m in pkg.messages:
@@ -294,7 +294,7 @@ class Sylk(IUndoRedo):
                 pkg_temp['messages'] = mylist
 
                 pretty.print_info(mylist,True,"Last step")
-                wzjson_temp = MessageToDict(wzjson)
+                sylkJson_temp = MessageToDict(sylkJson)
                 index = 0
                 for i in pkg_temp['messages']:
                     pretty.print_info(i,True)
@@ -302,7 +302,7 @@ class Sylk(IUndoRedo):
                     pkg_temp[index] = MessageToDict(i)
                     index += 1
 
-                wzjson_temp.get('packages')[p] = pkg_temp
-                pretty.print_info(wzjson_temp,True)
-                return helpers.SylkJsonToMessage(wzjson_temp)
-                # pretty.print_info(wzjson.packages[p],True,"Package After Change step")
+                sylkJson_temp.get('packages')[p] = pkg_temp
+                pretty.print_info(sylkJson_temp,True)
+                return helpers.SylkJsonToMessage(sylkJson_temp)
+                # pretty.print_info(sylkJson.packages[p],True,"Package After Change step")

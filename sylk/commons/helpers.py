@@ -21,6 +21,7 @@
 
 from collections import defaultdict
 import logging
+from ntpath import join
 import os
 import re
 import subprocess
@@ -32,7 +33,7 @@ from sylk.commons import errors, pretty
 from sylk.commons.resources import generate_package, generate_service
 from sylk.commons.errors import SylkCoderError, SylkValidationError
 from sylk.commons.file_system import check_if_file_exists, join_path
-from sylk.commons.protos import SylkCore_pb2 as SylkCore
+from sylk.commons.protos import Sylk as SylkCore
 from itertools import groupby
 from google.protobuf.struct_pb2 import Value
 from google.protobuf.json_format import ParseDict, MessageToDict
@@ -61,13 +62,13 @@ def check_if_under_project():
     return check_if_file_exists(join_path(os.getcwd(),'sylk.json'))
 
 
-def SylkJsonCacheToMessage(path) -> SylkCore.Sylk:
+def SylkJsonCacheToMessage(path) -> SylkCore.SylkJson:
     data = open(path, "rb").read()  # read file as string
     msg = SylkJson()
     msg.ParseFromString(data)
 
 
-def SylkJsonToMessage(sylk_json,validate:bool=False) -> SylkCore.Sylk:
+def SylkJsonToMessage(sylk_json,validate:bool=False) -> SylkCore.SylkJson:
     if validate:
         pretty.print_info("Validating sylk.json",True)
         # assert(sylk_json.get('project') is not None)
@@ -110,7 +111,7 @@ def SylkJsonToMessage(sylk_json,validate:bool=False) -> SylkCore.Sylk:
         #     sylk_json['packages'][p] = pkg
         #     pretty.print_info(sylk_json['packages'][p],True,"Package After Change step")
     
-    return ParseDict(sylk_json, SylkCore.Sylk())
+    return ParseDict(sylk_json, SylkCore.SylkJson())
 
 
 class SylkProject():
@@ -499,8 +500,8 @@ class SylkJson():
 
     def _parse_json(self):
         self._organization = self._sylk_json.get('organization')
-        self._domain = self._organization.get('domain')
-        self._config = self._sylk_json.get('config')
+        self._domain = self._organization.get('domain') if self._organization is not None else 'public'
+        self._config = self._sylk_json.get('configs')
         self._project = self._sylk_json.get('project')
         self._services = self._sylk_json.get('services')
         self._packages = self._sylk_json.get('packages')
@@ -957,8 +958,9 @@ class SylkClientPy():
         if self._pre_data is not None:
             client_options = self._pre_data.get('client_options')
             client_options = '\n\t'.join(list(map(lambda opt: '("{}", {}),'.format(opt[0],opt[1]),client_options)))
-        
-        return f'\n# For available channel options in python visit https://github.com/grpc/grpc/blob/v1.46.x/include/grpc/impl/codegen/grpc_types.h\n_CHANNEL_OPTIONS = ({client_options})\n\nclass {self._project_package}:\n\n\t{self.init_wrapper()}'
+        sylk_version = __version__.__version__
+        sylk_global_auth_key = None
+        return f'\n# For available channel options in python visit https://github.com/grpc/grpc/blob/v1.46.x/include/grpc/impl/codegen/grpc_types.h\n_CHANNEL_OPTIONS = ({client_options})\n\n# Global metadata\n_METADATA = ((\'sylk-version\',\'{sylk_version}\'),)\n\n# Global auth key that will be verified by sylk client\n_GLOBAL_AUTH_KEY = {sylk_global_auth_key}\n\n# Generated thanks to [sylk.build](https://www.sylk.build)\nclass {self._project_package}:\n\n\t{self.init_wrapper()}'
 
     def init_stubs(self):
         stubs = []
@@ -974,14 +976,20 @@ class SylkClientPy():
 
         else:
             host = 'localhost'
-            port = 50051
-        init_func = f'def __init__(self, host="{host}", port={port}, timeout=10):\n\t\tchannel = grpc.insecure_channel(\'{_OPEN_BRCK}0{_CLOSING_BRCK}:{_OPEN_BRCK}1{_CLOSING_BRCK}\'.format(host, port),_CHANNEL_OPTIONS)\n\t\ttry:\n\t\t\tgrpc.channel_ready_future(channel).result(timeout=timeout)\n\t\texcept grpc.FutureTimeoutError:\n\t\t\tsys.exit(\'Error connecting to server\')\n\t\t{self.init_stubs()}'
+            port = 44880
+        init_func = f'def __init__(self, host="{host}", port={port}, timeout=10, log_level=\'ERROR\'):\n\t\tlogging.root.setLevel(log_level)\n\t\tself._sylk_global_auth_key = _GLOBAL_AUTH_KEY\n\t\tchannel = grpc.insecure_channel(\'{_OPEN_BRCK}0{_CLOSING_BRCK}:{_OPEN_BRCK}1{_CLOSING_BRCK}\'.format(host, port),_CHANNEL_OPTIONS)\n\t\ttry:\n\t\t\tgrpc.channel_ready_future(channel).result(timeout=timeout)\n\t\texcept grpc.FutureTimeoutError:\n\t\t\tlogging.error(\'Timed out: Server seems to be offline. Verify your connection configs.\')\n\t\t\tsys.exit(1)\n\t\t{self.init_stubs()}'
         return init_func
 
     def write_imports(self):
         imports = ['from typing import Tuple, Iterator, Any', 'import grpc',
-                   'import sys', 'from functools import partial']
+                   'import sys', 'from functools import partial',
+                   'from sylk.commons.interceptors import sylk_client_pre_rpc','import logging']
         for svc in self._services:
+            for dep in self._services[svc].get('dependencies'):
+                if 'google.protobuf.' in dep:
+                    wellknown_message = dep.split('.')[-1]
+                    imports.append(f'from google.protobuf import {wellknown_message.lower()}_pb2')
+
             imports.append(f'from . import {svc}_pb2_grpc as {svc}Service')
         for pkg in self._packages:
             pkg = pkg.split('/')[-1].split('.')[0]
@@ -1005,10 +1013,16 @@ class SylkClientPy():
                     description = rpc.get('description') if rpc.get('description') is not None else ''
                     rpc_in_type_pkg = rpc['inputType'].split('.')[1]
                     rpc_in_type = rpc['inputType'].split('.')[-1]
-                    rpc_in_type = f'{rpc_in_type_pkg}.{rpc_in_type}'
+                    if 'protobuf' in rpc_in_type_pkg:
+                        rpc_in_type = f'{rpc_in_type.lower()}_pb2.{rpc_in_type}'
+                    else:
+                        rpc_in_type = f'{rpc_in_type_pkg}.{rpc_in_type}'
                     rpc_out_type_pkg = rpc['outputType'].split('.')[1]
                     rpc_out_type = rpc['outputType'].split('.')[-1]
-                    rpc_out_type = f'{rpc_out_type_pkg}.{rpc_out_type}'
+                    if 'protobuf' in rpc_out_type_pkg:
+                        rpc_in_type = f'{rpc_out_type.lower()}_pb2.{rpc_out_type}'
+                    else:
+                        rpc_out_type = f'{rpc_out_type_pkg}.{rpc_out_type}'
                     in_open_type = 'Iterator[' if rpc.get(
                         'clientStreaming') is not None and rpc.get('clientStreaming') == True else ''
                     in_close_type = ']' if rpc.get('clientStreaming') is not None and rpc.get(
@@ -1018,9 +1032,9 @@ class SylkClientPy():
                     out_close_type = ']' if rpc.get('serverStreaming') is not None and rpc.get(
                         'serverStreaming') == True else ''
                     rpcs.append(
-                        f'def {rpc_name}_WithCall(self, request: {in_open_type}{rpc_in_type}{in_close_type}, metadata: Tuple[Tuple[str,str]] = ()) -> Tuple[{out_open_type}{rpc_out_type}{out_close_type}, Any]:\n\t\t"""sylk - {description} Returns: RPC output and a call object"""\n\n\t\treturn self.{svc}Stub.{rpc_name}.with_call(request,metadata=metadata)')
+                        f'@sylk_client_pre_rpc()\n\tdef {rpc_name}_WithCall(self, request: {in_open_type}{rpc_in_type}{in_close_type}, metadata: Tuple[Tuple[str,str]] = _METADATA) -> Tuple[{out_open_type}{rpc_out_type}{out_close_type}, Any]:\n\t\t"""sylk - {description} Returns: RPC output and a call object"""\n\n\t\treturn self.{svc}Stub.{rpc_name}.with_call(request,metadata=metadata)')
                     rpcs.append(
-                        f'def {rpc_name}(self, request: {in_open_type}{rpc_in_type}{in_close_type}, metadata: Tuple[Tuple[str,str]] = ()) -> {out_open_type}{rpc_out_type}{out_close_type}:\n\t\t"""sylk - {description}"""\n\n\t\treturn self.{svc}Stub.{rpc_name}(request,metadata=metadata)')
+                        f'@sylk_client_pre_rpc()\n\tdef {rpc_name}(self, request: {in_open_type}{rpc_in_type}{in_close_type}, metadata: Tuple[Tuple[str,str]] = _METADATA) -> {out_open_type}{rpc_out_type}{out_close_type}:\n\t\t"""sylk - {description}"""\n\n\t\treturn self.{svc}Stub.{rpc_name}(request,metadata=metadata)')
 
             rpcs = '\n\n\t'.join(rpcs)
         return ''.join(rpcs)
@@ -1053,12 +1067,13 @@ class SylkServicePy():
 
     def write_class(self):
         rpcs = []
-        functions = self._context.get_functions(self._name)
-        if functions is not None:
-            for func in functions:
-                func_code = func['code']
-                rpcs.append(
-                    f'\t# @skip @@sylk - DO NOT REMOVE\n{func_code}')
+        if self._context is not None:
+            functions = self._context.get_functions(self._name)
+            if functions is not None:
+                for func in functions:
+                    func_code = func['code']
+                    rpcs.append(
+                        f'\t# @skip @@sylk - DO NOT REMOVE\n{func_code}')
 
         for rpc in self._service.get('methods'):
             rpc_name = rpc.get('name')
@@ -1091,8 +1106,20 @@ class SylkServicePy():
                     else:
                         out_prototype = f'\t\t# response = {rpc_out_pkg}_pb2.{rpc_out_name}({fields})\n\t\t# return response\n'
                     code = f'{out_prototype}\n\t\tsuper().{rpc_name}(request, context)\n\n'
+            else:
+                if self._sylk_json is not None:
+                    fields = []
+                    msg = self._sylk_json.get_message(rpc.get('outputType'))
+                    for f in msg.get('fields'):
+                        fields.append('{0}=None'.format(f.get('name')))
+                fields = ','.join(fields)
+                if rpc_type_out:
+                    out_prototype = f'\t\t# responses = [{rpc_out_pkg}_pb2.{rpc_out_name}({fields})]\n\t\t# for res in responses:\n\t\t#    yield res\n'
+                else:
+                    out_prototype = f'\t\t# response = {rpc_out_pkg}_pb2.{rpc_out_name}({fields})\n\t\t# return response\n'
+                code = f'{out_prototype}\n\t\tsuper().{rpc_name}(request, context)\n\n'
             rpcs.append(
-                f'\t# @rpc @@sylk - DO NOT REMOVE\n\tdef {rpc_name}(self, request: {open_in_type}{rpc_in_pkg}_pb2.{rpc_in_name}{closing_in_type}, context: grpc.ServicerContext) -> {open_out_type}{rpc_out_pkg}_pb2.{rpc_out_name}{close_out_type}:\n{code}')
+                f'\t# @rpc @@sylk - DO NOT REMOVE\n\tdef {rpc_name}(self, request: {open_in_type}{rpc_in_pkg}_pb2.{rpc_in_name}{closing_in_type}, context) -> {open_out_type}{rpc_out_pkg}_pb2.{rpc_out_name}{close_out_type}:\n{code}')
         rpcs = ''.join(rpcs)
         return f'class {self._name}({self._name}_pb2_grpc.{self._name}Servicer):\n\n{rpcs}'
 
@@ -1130,12 +1157,13 @@ class SylkServiceTs():
 
     def write_class(self):
         rpcs = []
-        functions = self._context.get_functions(self._name)
-        if functions is not None:
-            for func in functions:
-                func_code = func['code']
-                rpcs.append(
-                    f'\t// @skip @@sylk - DO NOT REMOVE\n{func_code}')
+        if self._context is not None:
+            functions = self._context.get_functions(self._name)
+            if functions is not None:
+                for func in functions:
+                    func_code = func['code']
+                    rpcs.append(
+                        f'\t// @skip @@sylk - DO NOT REMOVE\n{func_code}')
 
         for rpc in self._service.get('methods'):
             rpc_name = rpc.get('name')
@@ -1225,7 +1253,7 @@ class SylkClientTs():
                 interceptors = self._pre_data.get('interceptors')
 
         interceptors = ', '.join(interceptors)
-        return f'\n{before_init}\nconst interceptorsProviders: Interceptor[] = [{interceptors}]\nconst _DEFAULT_OPTION = {_OPEN_BRCK}\n\t{client_options}\n{_CLOSING_BRCK}\n\nexport class {self._project_package} {_OPEN_BRCK}\n\n\t{self.init_wrapper()}'
+        return f'\n{before_init}\nconst interceptorsProviders: Interceptor[] = [{interceptors}]\nconst _DEFAULT_OPTION = {_OPEN_BRCK}\n\t{client_options}\n{_CLOSING_BRCK}\n\n/**\n * Generated thanks to [sylk.build](https://www.sylk.build)\n */\nexport class {self._project_package} {_OPEN_BRCK}\n\n\t{self.init_wrapper()}'
 
     def init_stubs(self):
         stubs = []
@@ -1260,19 +1288,225 @@ class SylkClientTs():
 
         else:
             host = 'localhost'
-            port = 50051
-        init_func = f'constructor(host: string = "{host}", port: number = {port}, metadata: Metadata = new Metadata()) {_OPEN_BRCK}\n\t\tthis.host = host;\n\t\tthis.port = port;\n\t\tthis.metadata = metadata;\n\t\t{self.init_stubs()}\n\t{_CLOSING_BRCK}\n\n\tprivate readonly metadata: Metadata;\n\tprivate readonly host: string;\n\tprivate readonly port: number;\n\t{self.args_stubs()}'
+            port = 44880
+        sylk_version = __version__.__version__
+        init_func = f'constructor(host: string = "{host}", port: number = {port}, metadata: Metadata = new Metadata()) {_OPEN_BRCK}\n\t\tthis.host = host;\n\t\tthis.port = port;\n\t\tthis.metadata = metadata;\n\t\tthis.metadata.add(\'sylk-version\',\'{sylk_version}\');\n\t\t{self.init_stubs()}\n\t{_CLOSING_BRCK}\n\n\tprivate readonly metadata: Metadata;\n\tprivate readonly host: string;\n\tprivate readonly port: number;\n\t{self.args_stubs()}'
         return init_func
 
     def write_imports(self):
         imports = ['import { credentials, Metadata, ServiceError as _service_error, ClientUnaryCall, ClientDuplexStream, ClientReadableStream, ClientWritableStream, InterceptingCall, Interceptor } from \'@grpc/grpc-js\';',
                    'import { promisify } from \'util\';','import { Observable } from \'rxjs\';']
         for svc in self._services:
-            imports.append(f'import {_OPEN_BRCK} {svc}Client {_CLOSING_BRCK} from \'./protos/{svc}\'')
+            for dep in self._services[svc].get('dependencies'):
+                if 'google.protobuf.' in dep:
+                    wellknown_message = dep.split('.')[-1]
+                    imports.append(f'import {_OPEN_BRCK} {wellknown_message} {_CLOSING_BRCK} from \'./protos/google/protobuf/{wellknown_message.lower()}\';')
+            imports.append(f'import {_OPEN_BRCK} {svc}Client {_CLOSING_BRCK} from \'./protos/{svc}\';')
         for pkg in self._packages:
             pkg = pkg.split('/')[-1].split('.')[0]
-            imports.append(f'import * as {pkg} from \'./protos/{pkg}\'')
+            imports.append(f'import * as {pkg} from \'./protos/{pkg}\';')
         
+        # Pre data parsing
+        if self._pre_data is not None:
+            if self._pre_data.get('imports') is not None:
+                for imp in self._pre_data.get('imports'):
+                    if imp not in imports:
+                        imports.append(imp)
+
+        return '\n'.join(imports)
+
+    def write_services_classes(self):
+        if self._services is not None:
+            rpcs = []
+            for svc in self._services:
+                for rpc in self._services[svc]['methods']:
+                    rpc_name = rpc['name']
+                    rpc_in_type_pkg = rpc['inputType'].split('.')[1]
+                    rpc_in_type = rpc['inputType'].split('.')[-1]
+                    if rpc_in_type_pkg == 'protobuf':
+                        rpc_in_type = rpc_in_type
+                    else:
+                        rpc_in_type = f'{rpc_in_type_pkg}.{rpc_in_type}'
+                    rpc_out_type_pkg = rpc['outputType'].split('.')[1]
+                    rpc_out_type = rpc['outputType'].split('.')[-1]
+                    if rpc_out_type_pkg == 'protobuf':
+                        rpc_out_type = rpc_out_type
+                    else:
+                        rpc_out_type = f'{rpc_out_type_pkg}.{rpc_out_type}'
+                    rpc_output_type = rpc.get('serverStreaming') if rpc.get('serverStreaming') is not None else False
+                    rpc_input_type = rpc.get('clientStreaming') if rpc.get('clientStreaming') is not None else False
+                    
+                    rpc_type = 'Unary' if rpc_output_type == False and rpc_input_type == False else 'Client Stream' if rpc_input_type == True and rpc_output_type == False  else 'Server Stream' if rpc_input_type == False and rpc_output_type == True else 'Bidi Stream' 
+                    
+                    rpc_description = rpc.get('description')
+                    return_type_overload = 'ClientUnaryCall' if rpc_output_type == False and rpc_input_type == False else f'ClientDuplexStream<{rpc_in_type}, {rpc_out_type}>' if rpc_output_type == True and rpc_input_type == True else f'ClientReadableStream<{rpc_out_type}>' if rpc_output_type == True and rpc_input_type == False else f'ClientWritableStream<{rpc_in_type}>' if rpc_output_type == False and rpc_input_type == True else 'any'
+                    return_type = f'Promise<{rpc_out_type}>' if rpc_output_type == False else f'Observable<{rpc_out_type}>'
+                    temp_rpc_name = rpc_name[0].lower() + rpc_name[1:]
+                    rpc_impl = f'if (callback === undefined) {_OPEN_BRCK}\n\t\t\treturn promisify<{rpc_in_type}, Metadata, {rpc_out_type}>(this.{svc}_client.{temp_rpc_name}.bind(this.{svc}_client))({rpc_in_type}.fromJSON(request), metadata);\n\t\t{_CLOSING_BRCK} else {_OPEN_BRCK}\n\t\t return this.{svc}_client.{temp_rpc_name}({rpc_in_type}.fromJSON(request), metadata, callback);\n\t\t{_CLOSING_BRCK}' if rpc_output_type == False and rpc_input_type == False else f'return this.{svc}_client.{temp_rpc_name}(metadata);' if rpc_output_type == True and rpc_input_type == True  else f'if (callback === undefined) {_OPEN_BRCK}\n\t\t\tcallback = (_error:_service_error | null , _response:{rpc_out_type}) => {_OPEN_BRCK}if (_error) throw _error; return _response{_CLOSING_BRCK}\n\t\t{_CLOSING_BRCK}\n\t\treturn this.{svc}_client.{temp_rpc_name}(metadata, callback);' if rpc_output_type == False and rpc_input_type == True else f'return new Observable(subscriber => {_OPEN_BRCK}\n\t\tconst stream = this.{svc}_client.{temp_rpc_name}({rpc_in_type}.fromJSON(request), metadata);\n\t\t\tstream.on(\'data\', (res: {rpc_out_type}) => {_OPEN_BRCK}\n\t\t\t\tsubscriber.next(res)\n\t\t\t{_CLOSING_BRCK}).on(\'end\', () => {_OPEN_BRCK}\n\t\t\t\tsubscriber.complete()\n\t\t\t{_CLOSING_BRCK}).on(\'error\', (err: any) => {_OPEN_BRCK}\n\t\t\t\tsubscriber.error(err)\n\t\t\t\tsubscriber.complete()\n\t\t\t{_CLOSING_BRCK});\n\t\t{_CLOSING_BRCK})'
+                    # Client streaming
+                    if rpc_output_type == False and rpc_input_type == True:
+                        description = f'/**\n\t* @method {svc}.{rpc_name}\n\t* @description {rpc_description}\n\t* @kind {rpc_type}\n\t* @param metadata Metadata\n\t*/'
+                        rpcs.append(
+                            f'\n\t{description}\n\tpublic {rpc_name}(metadata?: Metadata): {return_type};\n\tpublic {rpc_name}(metadata: Metadata, callback: (error: _service_error | null, response: {rpc_out_type}) => void): {return_type_overload};\n\tpublic {rpc_name}(metadata: Metadata = this.metadata, callback?: (error: _service_error | null, response: {rpc_out_type}) => void): {return_type_overload} | {return_type} {_OPEN_BRCK}\n\t\t{rpc_impl}\n\t{_CLOSING_BRCK}')
+                    # Bidi stream
+                    elif rpc_output_type == True and rpc_input_type == True:
+                        description = f'/**\n\t* @method {svc}.{rpc_name}\n\t* @description {rpc_description}\n\t* @kind {rpc_type}\n\t* @param request {rpc_in_type}\n\t* @param metadata Metadata\n\t*/'
+                        rpcs.append(
+                            f'\n\t{description}\n\tpublic {rpc_name}(metadata: Metadata = this.metadata): {return_type_overload} {_OPEN_BRCK}\n\t\t{rpc_impl}\n\t{_CLOSING_BRCK}')
+                    # Unary
+                    else:
+                        description_0 = f'/**\n\t* @method {svc}.{rpc_name}\n\t* @description {rpc_description}\n\t* @kind {rpc_type}\n\t* @param request {rpc_in_type}\n\t* @param metadata Metadata\n\t* @returns {return_type}\n\t*/'
+                        description_1 = f'/**\n\t* @method {svc}.{rpc_name}\n\t* @description {rpc_description}\n\t* @kind {rpc_type}\n\t* @param request {rpc_in_type}\n\t* @param metadata Metadata\n\t* @param callback A callback function to be excuted once the server responds with {rpc_out_type}\n\t* @returns {return_type_overload}\n\t*/'
+                        
+                        rpcs.append(
+                            f'\n\t{description_0}\n\tpublic {rpc_name}(request: {rpc_in_type}, metadata?: Metadata): {return_type};\n\t{description_1}\n\tpublic {rpc_name}(request: {rpc_in_type}, metadata: Metadata, callback: (error: _service_error | null, response: {rpc_out_type}) => void): {return_type_overload};\n\tpublic {rpc_name}(request: {rpc_in_type}, metadata: Metadata = this.metadata, callback?: (error: _service_error | null, response: {rpc_out_type}) => void): {return_type_overload} | {return_type} {_OPEN_BRCK}\n\t\t{rpc_impl}\n\t{_CLOSING_BRCK}')
+
+            rpcs = '\n\n\t'.join(rpcs)
+        return ''.join(rpcs)
+
+class SylkClientJs():
+    """A helper class to write 'Javascript' language clients for sylk.build project services"""
+
+    def __init__(self, project_package, services=None, packages=None, context: SylkContext = None, config = None,pre_data=None):
+        self._services = services
+        self._project_package = project_package
+        self._context = context
+        self._packages = packages
+        self._config = config
+        self._pre_data = pre_data
+        self._proto_paths = []
+        
+    def __str__(self):
+        return f'{self.write_imports()}\n{self.write_services_namespaces()}\n{self.write_client_wrapper()}\n\n\t{self.write_services_classes()}\n{_CLOSING_BRCK}\n{self.write_client_exports()}'
+
+    def write_client_exports(self):
+        pkgs_list = []
+        clients_list = []
+        # for key in self._packages:
+        #     pkg = self._packages[key].get('name')
+        #     pkgs_list.append(pkg)
+        # pkgs_list = ',\n\t'.join(pkgs_list)
+        # for key in self._services:
+        #     clients_list.append(key+'Client')
+        
+        # Pre data parsing
+        if self._pre_data is not None:
+            if self._pre_data.get('exports') is not None:
+                for exp in self._pre_data.get('exports'):
+                    if exp not in clients_list:
+                        clients_list.append(exp)
+
+        clients_list = ',\n\t'.join(clients_list)
+        return f'module.exports = {_OPEN_BRCK}\n\t{self._project_package}\n{_CLOSING_BRCK}' 
+
+    def write_services_namespaces(self):
+        svcs = []
+        for svc in self._services:
+
+            svc_methods = []
+            for method in self._services[svc]['methods']:
+                rpc_name = method['name']
+                rpc_in_type_pkg = method['inputType'].split('.')[1]
+                rpc_in_type = method['inputType'].split('.')[-1]
+                rpc_in_type = f'{rpc_in_type_pkg}.{rpc_in_type}'
+                rpc_out_type_pkg = method['outputType'].split('.')[1]
+                rpc_out_type = method['outputType'].split('.')[-1]
+                rpc_out_type = f'{rpc_out_type_pkg}.{rpc_out_type}'
+                rpc_output_type = method.get('serverStreaming') if method.get('serverStreaming') is not None else False
+                rpc_input_type = method.get('clientStreaming') if method.get('clientStreaming') is not None else False
+                
+                rpc_type = 'Unary' if rpc_output_type == False and rpc_input_type == False else 'Client Stream' if rpc_input_type == True and rpc_output_type == False  else 'Server Stream' if rpc_input_type == False and rpc_output_type == True else 'Bidi Stream' 
+                return_type_overload = 'ClientUnaryCall' if rpc_output_type == False and rpc_input_type == False else f'ClientDuplexStream<{rpc_in_type}, {rpc_out_type}>' if rpc_output_type == True and rpc_input_type == True else f'ClientReadableStream<{rpc_out_type}>' if rpc_output_type == True and rpc_input_type == False else f'ClientWritableStream<{rpc_in_type}>' if rpc_output_type == False and rpc_input_type == True else 'any'
+                temp_rpc_name = rpc_name[0].lower() + rpc_name[1:]
+                rpc_impl = f'if (callback === undefined) {_OPEN_BRCK}\n\t\t\treturn new Promise((resolve,reject) => {_OPEN_BRCK}\n\t\t\tclient.{temp_rpc_name}.bind(client)(request, metadata, (err,res) => {_OPEN_BRCK}\n\t\t\t\tif(err) reject(err);\n\t\t\t\telse {_OPEN_BRCK}\n\t\t\t\t\tresolve(res);\n\t\t\t\t\t{_CLOSING_BRCK}\n\t\t\t\t{_CLOSING_BRCK});\n\t\t\t\t{_CLOSING_BRCK})\n\t\t{_CLOSING_BRCK} else {_OPEN_BRCK}\n\t\t return client.{temp_rpc_name}(request, metadata, callback);\n\t\t{_CLOSING_BRCK}' if rpc_output_type == False and rpc_input_type == False else f'return client.{temp_rpc_name}(metadata);' if rpc_output_type == True and rpc_input_type == True  else f'if (callback === undefined) {_OPEN_BRCK}\n\t\t\tcallback = (_error, _response) => {_OPEN_BRCK}if (_error) throw _error; return _response{_CLOSING_BRCK}\n\t\t{_CLOSING_BRCK}\n\t\treturn client.{temp_rpc_name}(metadata, callback);' if rpc_output_type == False and rpc_input_type == True else f'return new Observable(subscriber => {_OPEN_BRCK}\n\t\tconst stream = client.{temp_rpc_name}({rpc_in_type}.fromJSON(request), metadata);\n\t\t\tstream.on(\'data\', (res) => {_OPEN_BRCK}\n\t\t\t\tsubscriber.next(res)\n\t\t\t{_CLOSING_BRCK}).on(\'end\', () => {_OPEN_BRCK}\n\t\t\t\tsubscriber.complete()\n\t\t\t{_CLOSING_BRCK}).on(\'error\', (err) => {_OPEN_BRCK}\n\t\t\t\tsubscriber.error(err)\n\t\t\t\tsubscriber.complete()\n\t\t\t{_CLOSING_BRCK});\n\t\t{_CLOSING_BRCK})'
+                # Client streaming
+                if rpc_output_type == False and rpc_input_type == True:
+                    svc_methods.append(
+                        f'{rpc_name}: (client, metadata = this.metadata, callback = undefined) => {_OPEN_BRCK}\n\t\t{rpc_impl}\n\t{_CLOSING_BRCK}')
+                # Bidi stream
+                elif rpc_output_type == True and rpc_input_type == True:
+                    svc_methods.append(
+                        f'{rpc_name}: (client, metadata = this.metadata) => {_OPEN_BRCK}\n\t\t{rpc_impl}\n\t{_CLOSING_BRCK}')
+                # Unary
+                else:
+                    svc_methods.append(
+                        f'{rpc_name}: (client, request, metadata = this.metadata, callback = undefined) => {_OPEN_BRCK}\n\t\t{rpc_impl}\n\t{_CLOSING_BRCK}')
+
+            svc_methods = ',\n\t'.join(svc_methods)
+            svcs.append(f'const {svc}Service = {_OPEN_BRCK}\n\t{svc_methods}\n{_CLOSING_BRCK}')
+            return '\n\n'.join(svcs)
+
+    def write_client_wrapper(self):
+        client_options = self._pre_data.get('client_options')
+        client_options = '\n\t'.join(list(map(lambda opt: '"{}": {},'.format(opt[0],opt[1]),client_options)))
+        
+        # Parsing pre data
+        before_init = ''
+        interceptors = []
+
+        if self._pre_data:
+            if self._pre_data.get('before_init') is not None:
+                before_init = self._pre_data.get('before_init')
+            if self._pre_data.get('interceptors') is not None:
+                interceptors = self._pre_data.get('interceptors')
+        # proto_paths = ','.join(self._proto_paths)
+        interceptors = ', '.join(interceptors)
+        if self._config is not None:
+            host = self._config.get('host')
+            port = self._config.get('port')
+
+        else:
+            host = 'localhost'
+            port = 44880
+        return f'\n{before_init}\nconst interceptorsProviders = [{interceptors}]\nconst _DEFAULT_OPTION = {_OPEN_BRCK}\n\t{client_options}\n{_CLOSING_BRCK}\n\nconst protoDefinitions = protoLoader.loadSync(\n\t[...PROTO_PATHS],\n\t{_OPEN_BRCK}\n\t\tincluderDirs: [`${_OPEN_BRCK}__dirname{_CLOSING_BRCK}`],\n\t\tkeepCase:true,\n\t\tlongs: String,\n\t\tenums: String,\n\t\tdefaults: true,\n\t\toneofs: true,\n\t{_CLOSING_BRCK}\n);\nconst protos = grpc.loadPackageDefinition(protoDefinitions);\nconst defaultClientOptions = {_OPEN_BRCK}\n\thost: "{host}",\n\tport: {port},\n\tmetadata: new grpc.Metadata(),\n\tglobalInterceptors: []\n{_CLOSING_BRCK};\n\n/**\n * Generated thanks to [sylk.build](https://www.sylk.build)\n */\nclass {self._project_package} {_OPEN_BRCK}\n\n\t{self.init_wrapper()}'
+
+    def init_stubs(self):
+        stubs = []
+        temp_stubs = {}
+        if self._pre_data is not None:
+            if self._pre_data.get('stubs') is not None:
+                temp_stubs = self._pre_data.get('stubs')
+
+        for svc in self._services:
+            if svc in temp_stubs:
+                stub = temp_stubs[svc]
+                stub_target = stub.get('target') if stub.get('target') is not None else '${_OPEN_BRCK}this.host{_CLOSING_BRCK}:${_OPEN_BRCK}this.port{_CLOSING_BRCK}'
+                stub_creds = stub.get('creds') if stub.get('creds') is not None else 'credentials.createInsecure()'
+                stub_opts =  stub.get('opts') if stub.get('opts') is not None else '_DEFAULT_OPTION'
+                stubs.append(f'this._{svc}Client = new {svc}Client(`{stub_target}`, {stub_creds}, {stub_opts});')
+            else:
+                stubs.append(f'this._{svc}Client = new protos.{svc}(`${_OPEN_BRCK}this.host{_CLOSING_BRCK}:${_OPEN_BRCK}this.port{_CLOSING_BRCK}`, grpc.credentials.createInsecure());')
+
+        return '\n\t\t'.join(stubs)
+
+    def args_stubs(self):
+        stubs = []
+        for svc in self._services:
+            stubs.append(f'_{svc}Client;')
+
+        return '\n\t'.join(stubs)
+
+    def init_wrapper(self):
+        
+        sylk_version = __version__.__version__
+        init_func = f'constructor(options = {_OPEN_BRCK}{_CLOSING_BRCK}) {_OPEN_BRCK}\n\t\tconst {_OPEN_BRCK} host, port, metadata, globalInterceptors {_CLOSING_BRCK} = {_OPEN_BRCK} ...defaultClientOptions, ...options {_CLOSING_BRCK};\n\t\tthis.host = host;\n\t\tthis.port = port;\n\t\tthis.metadata = metadata;\n\t\tthis.metadata.add(\'sylk-version\',\'{sylk_version}\');\n\t\tthis.globalInterceptors = globalInterceptors;\n\t\t{self.init_stubs()}\n\t{_CLOSING_BRCK}\n\n\tmetadata;\n\thost;\n\tport;\n\t{self.args_stubs()}'
+        return init_func
+
+    def write_imports(self):
+        imports = ['let grpc = require(\'@grpc/grpc-js\');',
+                   'let protoLoader = require(\'@grpc/proto-loader\');',
+                   'const { compose } = require(\'lodash/fp\');',
+                   'const { clientMethodWrapper, clientRetries } = require(\'./utils/interceptors\');']
+        proto_paths = []
+        for svc in self._services:
+            proto_paths.append(f'`${_OPEN_BRCK}__dirname{_CLOSING_BRCK}/protos/{svc}/v1/{svc}.proto`')
+        for pkg in self._packages:
+            pkg_name = pkg.split('/')[-1].split('.')[0]
+            pkg_version = pkg.split('/')[1]
+            proto_paths.append(f'`${_OPEN_BRCK}__dirname{_CLOSING_BRCK}/protos/{pkg_name}/{pkg_version}/{pkg_name}.proto`')
+        proto_paths = ',\n\t'.join(proto_paths)
+        imports.append(f'const PROTO_PATHS = [{proto_paths}\n];')
+
         # Pre data parsing
         if self._pre_data is not None:
             if self._pre_data.get('imports') is not None:
@@ -1301,26 +1535,26 @@ class SylkClientTs():
                     
                     rpc_description = rpc.get('description')
                     return_type_overload = 'ClientUnaryCall' if rpc_output_type == False and rpc_input_type == False else f'ClientDuplexStream<{rpc_in_type}, {rpc_out_type}>' if rpc_output_type == True and rpc_input_type == True else f'ClientReadableStream<{rpc_out_type}>' if rpc_output_type == True and rpc_input_type == False else f'ClientWritableStream<{rpc_in_type}>' if rpc_output_type == False and rpc_input_type == True else 'any'
-                    return_type = f'Promise<{rpc_out_type}>' if rpc_output_type == False else f'Observable<{rpc_out_type}>'
+                    return_type = f'Promise' if rpc_output_type == False else f'Observable'
                     temp_rpc_name = rpc_name[0].lower() + rpc_name[1:]
-                    rpc_impl = f'if (callback === undefined) {_OPEN_BRCK}\n\t\t\treturn promisify<{rpc_in_type}, Metadata, {rpc_out_type}>(this.{svc}_client.{temp_rpc_name}.bind(this.{svc}_client))({rpc_in_type}.fromJSON(request), metadata);\n\t\t{_CLOSING_BRCK} else {_OPEN_BRCK}\n\t\t return this.{svc}_client.{temp_rpc_name}({rpc_in_type}.fromJSON(request), metadata, callback);\n\t\t{_CLOSING_BRCK}' if rpc_output_type == False and rpc_input_type == False else f'return this.{svc}_client.{temp_rpc_name}(metadata);' if rpc_output_type == True and rpc_input_type == True  else f'if (callback === undefined) {_OPEN_BRCK}\n\t\t\tcallback = (_error:_service_error | null , _response:{rpc_out_type}) => {_OPEN_BRCK}if (_error) throw _error; return _response{_CLOSING_BRCK}\n\t\t{_CLOSING_BRCK}\n\t\treturn this.{svc}_client.{temp_rpc_name}(metadata, callback);' if rpc_output_type == False and rpc_input_type == True else f'return new Observable(subscriber => {_OPEN_BRCK}\n\t\tconst stream = this.{svc}_client.{temp_rpc_name}({rpc_in_type}.fromJSON(request), metadata);\n\t\t\tstream.on(\'data\', (res: {rpc_out_type}) => {_OPEN_BRCK}\n\t\t\t\tsubscriber.next(res)\n\t\t\t{_CLOSING_BRCK}).on(\'end\', () => {_OPEN_BRCK}\n\t\t\t\tsubscriber.complete()\n\t\t\t{_CLOSING_BRCK}).on(\'error\', (err: any) => {_OPEN_BRCK}\n\t\t\t\tsubscriber.error(err)\n\t\t\t\tsubscriber.complete()\n\t\t\t{_CLOSING_BRCK});\n\t\t{_CLOSING_BRCK})'
+                    rpc_impl = f'return compose(\n\t\t\tclientMethodWrapper, clientRetries, ...this.globalInterceptors\n\t\t)({svc}Service.{rpc_name})(this._{svc}Client,request,metadata,callback)'
                     # Client streaming
                     if rpc_output_type == False and rpc_input_type == True:
                         description = f'/**\n\t* @method {svc}.{rpc_name}\n\t* @description {rpc_description}\n\t* @kind {rpc_type}\n\t* @param metadata Metadata\n\t*/'
                         rpcs.append(
-                            f'\n\t{description}\n\tpublic {rpc_name}(metadata?: Metadata): {return_type};\n\tpublic {rpc_name}(metadata: Metadata, callback: (error: _service_error | null, response: {rpc_out_type}) => void): {return_type_overload};\n\tpublic {rpc_name}(metadata: Metadata = this.metadata, callback?: (error: _service_error | null, response: {rpc_out_type}) => void): {return_type_overload} | {return_type} {_OPEN_BRCK}\n\t\t{rpc_impl}\n\t{_CLOSING_BRCK}')
+                            f'\n\t{description}\n\t{rpc_name}(metadata = this.metadata, callback = undefined) {_OPEN_BRCK}\n\t\t{rpc_impl}\n\t{_CLOSING_BRCK}')
                     # Bidi stream
                     elif rpc_output_type == True and rpc_input_type == True:
                         description = f'/**\n\t* @method {svc}.{rpc_name}\n\t* @description {rpc_description}\n\t* @kind {rpc_type}\n\t* @param request {rpc_in_type}\n\t* @param metadata Metadata\n\t*/'
                         rpcs.append(
-                            f'\n\t{description}\n\tpublic {rpc_name}(metadata: Metadata = this.metadata): {return_type_overload} {_OPEN_BRCK}\n\t\t{rpc_impl}\n\t{_CLOSING_BRCK}')
+                            f'\n\t{description}\n\t{rpc_name}(metadata = this.metadata) {_OPEN_BRCK}\n\t\t{rpc_impl}\n\t{_CLOSING_BRCK}')
                     # Unary
                     else:
-                        description_0 = f'/**\n\t* @method {svc}.{rpc_name}\n\t* @description {rpc_description}\n\t* @kind {rpc_type}\n\t* @param request {rpc_in_type}\n\t* @param metadata Metadata\n\t* @returns {return_type}\n\t*/'
+                        # description_0 = f'/**\n\t* @method {svc}.{rpc_name}\n\t* @description {rpc_description}\n\t* @kind {rpc_type}\n\t* @param request {rpc_in_type}\n\t* @param metadata Metadata\n\t* @returns {return_type}\n\t*/'
                         description_1 = f'/**\n\t* @method {svc}.{rpc_name}\n\t* @description {rpc_description}\n\t* @kind {rpc_type}\n\t* @param request {rpc_in_type}\n\t* @param metadata Metadata\n\t* @param callback A callback function to be excuted once the server responds with {rpc_out_type}\n\t* @returns {return_type_overload}\n\t*/'
                         
                         rpcs.append(
-                            f'\n\t{description_0}\n\tpublic {rpc_name}(request: {rpc_in_type}, metadata?: Metadata): {return_type};\n\t{description_1}\n\tpublic {rpc_name}(request: {rpc_in_type}, metadata: Metadata, callback: (error: _service_error | null, response: {rpc_out_type}) => void): {return_type_overload};\n\tpublic {rpc_name}(request: {rpc_in_type}, metadata: Metadata = this.metadata, callback?: (error: _service_error | null, response: {rpc_out_type}) => void): {return_type_overload} | {return_type} {_OPEN_BRCK}\n\t\t{rpc_impl}\n\t{_CLOSING_BRCK}')
+                            f'\n\t{description_1}\n\t{rpc_name}(request, metadata = this.metadata, callback = undefined) {_OPEN_BRCK}\n\t\t{rpc_impl}\n\t{_CLOSING_BRCK}')
 
             rpcs = '\n\n\t'.join(rpcs)
         return ''.join(rpcs)
@@ -1419,7 +1653,7 @@ class SylkClientGo:
                             '\n\tc := &{0}{1}{2}, conn, {3}{4}'.format(self._project_package,_OPEN_BRCK,', '.join(_list_of_client_opts_none_types),', '.join(_temp_svc_list),_CLOSING_BRCK),
                             '\n\treturn c']
         default_client = '// Default returns the standard client used by the project-level services RPC\'s.\nfunc Defualt() *{} {} return std {}'.format(self._project_package,_OPEN_BRCK,_CLOSING_BRCK)
-        return '// Initalize default constants\n\nvar (\n\tdefaultMsgSize  = 1024 * 1024 * 50 // Max Recv / Send message 50MB as default\n\tdefaultHost = "localhost"\n\tdefaultPort = 50051\n\tdefaultDialOpts = []grpc.DialOption{2}\n\t\tgrpc.WithTransportCredentials(insecure.NewCredentials()),\n\t\tgrpc.WithDefaultCallOptions(\n\t\t\tgrpc.MaxCallRecvMsgSize(defaultMsgSize),\n\t\t\tgrpc.MaxCallSendMsgSize(defaultMsgSize)),\n\t{4}\n\tdefaultCallOpts = []grpc.CallOption{2}{4}\n\tdefaultMetadata = metadata.Pairs("sylk-project-version","{6}",)\n\tdefaultCtx = context.Background()\n\tstd = New(defaultHost, defaultPort, defaultDialOpts, defaultCallOpts, defaultMetadata, defaultCtx)\n)\n\n{5}\n// Create new client stub\nfunc New({0}) *{1} {2}\n{3}\n{4}'.format(', '.join(_list_of_client_opts),self._project_package,_OPEN_BRCK,''.join(_new_client_init),_CLOSING_BRCK,default_client,self._sylk_json.project.get('version'))
+        return '// Initalize default constants\n\nvar (\n\tdefaultMsgSize  = 1024 * 1024 * 50 // Max Recv / Send message 50MB as default\n\tdefaultHost = "localhost"\n\tdefaultPort = 44880\n\tdefaultDialOpts = []grpc.DialOption{2}\n\t\tgrpc.WithTransportCredentials(insecure.NewCredentials()),\n\t\tgrpc.WithDefaultCallOptions(\n\t\t\tgrpc.MaxCallRecvMsgSize(defaultMsgSize),\n\t\t\tgrpc.MaxCallSendMsgSize(defaultMsgSize)),\n\t{4}\n\tdefaultCallOpts = []grpc.CallOption{2}{4}\n\tdefaultMetadata = metadata.Pairs("sylk-project-version","{6}",)\n\tdefaultCtx = context.Background()\n\tstd = New(defaultHost, defaultPort, defaultDialOpts, defaultCallOpts, defaultMetadata, defaultCtx)\n)\n\n{5}\n// Create new client stub\nfunc New({0}) *{1} {2}\n{3}\n{4}'.format(', '.join(_list_of_client_opts),self._project_package,_OPEN_BRCK,''.join(_new_client_init),_CLOSING_BRCK,default_client,self._sylk_json.project.get('version'))
     
     def write_methods(self):
         list_of_rpcs = []
@@ -1490,9 +1724,9 @@ class SylkServiceGo():
             rpc_temp_name = rpc.get('name')[0].capitalize() + rpc.get('name')[1:]
             rpc_output_type = rpc.get('serverStreaming') if rpc.get('serverStreaming') is not None else False
             rpc_input_type = rpc.get('clientStreaming') if rpc.get('clientStreaming') is not None else False
-            rpc_input_name = rpc.get('inputType').split('.')[3]
+            rpc_input_name = rpc.get('inputType').split('.')[-1]
             rpc_input_package_name = rpc.get('inputType').split('.')[1]
-            rpc_output_name = rpc.get('outputType').split('.')[3]
+            rpc_output_name = rpc.get('outputType').split('.')[-1]
             rpc_output_package_name = rpc.get('outputType').split('.')[1]
             temp_go_rpc_input_name = rpc_input_name[0].capitalize() + rpc_input_name[1:]
             temp_go_rpc_output_name = rpc_output_name[0].capitalize() + rpc_output_name[1:]
@@ -1580,6 +1814,64 @@ class SylkServiceGo():
     def __str__(self):
         temp_svc_name = self._name[0].capitalize() + self._name[1:]
         return f'package {temp_svc_name}\n\nimport (\n\t{self.write_imports()}\n)\n\n{self.write_struct()}\n{self.write_methods()}\n\n{self.write_log_func()}'
+
+class SylkServiceJs():
+    """A helper class to write 'Typescript' language services for sylk.build project services"""
+    
+    def __init__(self, project_package, name, imports=[], service=None, package=None, messages=[], enums=[], context: SylkContext = None,sylk_json: SylkJson= None):
+        self._name = name
+        self._imports = imports
+        self._service = service
+        self._project_package = project_package
+        self._context = context
+        self._sylk_json = sylk_json
+
+    def write_imports(self):
+       return ''
+
+    def write_class(self):
+        rpcs = []
+        if self._context is not None:
+            functions = self._context.get_functions(self._name)
+            if functions is not None:
+                for func in functions:
+                    func_code = func['code']
+                    rpcs.append(
+                        f'\t// @skip @@sylk - DO NOT REMOVE\n{func_code}')
+        methods_exports = []
+        methods_functions = []
+        for rpc in self._service.get('methods'):
+            rpc_name = rpc.get('name')
+            args = f'call, callback'
+            
+            # if rpc_type_in and rpc_type_out:
+            #     handleType = 'handleBidiStreamingCall'
+            #     args = f'call, {rpc_out_pkg}.{rpc_out_name}>'
+            # elif rpc_type_in and rpc_type_out == False:
+            #     handleType = 'handleClientStreamingCall'
+            #     args = f'call: ServerReadableStream<{rpc_in_pkg}.{rpc_in_name}, {rpc_out_pkg}.{rpc_out_name}>,\n\t\tcallback: sendUnaryData<{rpc_out_pkg}.{rpc_out_name}>'
+            # elif rpc_type_in == False and rpc_type_out:
+            #     handleType = 'handleServerStreamingCall'
+            #     args = f'call: ServerWritableStream<{rpc_in_pkg}.{rpc_in_name}, {rpc_out_pkg}.{rpc_out_name}>'
+            code = ''
+            if self._context is not None:
+                code = self._context.get_rpc(self._name, rpc_name)
+                if code is not None:
+                    code =code.get('code')
+            temp_name = rpc_name[0].lower() + rpc_name[1:]
+            methods.append(temp_name)
+            rpcs.append(f'\t// @rpc @@sylk - DO NOT REMOVE\nconst {temp_name} = function({args}) {_OPEN_BRCK}\n\t\n\n{_CLOSING_BRCK}\n\n')
+            # rpcs.append(
+                # f'\t// @rpc @@sylk - DO NOT REMOVE\n\t{temp_name}= ({args}) => {_OPEN_BRCK}\n{code}\n\t{_CLOSING_BRCK}\n')
+        rpcs = ''.join(rpcs)
+        methods = ',\n\t'.join(methods_exports)
+        return f'\n{rpcs}\n\nmodule.exports = {_OPEN_BRCK}\n\t{methods}\n{_CLOSING_BRCK};'
+
+    def to_str(self):
+        return self.__str__()
+
+    def __str__(self):
+        return f'{self.write_imports()}\nconst protoDefinitions = protoLoader.loadSync(\n\t[...PROTO_PATHS],\n\t{_OPEN_BRCK}\n\t\tincluderDirs: [`${_OPEN_BRCK}__dirname{_CLOSING_BRCK}`],\n\t\tkeepCase:true,\n\t\tlongs: String,\n\t\tenums: String,\n\t\tdefaults: true,\n\t\toneofs: true,\n\t{_CLOSING_BRCK}\n);\nconst protos = grpc.loadPackageDefinition(protoDefinitions);{self.write_class()}'
 
 
 def parse_code_file(file_content, seperator='@rpc'):

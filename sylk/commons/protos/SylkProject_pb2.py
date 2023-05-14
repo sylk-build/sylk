@@ -3,6 +3,7 @@
 # source: SylkProject.proto
 """Generated protocol buffer code."""
 from google.protobuf import descriptor as _descriptor
+from google.protobuf.internal import enum_type_wrapper
 
 from typing import overload, Iterator, List, Dict
 from google.protobuf import descriptor_pool as _descriptor_pool
@@ -14,36 +15,36 @@ from google.protobuf import symbol_database as _symbol_database
 _sym_db = _symbol_database.Default()
 
 
-from google.protobuf import struct_pb2 as google_dot_protobuf_dot_struct__pb2
 from . import SylkClient_pb2 as SylkClient__pb2
 from . import SylkServer_pb2 as SylkServer__pb2
+from google.protobuf import timestamp_pb2 as google_dot_protobuf_dot_timestamp__pb2
+from . import SylkUser_pb2 as SylkUser__pb2
 
 
-DESCRIPTOR = _descriptor_pool.Default().AddSerializedFile(b'\n\x11SylkProject.proto\x12\x13sylk.SylkProject.v1\x1a\x1cgoogle/protobuf/struct.proto\x1a\x10SylkClient.proto\x1a\x10SylkServer.proto\"\x85\x02\n\x0bSylkProject\x12\x0b\n\x03uri\x18\x01 \x01(\t\x12\x0c\n\x04name\x18\x02 \x01(\t\x12\x14\n\x0cpackage_name\x18\x03 \x01(\t\x12\x0e\n\x06\x61uthor\x18\x04 \x01(\t\x12\x13\n\x0b\x64\x65scription\x18\x05 \x01(\t\x12/\n\x07\x63lients\x18\x06 \x03(\x0b\x32\x1e.sylk.SylkClient.v1.SylkClient\x12.\n\x06server\x18\x07 \x01(\x0b\x32\x1e.sylk.SylkServer.v1.SylkServer\x12\x0f\n\x07version\x18\x08 \x01(\t\x12\x0c\n\x04type\x18\t \x01(\t\x12\x0c\n\x04kind\x18\n \x01(\t\x12\x12\n\ngo_package\x18\x0b \x01(\tB2Z0github.com/sylk/core/services/protos/SylkProjectb\x06proto3')
+DESCRIPTOR = _descriptor_pool.Default().AddSerializedFile(b'\n\x11SylkProject.proto\x12\x13sylk.SylkProject.v1\x1a\x10SylkClient.proto\x1a\x10SylkServer.proto\x1a\x1fgoogle/protobuf/timestamp.proto\x1a\x0eSylkUser.proto\"\xde\x01\n\x0bSylkProject\x12\x0b\n\x03uri\x18\x01 \x01(\t\x12\x0c\n\x04name\x18\x02 \x01(\t\x12\x14\n\x0cpackage_name\x18\x03 \x01(\t\x12/\n\x07\x63lients\x18\x04 \x03(\x0b\x32\x1e.sylk.SylkClient.v1.SylkClient\x12\x12\n\ngo_package\x18\x05 \x01(\t\x12\x14\n\x0cjava_package\x18\x06 \x01(\t\x12.\n\x06server\x18\x07 \x01(\x0b\x32\x1e.sylk.SylkServer.v1.SylkServer\x12\x13\n\x0b\x64\x65scription\x18\x08 \x01(\t\"\xa1\x03\n\x12SylkProjectDisplay\x12\x31\n\x07project\x18\x01 \x01(\x0b\x32 .sylk.SylkProject.v1.SylkProject\x12.\n\ncreated_at\x18\x02 \x01(\x0b\x32\x1a.google.protobuf.Timestamp\x12.\n\nupdated_at\x18\x03 \x01(\x0b\x32\x1a.google.protobuf.Timestamp\x12\r\n\x05owner\x18\x04 \x01(\t\x12\x45\n\x07members\x18\x05 \x03(\x0b\x32\x34.sylk.SylkProject.v1.SylkProjectDisplay.MembersEntry\x12\x12\n\nnumMethods\x18\x06 \x01(\x05\x12\x13\n\x0bnumServices\x18\x07 \x01(\x05\x12\x13\n\x0bnumPackages\x18\x08 \x01(\x05\x12\x13\n\x0bnumMessages\x18\t \x01(\x05\x1aO\n\x0cMembersEntry\x12\x0b\n\x03key\x18\x01 \x01(\t\x12.\n\x05value\x18\x02 \x01(\x0e\x32\x1f.sylk.SylkUser.v1.SylkUserRoles:\x02\x38\x01\x42\x1eZ\x1c/services/protos/SylkProjectb\x06proto3')
 
 
 
 _SYLKPROJECT = DESCRIPTOR.message_types_by_name['SylkProject']
+_SYLKPROJECTDISPLAY = DESCRIPTOR.message_types_by_name['SylkProjectDisplay']
+_SYLKPROJECTDISPLAY_MEMBERSENTRY = _SYLKPROJECTDISPLAY.nested_types_by_name['MembersEntry']
 
 @overload
 class SylkProject(_message.Message):
 	"""webezyio generated message [sylk.SylkProject.v1.SylkProject]
 	A class respresent a SylkProject type
 	
-	"""
+		"""
 	uri = str # type: str
 	name = str # type: str
 	package_name = str # type: str
-	author = str # type: str
-	description = str # type: str
 	clients = List[SylkClient__pb2.SylkClient] # type: List[SylkClient__pb2.SylkClient]
-	server = SylkServer__pb2.SylkServer # type: SylkServer__pb2.SylkServer
-	version = str # type: str
-	type = str # type: str
-	kind = str # type: str
 	go_package = str # type: str
+	java_package = str # type: str
+	server = SylkServer__pb2.SylkServer # type: SylkServer__pb2.SylkServer
+	description = str # type: str
 
-	def __init__(self, uri=str, name=str, package_name=str, author=str, description=str, clients=List[SylkClient__pb2.SylkClient], server=SylkServer__pb2.SylkServer, version=str, type=str, kind=str, go_package=str):
+	def __init__(self, uri=str, name=str, package_name=str, clients=List[SylkClient__pb2.SylkClient], go_package=str, java_package=str, server=SylkServer__pb2.SylkServer, description=str):
 		"""
 		Attributes:
 		----------
@@ -53,21 +54,15 @@ class SylkProject(_message.Message):
 			
 		package_name : str
 			
-		author : str
-			
-		description : str
-			
 		clients : List[SylkClient__pb2.SylkClient]
+			
+		go_package : str
+			
+		java_package : str
 			
 		server : SylkServer__pb2.SylkServer
 			
-		version : str
-			
-		type : str
-			
-		kind : str
-			
-		go_package : str
+		description : str
 			
 		"""
 		pass
@@ -78,10 +73,72 @@ SylkProject = _reflection.GeneratedProtocolMessageType('SylkProject', (_message.
   })
 _sym_db.RegisterMessage(SylkProject)
 
+
+@overload
+class SylkProjectDisplay(_message.Message):
+	"""webezyio generated message [sylk.SylkProject.v1.SylkProjectDisplay]
+	A class respresent a SylkProjectDisplay type
+	
+		"""
+	project = SylkProject # type: SylkProject
+	created_at = google_dot_protobuf_dot_timestamp__pb2.Timestamp # type: google_dot_protobuf_dot_timestamp__pb2.Timestamp
+	updated_at = google_dot_protobuf_dot_timestamp__pb2.Timestamp # type: google_dot_protobuf_dot_timestamp__pb2.Timestamp
+	owner = str # type: str
+	members = Dict[str,enum_type_wrapper.EnumTypeWrapper] # type: Dict[str,enum_type_wrapper.EnumTypeWrapper]
+	numMethods = int # type: int
+	numServices = int # type: int
+	numPackages = int # type: int
+	numMessages = int # type: int
+
+	def __init__(self, project=SylkProject, created_at=google_dot_protobuf_dot_timestamp__pb2.Timestamp, updated_at=google_dot_protobuf_dot_timestamp__pb2.Timestamp, owner=str, members=Dict[str,enum_type_wrapper.EnumTypeWrapper], numMethods=int, numServices=int, numPackages=int, numMessages=int):
+		"""
+		Attributes:
+		----------
+		project : SylkProject
+			
+		created_at : google_dot_protobuf_dot_timestamp__pb2.Timestamp
+			
+		updated_at : google_dot_protobuf_dot_timestamp__pb2.Timestamp
+			
+		owner : str
+			
+		members : Dict[str,enum_type_wrapper.EnumTypeWrapper]
+			
+		numMethods : int
+			
+		numServices : int
+			
+		numPackages : int
+			
+		numMessages : int
+			
+		"""
+		pass
+SylkProjectDisplay = _reflection.GeneratedProtocolMessageType('SylkProjectDisplay', (_message.Message,), {
+
+  'MembersEntry' : _reflection.GeneratedProtocolMessageType('MembersEntry', (_message.Message,), {
+    'DESCRIPTOR' : _SYLKPROJECTDISPLAY_MEMBERSENTRY,
+    '__module__' : 'SylkProject_pb2'
+    # @@protoc_insertion_point(class_scope:sylk.SylkProject.v1.SylkProjectDisplay.MembersEntry)
+    })
+  ,
+  'DESCRIPTOR' : _SYLKPROJECTDISPLAY,
+  '__module__' : 'SylkProject_pb2'
+  # @@protoc_insertion_point(class_scope:sylk.SylkProject.v1.SylkProjectDisplay)
+  })
+_sym_db.RegisterMessage(SylkProjectDisplay)
+_sym_db.RegisterMessage(SylkProjectDisplay.MembersEntry)
+
 if _descriptor._USE_C_DESCRIPTORS == False:
 
   DESCRIPTOR._options = None
-  DESCRIPTOR._serialized_options = b'Z0github.com/sylk/core/services/protos/SylkProject'
-  _SYLKPROJECT._serialized_start=109
-  _SYLKPROJECT._serialized_end=370
+  DESCRIPTOR._serialized_options = b'Z\034/services/protos/SylkProject'
+  _SYLKPROJECTDISPLAY_MEMBERSENTRY._options = None
+  _SYLKPROJECTDISPLAY_MEMBERSENTRY._serialized_options = b'8\001'
+  _SYLKPROJECT._serialized_start=128
+  _SYLKPROJECT._serialized_end=350
+  _SYLKPROJECTDISPLAY._serialized_start=353
+  _SYLKPROJECTDISPLAY._serialized_end=770
+  _SYLKPROJECTDISPLAY_MEMBERSENTRY._serialized_start=691
+  _SYLKPROJECTDISPLAY_MEMBERSENTRY._serialized_end=770
 # @@protoc_insertion_point(module_scope)

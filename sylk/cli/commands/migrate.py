@@ -27,13 +27,13 @@ import sys
 
 from sylk.commons.protos import SylkServer_pb2, SylkClient_pb2
 
-def migrate_project(protos_directory:str,output_path:str,format:Literal['json','python']='json',server_language=SylkServer_pb2.ServerLanguages.Name(SylkServer_pb2.python),clients=[SylkClient_pb2.ClientLanguages.Name(SylkClient_pb2.python)]):
+def migrate_project(protos_directory:str,output_path:str,format:Literal['json','python']='json',server_language=SylkServer_pb2.SylkServerLanguages.Name(SylkServer_pb2.python),clients=[SylkClient_pb2.SylkClientLanguages.Name(SylkClient_pb2.python)]):
     if format == 'python':
         raise Exception("Cannot process a migration plan into python file ! only json format is supported right now.")
     _pretty.print_info((output_path,format),True,'Starting migration process ->')
-    wzcoder = SylkBuilder(path=output_path,hooks=[SylkMigrate])
-    # wzcoder.PreBuild()
+    sylkcoder = SylkBuilder(path=output_path,hooks=[SylkMigrate])
+    # sylkcoder.PreBuild()
     if _fs.get_current_location() not in sys.path:
         sys.path.append(_fs.get_current_location())
-    wzcoder.ParseProtosToResource(protos_dir=protos_directory,project_name='TEST-PROJECT',server_language=server_language,clients=clients)
-    wzcoder.PostBuild()
+    sylkcoder.ParseProtosToResource(protos_dir=protos_directory,project_name='TEST-PROJECT',server_language=server_language,clients=clients)
+    sylkcoder.PostBuild()

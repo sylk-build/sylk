@@ -26,7 +26,7 @@ from sylk.architect import SylkArchitect
 from sylk.cli.theme import SylkTheme
 from sylk.commons.helpers import SylkJson, SylkField, SylkEnumValue,_WellKnowns
 from sylk.commons.pretty import print_info, print_warning, print_error, print_note, print_success, bcolors
-from sylk.commons.protos.SylkField_pb2 import SylkFieldLabel, SylkFieldType
+from sylk.commons.protos.SylkField_pb2 import SylkFieldLabels, SylkFieldTypes
 from sylk.commons.errors import SylkProtoError
 from sylk.commons.protos.SylkCommons_pb2 import FieldOptions,MessageOptions,MethodOptions,ServiceOptions,SylkExtensions
 
@@ -35,22 +35,22 @@ from inquirer import errors
 import re
 
 fields_opt = [
-    SylkFieldType.Name(SylkFieldType.TYPE_DOUBLE),
-    SylkFieldType.Name(SylkFieldType.TYPE_FLOAT),
-    SylkFieldType.Name(SylkFieldType.TYPE_INT64),
-    SylkFieldType.Name(SylkFieldType.TYPE_INT32),
-    SylkFieldType.Name(SylkFieldType.TYPE_BOOL),
-    SylkFieldType.Name(SylkFieldType.TYPE_STRING),
-    SylkFieldType.Name(SylkFieldType.TYPE_MESSAGE),
-    SylkFieldType.Name(SylkFieldType.TYPE_BYTES),
-    SylkFieldType.Name(SylkFieldType.TYPE_ENUM),
-    SylkFieldType.Name(SylkFieldType.TYPE_ONEOF),
-    SylkFieldType.Name(SylkFieldType.TYPE_MAP),
+    SylkFieldTypes.Name(SylkFieldTypes.TYPE_DOUBLE),
+    SylkFieldTypes.Name(SylkFieldTypes.TYPE_FLOAT),
+    SylkFieldTypes.Name(SylkFieldTypes.TYPE_INT64),
+    SylkFieldTypes.Name(SylkFieldTypes.TYPE_INT32),
+    SylkFieldTypes.Name(SylkFieldTypes.TYPE_BOOL),
+    SylkFieldTypes.Name(SylkFieldTypes.TYPE_STRING),
+    SylkFieldTypes.Name(SylkFieldTypes.TYPE_MESSAGE),
+    SylkFieldTypes.Name(SylkFieldTypes.TYPE_BYTES),
+    SylkFieldTypes.Name(SylkFieldTypes.TYPE_ENUM),
+    SylkFieldTypes.Name(SylkFieldTypes.TYPE_ONEOF),
+    SylkFieldTypes.Name(SylkFieldTypes.TYPE_MAP),
 
 ]
 field_label = [
-    SylkFieldLabel.Name(SylkFieldLabel.LABEL_OPTIONAL),
-    SylkFieldLabel.Name(SylkFieldLabel.LABEL_REPEATED),
+    SylkFieldLabels.Name(SylkFieldLabels.LABEL_OPTIONAL),
+    SylkFieldLabels.Name(SylkFieldLabels.LABEL_REPEATED),
 ]
 
 well_known_type = _WellKnowns
@@ -240,7 +240,7 @@ def message(results, sylk_json: SylkJson, architect: SylkArchitect, expand=False
         message_type = None
         enum_type = None
 
-        if field['fieldType'] == SylkFieldType.Name(SylkFieldType.TYPE_MESSAGE):
+        if field['fieldType'] == SylkFieldTypes.Name(SylkFieldTypes.TYPE_MESSAGE):
             if len(avail_msgs) == 0:
                 print_warning("No messages availabe for field")
                 exit(1)
@@ -251,7 +251,7 @@ def message(results, sylk_json: SylkJson, architect: SylkArchitect, expand=False
                 ], theme=SylkTheme())
                 message_type = message['message']
 
-        elif field['fieldType'] == SylkFieldType.Name(SylkFieldType.TYPE_ENUM):
+        elif field['fieldType'] == SylkFieldTypes.Name(SylkFieldTypes.TYPE_ENUM):
             if len(avail_enums) == 0:
                 print_warning("No enums available for field")
                 exit(1)
@@ -282,10 +282,10 @@ def message(results, sylk_json: SylkJson, architect: SylkArchitect, expand=False
                             (m for m in temp_pkg.messages if m.name == f_ext['extensions'].split('.')[3]), None)
                         temp_field = next(
                             (f for f in temp_msg.fields if f.name == f_ext['extensions'].split('.')[-1]), None)
-                        if SylkFieldType.Name(temp_field.field_type) == 'TYPE_BOOL':
+                        if SylkFieldTypes.Name(temp_field.field_type) == 'TYPE_BOOL':
                             f_ext_v = inquirer.prompt([inquirer.Confirm(
                                 'ext_value', 'Enter extension bool value', default=False)], theme=SylkTheme())
-                        elif SylkFieldType.Name(temp_field.field_type) == 'TYPE_DOUBLE' or SylkFieldType.Name(temp_field.field_type) == 'TYPE_FLOAT':
+                        elif SylkFieldTypes.Name(temp_field.field_type) == 'TYPE_DOUBLE' or SylkFieldTypes.Name(temp_field.field_type) == 'TYPE_FLOAT':
                             f_ext_v = inquirer.prompt([inquirer.Text(
                                 'ext_value', 'Enter extension float value', validate=float_value_validate)], theme=SylkTheme())
                             try:
@@ -293,7 +293,7 @@ def message(results, sylk_json: SylkJson, architect: SylkArchitect, expand=False
                             except Exception as e:
                                 logging.exception(e)
                                 exit(1)
-                        elif SylkFieldType.Name(temp_field.field_type) == 'TYPE_INT32' or SylkFieldType.Name(temp_field.field_type) == 'TYPE_INT64':
+                        elif SylkFieldTypes.Name(temp_field.field_type) == 'TYPE_INT32' or SylkFieldTypes.Name(temp_field.field_type) == 'TYPE_INT64':
                             f_ext_v = inquirer.prompt([inquirer.Text(
                                 'ext_value', 'Enter extension integer value', validate=int_value_validate)], theme=SylkTheme())
                             try:
@@ -301,7 +301,7 @@ def message(results, sylk_json: SylkJson, architect: SylkArchitect, expand=False
                             except Exception as e:
                                 logging.exception(e)
                                 exit(1)
-                        elif SylkFieldType.Name(temp_field.field_type) == 'TYPE_STRING':
+                        elif SylkFieldTypes.Name(temp_field.field_type) == 'TYPE_STRING':
                             f_ext_v = inquirer.prompt([inquirer.Text(
                                 'ext_value', 'Enter extension string value')], theme=SylkTheme())
                         temp_ext_name = f_ext['extensions'].split('.')
@@ -406,7 +406,7 @@ def add_fields_oneof(add_field:bool,avail_msgs,avail_enums,pre_fields,msg_full_n
         message_type = None
         enum_type = None
 
-        if field['fieldType'] == SylkFieldType.Name(SylkFieldType.TYPE_MESSAGE):
+        if field['fieldType'] == SylkFieldTypes.Name(SylkFieldTypes.TYPE_MESSAGE):
             if len(avail_msgs) == 0:
                 print_warning("[ONEOF] No messages availabe for field")
                 exit(1)
@@ -417,7 +417,7 @@ def add_fields_oneof(add_field:bool,avail_msgs,avail_enums,pre_fields,msg_full_n
                 ], theme=SylkTheme())
                 message_type = message['message']
 
-        elif field['fieldType'] == SylkFieldType.Name(SylkFieldType.TYPE_ENUM):
+        elif field['fieldType'] == SylkFieldTypes.Name(SylkFieldTypes.TYPE_ENUM):
             if len(avail_enums) == 0:
                 print_warning("[ONEOF] No enums available for field")
                 exit(1)
@@ -468,8 +468,8 @@ def rpc(results, sylk_json: SylkJson, architect: SylkArchitect, expand=None, par
     if dependencies is None:
         svc_name = svc.split('.')[1]
         print_error(
-            f'Dependencies not listed under "{svc}"\n\tTry attache first a packge to service\n\tRun: \'wz package <some.package.v1> {svc_name}\'')
-        print_warning("Try and list all available packages with `$ wz ls --type package`")
+            f'Dependencies not listed under "{svc}"\n\tTry attache first a packge to service\n\tRun: \'sylk package <some.package.v1> {svc_name}\'')
+        print_warning("Try and list all available packages with `$ sylk ls --type package`")
         exit(1)
 
     avail = []
@@ -499,7 +499,7 @@ def rpc(results, sylk_json: SylkJson, architect: SylkArchitect, expand=None, par
     if inputs_outputs is None:
         print_error('IN/OUT Types are required for RPC')
         exit(1)
-    architect.AddRPC(sylk_json.get_service(svc.split('.')[1], False,wz_json=sylk_json._sylk_json), rpc, [
+    architect.AddRPC(sylk_json.get_service(svc.split('.')[1], False,sylk_json=sylk_json._sylk_json), rpc, [
         (results['type'][0], inputs_outputs['input_type']), (results['type'][1], inputs_outputs['output_type'])], description)
     architect.Save()
     print_success(f'Success !\n\tCreated new RPC "{rpc}"')
@@ -510,7 +510,7 @@ def rpc(results, sylk_json: SylkJson, architect: SylkArchitect, expand=None, par
     print_warning(
         f'\t- Make sure you are adding the new RPC "{rpc}" method to your service implemantation file at {path_to_svc}')
     print_warning(
-        f'\t- For more information on how to edit your service implemantation files see https://www.webezy.io/tutorial/add-new-rpc?lang='+lang)
+        f'\t- For more information on how to edit your service implemantation files see https://docs.sylk.build/cli/edit?lang='+lang)
 
 
 def enum(results, sylk_json: SylkJson, architect: SylkArchitect, parent: str):

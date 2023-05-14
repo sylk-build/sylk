@@ -23,9 +23,10 @@ import importlib
 import logging
 import sys
 from typing import overload
+from sylk import config
 from sylk.commons import file_system as _fs,helpers as _helpers,pretty as _pretty,config as _config
-from sylk.commons.pretty import print_error, print_note, print_warning
-from sylk.commons.protos import SylkConfig_pb2
+from sylk.commons.pretty import print_error, print_info, print_note, print_warning
+from sylk.commons.protos import SylkConfigs
 from google.protobuf.json_format import MessageToDict,ParseDict
 
 log = logging.getLogger('sylk.cli.main')
@@ -73,9 +74,21 @@ class SylkProjectConfig:
 
         return temp_dict
 
+
+def parse_sylk_config(root_path:str,proto=False):
+    if proto:
+        sylk_config = SylkConfigs.SylkProjectConfigs()
+        sylk_json_configs = parse_sylk_project_json_configs_proto(root_path)
+        sylk_config.MergeFrom(sylk_json_configs)
+    else:
+        sylk_json_configs = parse_sylk_project_json_configs_proto(root_path)
+        sylk_config = sylk_json_configs
+    return sylk_config
+
+
 def parse_project_config(root_path:str,proto=False):
     if proto:
-        sylk_config = SylkConfig_pb2.SylkCliConfigs()
+        sylk_config = SylkConfigs.SylkCliConfigs()
         global_config = parse_global_config_proto()
         sylk_config.MergeFrom(global_config)
         
@@ -94,20 +107,22 @@ def parse_project_config(root_path:str,proto=False):
         sylk_json_configs = parse_sylk_json_configs(root_path)
 
         config_file = parse_config_file_dict(root_path)
-    
-        merged_configs = None 
+        sylk_config = None 
         if sys.version_info[0] >= 3 and sys.version_info[1] >= 9:
-            merged_configs = global_config | sylk_json_configs
+            if sylk_json_configs is not None:
+                sylk_config = global_config | sylk_json_configs
 
+            if sylk_config is None:
+                sylk_config = global_config
             if config_file:
-                merged_configs = merged_configs | config_file 
+                sylk_config = sylk_config | config_file 
         else:
 
-            merged_configs = {**global_config, **sylk_json_configs } 
-            # print_note(merged_configs,True,'merged_configs.py')
+            sylk_config = {**global_config, **sylk_json_configs } 
+            # print_note(sylk_config,True,'sylk_config.py')
 
             if config_file is not None:
-                merged_configs = {**merged_configs, **config_file }
+                sylk_config = {**sylk_config, **config_file }
     # print_note(merged_configs,True,'Merged Config')
     return sylk_config
 
@@ -116,24 +131,41 @@ def parse_sylk_json_configs(root_path):
     SYLK_JSON = None
     if _fs.check_if_file_exists(sylk_json_path):
         SYLK_JSON = _fs.rFile(sylk_json_path, json=True)
-        SYLK_JSON = _helpers.WZJson(sylk_json=SYLK_JSON)
+        SYLK_JSON = _helpers.SylkJson(sylk_json=SYLK_JSON)
     return SYLK_JSON._config if SYLK_JSON is not None else None
+
+
+def parse_sylk_project_json_configs_proto(root_path):
+    SYLK_JSON = None
+    if _fs.check_if_file_exists(root_path):
+        if 'sylk.json' not in root_path:
+            root_path = root_path +'/sylk.json'
+        print_note(f'Loading sylk.build project from: {root_path}')
+
+        SYLK_JSON = _fs.rFile(root_path, json=True)
+        SYLK_JSON = _helpers.SylkJson(sylk_json=SYLK_JSON)
+        if SYLK_JSON._config:
+            return ParseDict(SYLK_JSON._config,SylkConfigs.SylkProjectConfigs())
+        else:
+            return None
 
 def parse_sylk_json_configs_proto(root_path):
     SYLK_JSON = None
     if _fs.check_if_file_exists(root_path):
         if 'sylk.json' not in root_path:
             root_path = root_path +'/sylk.json'
-        print_error(root_path)
+        print_note(f'Loading sylk.build project from: {root_path}')
 
         SYLK_JSON = _fs.rFile(root_path, json=True)
         SYLK_JSON = _helpers.SylkJson(sylk_json=SYLK_JSON)
         if SYLK_JSON._config:
-            return ParseDict(SYLK_JSON._config,SylkConfig_pb2.SylkCliConfigs())
+            if SYLK_JSON._config.get('template') is not None:
+                del SYLK_JSON._config['template']
+            return ParseDict(SYLK_JSON._config,SylkConfigs.SylkCliConfigs())
         else:
             return None
 
-def parse_config_file_proto(root_path) -> SylkConfig_pb2.SylkCliConfigs:
+def parse_config_file_proto(root_path) -> SylkConfigs.SylkCliConfigs:
     custom_config_path = _fs.join_path(root_path,'config.py')
     sylk_prj_conf = None
     if _fs.check_if_file_exists(custom_config_path):
@@ -187,13 +219,13 @@ def parse_config_file_dict(root_path):
     return None if sylk_prj_conf is None else sylk_prj_conf.config()
 
 def parse_global_config_dict() :
-    global_config_path = dict_from_module(_config.configs)
+    global_config_path = dict_from_module(_config.config.configs)
     return global_config_path
 
 def parse_global_config_proto():
     # temp_module = dict_from_module(_config)
-    if hasattr(_config,'configs'):
-        return _config.configs
+    if hasattr(config,'configs'):
+        return config.configs
     else:
         print_error('Global configs are not valid !')
     # if temp_module.get('Sylkio_templates'):
@@ -226,5 +258,5 @@ def dict_from_module(module):
             context[setting] = getattr(module, setting)
     return context
 
-def get_file_config(prj_config_module) -> SylkConfig_pb2.SylkCliConfigs:
+def get_file_config(prj_config_module) -> SylkConfigs.SylkCliConfigs:
     return prj_config_module.configs

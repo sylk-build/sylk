@@ -15,14 +15,14 @@ from google.protobuf import symbol_database as _symbol_database
 _sym_db = _symbol_database.Default()
 
 
-from google.protobuf import struct_pb2 as google_dot_protobuf_dot_struct__pb2
+from google.protobuf import descriptor_pb2 as google_dot_protobuf_dot_descriptor__pb2
 
 
-DESCRIPTOR = _descriptor_pool.Default().AddSerializedFile(b'\n\x11SylkCommons.proto\x12\x13sylk.SylkCommons.v1\x1a\x1cgoogle/protobuf/struct.proto\"=\n\x11SylkMethodContext\x12\x0c\n\x04name\x18\x01 \x01(\t\x12\x0c\n\x04\x63ode\x18\x02 \x01(\t\x12\x0c\n\x04type\x18\x03 \x01(\t\"f\n\x0fSylkFileContext\x12\x0c\n\x04\x66ile\x18\x01 \x01(\t\x12\x37\n\x07methods\x18\x02 \x03(\x0b\x32&.sylk.SylkCommons.v1.SylkMethodContext\x12\x0c\n\x04\x63ode\x18\x03 \x01(\x0c\"B\n\x0bSylkContext\x12\x33\n\x05\x66iles\x18\x01 \x03(\x0b\x32$.sylk.SylkCommons.v1.SylkFileContext*\x8a\x01\n\x0eSylkExtensions\x12\x1a\n\x16UNKNOWN_SYLKEXTENSIONS\x10\x00\x12\x0f\n\x0b\x46ileOptions\x10\x01\x12\x12\n\x0eMessageOptions\x10\x02\x12\x10\n\x0c\x46ieldOptions\x10\x03\x12\x12\n\x0eServiceOptions\x10\x04\x12\x11\n\rMethodOptions\x10\x05\x42\x32Z0github.com/sylk/core/services/protos/SylkCommonsb\x06proto3')
+DESCRIPTOR = _descriptor_pool.Default().AddSerializedFile(b'\n\x11SylkCommons.proto\x12\x13sylk.SylkCommons.v1\x1a google/protobuf/descriptor.proto\"=\n\x11SylkMethodContext\x12\x0c\n\x04name\x18\x01 \x01(\t\x12\x0c\n\x04\x63ode\x18\x02 \x01(\t\x12\x0c\n\x04type\x18\x03 \x01(\t\"f\n\x0fSylkFileContext\x12\x0c\n\x04\x66ile\x18\x01 \x01(\t\x12\x37\n\x07methods\x18\x02 \x03(\x0b\x32&.sylk.SylkCommons.v1.SylkMethodContext\x12\x0c\n\x04\x63ode\x18\x03 \x01(\x0c\"B\n\x0bSylkContext\x12\x33\n\x05\x66iles\x18\x01 \x03(\x0b\x32$.sylk.SylkCommons.v1.SylkFileContext*\x8a\x01\n\x0eSylkExtensions\x12\x1a\n\x16\x44\x45\x46\x41ULT_SYLKEXTENSIONS\x10\x00\x12\x0f\n\x0b\x46ileOptions\x10\x01\x12\x12\n\x0eMessageOptions\x10\x02\x12\x10\n\x0c\x46ieldOptions\x10\x03\x12\x12\n\x0eServiceOptions\x10\x04\x12\x11\n\rMethodOptions\x10\x05\x42\x1eZ\x1c/services/protos/SylkCommonsb\x06proto3')
 
 _SYLKEXTENSIONS = DESCRIPTOR.enum_types_by_name['SylkExtensions']
 SylkExtensions = enum_type_wrapper.EnumTypeWrapper(_SYLKEXTENSIONS)
-UNKNOWN_SYLKEXTENSIONS = 0
+DEFAULT_SYLKEXTENSIONS = 0
 FileOptions = 1
 MessageOptions = 2
 FieldOptions = 3
@@ -39,7 +39,7 @@ class SylkMethodContext(_message.Message):
 	"""webezyio generated message [sylk.SylkCommons.v1.SylkMethodContext]
 	A class respresent a SylkMethodContext type
 	
-	"""
+		"""
 	name = str # type: str
 	code = str # type: str
 	type = str # type: str
@@ -69,7 +69,7 @@ class SylkFileContext(_message.Message):
 	"""webezyio generated message [sylk.SylkCommons.v1.SylkFileContext]
 	A class respresent a SylkFileContext type
 	
-	"""
+		"""
 	file = str # type: str
 	methods = List[SylkMethodContext] # type: List[SylkMethodContext]
 	code = None # type: None
@@ -99,7 +99,7 @@ class SylkContext(_message.Message):
 	"""webezyio generated message [sylk.SylkCommons.v1.SylkContext]
 	A class respresent a SylkContext type
 	
-	"""
+		"""
 	files = List[SylkFileContext] # type: List[SylkFileContext]
 
 	def __init__(self, files=List[SylkFileContext]):
@@ -120,13 +120,13 @@ _sym_db.RegisterMessage(SylkContext)
 if _descriptor._USE_C_DESCRIPTORS == False:
 
   DESCRIPTOR._options = None
-  DESCRIPTOR._serialized_options = b'Z0github.com/sylk/core/services/protos/SylkCommons'
-  _SYLKEXTENSIONS._serialized_start=308
-  _SYLKEXTENSIONS._serialized_end=446
-  _SYLKMETHODCONTEXT._serialized_start=72
-  _SYLKMETHODCONTEXT._serialized_end=133
-  _SYLKFILECONTEXT._serialized_start=135
-  _SYLKFILECONTEXT._serialized_end=237
-  _SYLKCONTEXT._serialized_start=239
-  _SYLKCONTEXT._serialized_end=305
+  DESCRIPTOR._serialized_options = b'Z\034/services/protos/SylkCommons'
+  _SYLKEXTENSIONS._serialized_start=312
+  _SYLKEXTENSIONS._serialized_end=450
+  _SYLKMETHODCONTEXT._serialized_start=76
+  _SYLKMETHODCONTEXT._serialized_end=137
+  _SYLKFILECONTEXT._serialized_start=139
+  _SYLKFILECONTEXT._serialized_end=241
+  _SYLKCONTEXT._serialized_start=243
+  _SYLKCONTEXT._serialized_end=309
 # @@protoc_insertion_point(module_scope)

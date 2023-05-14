@@ -3,6 +3,7 @@ import logging
 
 # Internal deps
 from sylk.helpers import pretty
+from sylk.architect import SylkArchitect
 
 logging.basicConfig(
     level='ERROR',
