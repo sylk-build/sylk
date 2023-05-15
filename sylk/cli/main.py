@@ -581,7 +581,7 @@ def main(args=None):
             # Global sylk cli commands
             # sylk_project_config = prj_conf.parse_project_config(os.getcwd())
             # print_note(sylk_project_config,True)
-            if hasattr(args,'protos'):
+            if hasattr(args,'protos') and hasattr(args,'server_language'):
                 """Migrations commands"""
                 migrate.migrate_project(args.protos,output_path=file_system.get_current_location(),format='json',server_language=args.server_language,clients=args.clients)
             elif hasattr(args, 'path'):

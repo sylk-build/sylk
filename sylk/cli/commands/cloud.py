@@ -91,7 +91,7 @@ class SylkCloud:
                         config_file[i] = '    ' + config_file[i].strip()[:6] + f'"{self._token}",\n'
                     _fs.wFile(_fs.join_path(p,'config.py'),content=''.join(config_file),overwrite=True)
             else:
-                _pretty.print_info('Generate cloud tokens to remotly interacte with your sylk.build projects\n\t- See more information on https://docs.sylk.build/platform/app-keys')
+                _pretty.print_info('Generate cloud tokens to remotly interacte with your sylk.build projects\n\t- See more information on https://docs.sylk.build/')
         else:
             self._validate_token()
 
@@ -150,6 +150,7 @@ class SylkCloud:
             return sylk
         except Exception as e:
             _pretty.print_error(e.details(),True,f'Error occured during pulling project {projectId}')
+            exit(1)
 
         
     def get_project(self):

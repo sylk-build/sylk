@@ -23,6 +23,7 @@ import logging
 import subprocess
 from typing import List, Literal
 from sylk import architect
+from sylk.cli import prompter
 from sylk.cli.prompter import QCheckbox,QConfirm,QList,QText,ask_user_question
 from sylk.cli.theme import SylkTheme
 from sylk.commons import file_system,protos
@@ -83,7 +84,15 @@ def create_new_project(project_name:str,path:str=None,host:str=None,port:int=Non
         project.project.uri = result_path
         project_path = join_path(
                     result_path,'sylk.json')
-
+        if project.project.server.language == SylkServerLanguages.go and project.project.go_package == '':
+            go_package_input = prompter.QText(name='go_package',message='Enter a prefix to support Go package',default='github.com')
+            go_package = prompter.ask_user_question(questions=[go_package_input])
+            if go_package is not None:
+                go_package = '{}/{}'.format(go_package['go_package'],project.project.package_name)
+            else:
+                go_package = 'github.com/{}'.format(project.project.package_name)
+            project.project.go_package = go_package
+            
         mkdir(result_path)
         # print_info(MessageToDict(project),True,'JSON:')
         wFile(project_path, MessageToDict(project),

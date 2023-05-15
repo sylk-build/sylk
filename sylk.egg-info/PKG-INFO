@@ -2,7 +2,7 @@ Metadata-Version: 2.1
 Name: sylk
 Version: 0.0.1
 Summary: sylk CLI build, deploy and manage gRPC microservices.
-Author-email: Amit Shmulevitch <amitsh1995@gmail.com>
+Author-email: Sylk Developers <contact@sylk.build>
 License: Copyright (c) 2023 sylk.build
         
         Permission is hereby granted, free of charge, to any person obtaining
@@ -55,8 +55,8 @@ The current supported languages are:
 |:-----------------------------------------:|:----------:|:----------:|:------------:|
 |     [Python](./docs/source/python.md)     |    **V**   |    **V**   |    Stable    |
 | [Typescript](./docs/source/typescript.md) |    **V**   |    **V**   |    Stable    |
-|         [Go](./docs/source/go.md)         |    **V**   |    **V**   | Experimental |
-| [Webpack-js](./docs/source/webpack-js.md) |     --     |    **V**   | Experimental |
+|         [Go](./docs/source/go.md)         |    **V**   |    **V**   | Stable |
+| NodeJS |     --     |    **V**   | Stable |
 |                   C#.NET                  |    **X**   |    **X**   |    Planned   |
 
 Get full explanation and many more details on usage at [```sylk.build```](https://www.sylk.build).
@@ -203,4 +203,4 @@ We are welcoming any code contribution and help to maintain and release new fetu
 See our [contirbution page](./docs/source/contirbuting.md)
 
 ---
-__Created with love by Amit Shmulevitch. 2022 © sylk.build__
+__Created with love by Sylk team. 2023 © Sylk__

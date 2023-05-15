@@ -1,0 +1,6 @@
+docker/
+sylk/
+sylk.egg-info/
+assets/
+.github/
+.vscode/

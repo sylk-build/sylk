@@ -1704,9 +1704,14 @@ class SylkServiceGo():
             list_d.append(f'"{go_package_name}/services/utils"')
 
             for d in self._imports:
-                name = d.split('.')[1]
-                d_name = '{0}'.format(name)
-                list_d.append(f'{d_name} "{go_package_name}/services/protos/{d_name}"')
+                if 'google.protobuf.' in d:
+                    name = d.split('.')[-1]
+                    d_name = '{0}'.format(name).lower()
+                    list_d.append(f'"google.golang.org/protobuf/types/known/{d_name}pb"')
+                else:
+                    name = d.split('.')[1]
+                    d_name = '{0}'.format(name)
+                    list_d.append(f'{d_name} "{go_package_name}/services/protos/{d_name}"')
 
             list_d = '\n\t'.join(list_d)
             return f'{list_d}'
@@ -1725,9 +1730,15 @@ class SylkServiceGo():
             rpc_output_type = rpc.get('serverStreaming') if rpc.get('serverStreaming') is not None else False
             rpc_input_type = rpc.get('clientStreaming') if rpc.get('clientStreaming') is not None else False
             rpc_input_name = rpc.get('inputType').split('.')[-1]
-            rpc_input_package_name = rpc.get('inputType').split('.')[1]
+            if 'google.protobuf.' in rpc.get('inputType'):
+                rpc_input_package_name = '{0}pb'.format(rpc.get('inputType').split('.')[-1]).lower()
+            else:
+                rpc_input_package_name = rpc.get('inputType').split('.')[1]
             rpc_output_name = rpc.get('outputType').split('.')[-1]
-            rpc_output_package_name = rpc.get('outputType').split('.')[1]
+            if 'google.protobuf.' in rpc.get('outputType'):
+                rpc_output_package_name = '{0}pb'.format(rpc.get('outputType').split('.')[-1]).lower()
+            else:
+                rpc_output_package_name = rpc.get('outputType').split('.')[1]
             temp_go_rpc_input_name = rpc_input_name[0].capitalize() + rpc_input_name[1:]
             temp_go_rpc_output_name = rpc_output_name[0].capitalize() + rpc_output_name[1:]
             rpc_description = rpc.get('description')

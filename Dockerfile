@@ -1,11 +1,10 @@
-FROM python:3.9 AS webezy-base
-# Or any preferred Python version.
-COPY ./dist/sylk-0.0.1.tar.gz /sylk/sylk-0.0.1.tar.gz
-RUN pip install ./sylk/sylk-0.0.1.tar.gz
-CMD ["wz","--version"]
+# FROM python:3.9 AS sylk-base
 
+# COPY ./dist/sylk-0.0.1.tar.gz /sylk/sylk-0.0.1.tar.gz
+# RUN pip install ./sylk/sylk-0.0.1.tar.gz
+# CMD ["sylk","--version"]
 
-FROM ubuntu:20.04 AS webezy-ubuntu
+FROM ubuntu:20.04 AS sylk-ubuntu
 
 LABEL maintainer="Amit Shmulevitch"
 
@@ -19,4 +18,4 @@ RUN curl -fsSL https://deb.nodesource.com/setup_16.x | bash - &&\
 
 COPY ./dist/sylk-0.0.1.tar.gz /sylk/sylk-0.0.1.tar.gz
 RUN pip install ./sylk/sylk-0.0.1.tar.gz
-CMD ["wz","--version"]
+CMD ["sylk","--version"]

@@ -10,7 +10,7 @@ from sylk.commons.protos.SylkConfigs_pb2 import SylkCliConfigs
 sylk cli module configuration"""
 configs=SylkCliConfigs(
     host="localhost",
-    port=48800,
+    port=44880,
     # Analytic gathering approval
     analytics=False,
     # First run flag

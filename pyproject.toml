@@ -7,7 +7,7 @@ name = "sylk"
 version = "0.0.1"
 description = "sylk CLI build, deploy and manage gRPC microservices."
 readme = "README.md"
-authors = [{ name = "Amit Shmulevitch", email = "amitsh1995@gmail.com" }]
+authors = [{ name = "Sylk Developers", email = "contact@sylk.build" }]
 license = { file = "LICENSE" }
 classifiers = [
     "License :: OSI Approved :: MIT License",
