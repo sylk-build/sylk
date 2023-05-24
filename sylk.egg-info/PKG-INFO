@@ -1,6 +1,6 @@
 Metadata-Version: 2.1
 Name: sylk
-Version: 0.0.3
+Version: 0.0.4
 Summary: sylk CLI build, deploy and manage gRPC microservices.
 Author-email: Sylk Developers <contact@sylk.build>
 License: Copyright (c) 2023 sylk.build
