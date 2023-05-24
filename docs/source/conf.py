@@ -12,7 +12,7 @@ import sys
 project = 'sylk'
 copyright = 'sylk 2022, Amit Shmulevitch'
 author = 'Amit Shmulevitch'
-release = '0.0.3'
+release = '0.0.4'
 
 sys.path.append('/Users/amitshmulevitch/Projects/sylk/sylk')
 # -- General configuration ---------------------------------------------------
