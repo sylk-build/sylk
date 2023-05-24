@@ -2,6 +2,12 @@
 requires      = ["setuptools>=61.0.0", "wheel"]
 build-backend = "setuptools.build_meta"
 
+# [options.extras_require]
+# dev = [
+#     "package1",
+#     "package2",
+# ]
+
 [project]
 name = "sylk"
 version = "0.0.2"

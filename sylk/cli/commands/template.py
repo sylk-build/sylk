@@ -216,8 +216,8 @@ def create_fields(messages):
                                   f.get('fullName').replace('.','_'),
                                   '_DOMAIN+\'.{}\''.format('.'.join(f.get('enumType').split('.')[1:])) if f.get('enumType') is not None else None,
                                   '{}'.format(temp_msg_type),
-                                  '\'{0}\''.format(f.get('keyType')) if f.get('keyType') is not None else None,
-                                  '\'{0}\''.format(f.get('valueType')) if f.get('valueType') is not None else None,
+                                  '\'{0}\''.format(f.get('keyType')) if f.get('keyType') is not None and f.get('keyType') != -1 else None,
+                                  '\'{0}\''.format(f.get('valueType')) if f.get('valueType') is not None and f.get('valueType') != -1 else None,
                                   f.get('extensions'))
             fields[m.get('fullName')].append((f.get('fullName').replace('.','_'),field))
 

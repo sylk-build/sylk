@@ -27,7 +27,7 @@ from sylk.cli.theme import SylkTheme
 from sylk.commons import client_wrapper , helpers as _helpers, file_system as _fs, pretty as _pretty
 from sylk.commons.protos import sylkcore
 import ast
-from sylk.commons.helpers import MessageToDict
+from sylk.commons.helpers import MessageToDict,MessageToJson
 
 from sylk.commons.protos.SylkApi_pb2 import GetAccessTokenRequest, GetOrganizationRequest, GetProjectRequest, ListPackagesRequest, ListProjectsRequest, ListServicesRequest
 from sylk.commons.protos.SylkConfigs_pb2 import SylkCliConfigs, SylkProjectConfigs
@@ -145,7 +145,7 @@ class SylkCloud:
                 )
             )
             if overwrite:
-                _fs.wFile('sylk.json',MessageToDict(sylk),True,True)
+                _fs.wFile('sylk.json',MessageToJson(sylk),True,True)
             # _pretty.print_info(sylk,True,'Project')
             return sylk
         except Exception as e:

@@ -130,3 +130,7 @@ def join_path(*paths):
 
 def get_current_location():
     return os.getcwd()
+
+
+def is_file_executable(file_path):
+    return os.access(file_path, os.X_OK)

@@ -229,8 +229,8 @@ def override_generated_classes(sylk_json: helpers.SylkJson, sylk_context: helper
                                 init_fields = []
                                 docstring_fields = []
                                 for field in m['fields']:
-                                    key_type = field.get('keyType').split('_')[-1].lower() if field.get('keyType') is not None else None
-                                    value_type = field.get('valueType').split('_')[-1].lower() if field.get('keyType') is not None else None
+                                    key_type = field.get('keyType').split('_')[-1].lower() if field.get('keyType') is not None and field.get('keyType') != -1 else None
+                                    value_type = field.get('valueType').split('_')[-1].lower() if field.get('valueType') is not None and field.get('valueType') != -1 else None
                                     fName = field['name']
                                     fDescription = field.get('description') if field.get('description') is not None else ''
 

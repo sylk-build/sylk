@@ -37,7 +37,21 @@ from sylk.cli import theme,prompter
 from sylk.commons import client_wrapper, helpers,file_system,errors,resources, parser, config as prj_conf, protos
 from sylk.commons.pretty import print_info, print_note, print_version, print_success, print_warning, print_error
 from sylk.commons.protos import SylkField_pb2
-from sylk.cli.commands import call, extend, migrate, new,build,generate,ls,package as pack,run,edit,template, config as config_command,cloud
+from grpc_tools import protoc,command
+from sylk.cli.commands import call, \
+    extend, \
+    migrate, \
+    new, \
+    build, \
+    generate, \
+    ls, \
+    package as pack, \
+    run, \
+    edit, \
+    template, \
+    config as config_command, \
+    cloud, \
+    plugin
 from pathlib import Path
 
 _TEMPLATES = config.configs.sylk_templates
@@ -156,9 +170,12 @@ def main(args=None):
                                      description='Command line interface for the sylk.build package build awesome gRPC micro-services. For more information please visit https://www.sylk.build there you can find additional documentation and tutorials.',
                                      epilog=f'For more information see - https://docs.sylk.build | Created with love by Amit Shmulevitch. 2022 © sylk.build [{__version__.__version__}]')
 
+    # parser.add_argument('test', help='test')
     # Instantiating sub parsers object
-    subparsers = parser.add_subparsers(
+    subparsers = parser.add_subparsers(dest='command',required=True,title='command',
         help='Main modules to interact with sylk CLI.')
+    subparsers.required = True
+
 
     """Cloud commands"""
     parser_login = subparsers.add_parser('login', help='Login to sylk cloud organziation')
@@ -312,6 +329,21 @@ def main(args=None):
     parse_configs.add_argument('--token', action="store_true",help="Refresh 'Personal Access Token' with new one")
 
 
+    """Plugins command"""
+    parser_plugin = subparsers.add_parser('plugin', help='Sylk plugin command')
+    plugin_subparser = parser_plugin.add_subparsers(dest='action')
+
+    run_plugin_parser = plugin_subparser.add_parser('run')
+    # run_plugin_parser.add_argument('--foo', help='The foo argument for action1')
+    run_plugin_parser.add_argument('plugin',nargs='*',metavar='plugin-name',help='The executable path for protoc plugin')
+    run_plugin_parser.add_argument('--protos',nargs='*',help='List of proto files relative to current directory')
+    run_plugin_parser.add_argument('-d','--dir',help='The plugin base directory, if not specified it will lookup sylk base plugins')
+    
+    # Create the subparser for 'action2' under 'resource1'
+    init_plugin_parser = plugin_subparser.add_parser('init')
+    init_plugin_parser.add_argument('--bar', help='The bar argument for action2')
+
+
     # Utils
     parser.add_argument('-v', '--version', action='store_true',
                         help='Display sylk.build current installed version')
@@ -336,7 +368,16 @@ def main(args=None):
     parser.add_argument('--purge',action='store_true',help='Purge .sylk/contxt.json file')
     # Parse all command line arguments
     args = parser.parse_args(args)
+    print(args)
     
+    # New sub-parsers
+    if hasattr(args,"command"):
+        if args.command == 'plugin':
+            if args.action == 'run':
+                plugin.run(args)
+            else:
+                print_error("Action '{0}' is not supported yet on {1}".format(args.action,args.command))
+            
     log.setLevel(args.loglevel)
     log.debug(args)
 

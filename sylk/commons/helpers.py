@@ -36,7 +36,7 @@ from sylk.commons.file_system import check_if_file_exists, join_path
 from sylk.commons.protos import Sylk as SylkCore
 from itertools import groupby
 from google.protobuf.struct_pb2 import Value
-from google.protobuf.json_format import ParseDict, MessageToDict
+from google.protobuf.json_format import ParseDict, MessageToDict,MessageToJson
 from google.protobuf import text_format
 from google.protobuf.timestamp_pb2 import Timestamp
 from platform import platform
@@ -817,7 +817,7 @@ class SylkProto():
                     elif fType == 'enum':
                         fType = f.get('enumType')
                     elif fType == 'map':
-                        keyType = f.get('keyType').split('_')[-1].lower()
+                        keyType = f.get('keyType').split('_')[-1].lower() if f.get('keyType') is not None and f.get('keyType') != -1 else None
                         valueType = f.get('valueType').split('_')[-1].lower() if f.get('valueType') != 'TYPE_MESSAGE' and f.get('valueType') != 'TYPE_ENUM'  else f.get('messageType') if f.get('valueType') == 'TYPE_MESSAGE' else f.get('enumType') if f.get('valueType') == 'TYPE_ENUM' else None
                         if valueType is None:
                             pretty.print_error("Value type for 'map' is not valid ! {0}".format(f.get('valueType')))

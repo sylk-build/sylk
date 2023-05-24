@@ -180,8 +180,8 @@ def override_generated_classes(sylk_json: helpers.SylkJson, sylk_context: helper
 
                                         fName = field['name']
                                         fDescription = field.get('description') if field.get('description') is not None else ''
-                                        key_type = field.get('keyType').split('_')[-1].lower() if field.get('keyType') is not None else None
-                                        value_type = field.get('valueType').split('_')[-1].lower() if field.get('keyType') is not None else None
+                                        key_type = field.get('keyType').split('_')[-1].lower() if field.get('keyType') is not None and  field.get('keyType') != -1 else None
+                                        value_type = field.get('valueType').split('_')[-1].lower() if field.get('valueType') is not None and field.get('valueType') != -1 else None
                                         fType = parse_proto_type_to_py(field['fieldType'].split(
                                                 '_')[-1].lower(), field['label'].split('_')[-1].lower(), field.get('messageType'), field.get('enumType'),current_pkg=pkg_proto_name,key_type=key_type,value_type=value_type)
                                         if field['fieldType'].split(
