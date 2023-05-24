@@ -334,15 +334,10 @@ def main(args=None):
     plugin_subparser = parser_plugin.add_subparsers(dest='action')
 
     run_plugin_parser = plugin_subparser.add_parser('run')
-    # run_plugin_parser.add_argument('--foo', help='The foo argument for action1')
     run_plugin_parser.add_argument('plugin',nargs='*',metavar='plugin-name',help='The executable path for protoc plugin')
     run_plugin_parser.add_argument('--protos',nargs='*',help='List of proto files relative to current directory')
     run_plugin_parser.add_argument('-d','--dir',help='The plugin base directory, if not specified it will lookup sylk base plugins')
-    
-    # Create the subparser for 'action2' under 'resource1'
-    init_plugin_parser = plugin_subparser.add_parser('init')
-    init_plugin_parser.add_argument('--bar', help='The bar argument for action2')
-
+  
 
     # Utils
     parser.add_argument('-v', '--version', action='store_true',
