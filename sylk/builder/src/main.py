@@ -6,13 +6,13 @@ import sys
 import pluggy
 
 from sylk.builder.src import hookspecs, lru
-from sylk.builder.plugins import SylkBase, SylkGoClient, SylkGoServer, SylkJsClient, SylkJsServer, SylkProto, SylkPyClient, SylkPyServer, SylkReadme, SylkTsClient, SylkTsServer
+from sylk.builder.plugins import SylkBase, SylkGoClient, SylkGoServer, SylkJsClient, SylkJsServer, SylkPlugins, SylkProto, SylkPyClient, SylkPyServer, SylkReadme, SylkTsClient, SylkTsServer
 from sylk.commons import file_system, helpers, resources, errors
 from sylk.commons.pretty import print_error, print_info, print_warning
 
 # ADD MORE WELL KNOWN PLUGINS HERE
 _WELL_KNOWN_PLUGINS = [SylkProto, SylkPyServer,SylkPyClient,SylkTsServer,SylkTsClient,SylkGoServer,SylkGoClient,
-                        SylkReadme]  # Many More To Come
+                        SylkReadme, SylkPlugins]  # Many More To Come
 
 log = logging.getLogger('sylk.cli.main')
 
@@ -117,6 +117,7 @@ class SylkBuilder:
         self._pm.register(SylkProto)
         # Default Readme
         self._pm.register(SylkReadme)
+
         client_py = next((c for c in self._sylk_json.project.get('clients') if c.get('language') == 'python'),False)
         client_ts = next((c for c in self._sylk_json.project.get('clients') if c.get('language') == 'typescript'),False)
         client_go = next((c for c in self._sylk_json.project.get('clients') if c.get('language') == 'go'),False)
@@ -158,7 +159,10 @@ class SylkBuilder:
             self._pm.register(SylkGoServer)
         if server_lang == 'nodejs':
             self._pm.register(SylkJsServer)
-            
+        
+        self._pm.register(SylkPlugins)
+
+
         for p in _WELL_KNOWN_PLUGINS:
             plug_name = self._pm.get_name(p)
             if plug_name is not None:

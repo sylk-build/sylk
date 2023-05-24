@@ -69,6 +69,8 @@ def run(args):
             if stderr:
                 print_info(stderr.decode('utf-8'))
         else:
-            print(f'plugin {p} is not executable file')
+            print_warning(f'plugin {p} is not executable file')
+            print_info(f'Make sure you have permissions to edit the file mode and make it excutable.')
+
 
     exit(0)
