@@ -128,7 +128,7 @@ def remove_import(source,target,path,sylk_json:SylkJson):
                 dep = old_svc.get('dependencies')
                 dep.remove(source)
         
-        ARCHITECT.EditService(old_svc.get('name'), dep, old_svc.get('description'),old_svc.get('methods'),description=old_svc.get('description'),extensions=old_svc.get('extensions'))
+        ARCHITECT.EditService(old_svc.get('name'), dep,methods=old_svc.get('methods'),description=old_svc.get('description'),extensions=old_svc.get('extensions'))
         ARCHITECT.Save()
 
     print_warning(

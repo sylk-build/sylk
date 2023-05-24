@@ -172,9 +172,9 @@ def main(args=None):
 
     # parser.add_argument('test', help='test')
     # Instantiating sub parsers object
-    subparsers = parser.add_subparsers(dest='command',required=True,title='command',
+    subparsers = parser.add_subparsers(dest='command',title='command',
         help='Main modules to interact with sylk CLI.')
-    subparsers.required = True
+    # subparsers.required = True
 
 
     """Cloud commands"""
