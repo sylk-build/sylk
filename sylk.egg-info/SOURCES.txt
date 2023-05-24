@@ -37,6 +37,7 @@ sylk/builder/plugins/SylkGoServer.py
 sylk/builder/plugins/SylkJsClient.py
 sylk/builder/plugins/SylkJsServer.py
 sylk/builder/plugins/SylkMigrate.py
+sylk/builder/plugins/SylkPlugins.py
 sylk/builder/plugins/SylkProto.py
 sylk/builder/plugins/SylkPyClient.py
 sylk/builder/plugins/SylkPyServer.py
@@ -66,6 +67,7 @@ sylk/cli/commands/ls.py
 sylk/cli/commands/migrate.py
 sylk/cli/commands/new.py
 sylk/cli/commands/package.py
+sylk/cli/commands/plugin.py
 sylk/cli/commands/run.py
 sylk/cli/commands/template.py
 sylk/commons/__init__.py
