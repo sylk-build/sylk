@@ -15,7 +15,7 @@ _sym_db = _symbol_database.Default()
 from . import SylkApi_pb2 as SylkApi__pb2
 
 
-DESCRIPTOR = _descriptor_pool.Default().AddSerializedFile(b'\n\x0eServices.proto\x1a\rSylkApi.proto2\xde\x03\n\x08Services\x12U\n\nGetService\x12\".sylk.SylkApi.v1.GetServiceRequest\x1a#.sylk.SylkApi.v1.GetServiceResponse\x12^\n\rCreateService\x12%.sylk.SylkApi.v1.CreateServiceRequest\x1a&.sylk.SylkApi.v1.CreateServiceResponse\x12^\n\rUpdateService\x12%.sylk.SylkApi.v1.UpdateServiceRequest\x1a&.sylk.SylkApi.v1.UpdateServiceResponse\x12^\n\rDeleteService\x12%.sylk.SylkApi.v1.DeleteServiceRequest\x1a&.sylk.SylkApi.v1.DeleteServiceResponse\x12[\n\x0cListServices\x12$.sylk.SylkApi.v1.ListServicesRequest\x1a#.sylk.SylkApi.v1.GetServiceResponse0\x01\x42\x1bZ\x19/services/protos/Servicesb\x06proto3')
+DESCRIPTOR = _descriptor_pool.Default().AddSerializedFile(b'\n\x0eServices.proto\x1a\rSylkApi.proto2\xde\x03\n\x08Services\x12U\n\nGetService\x12\".sylk.SylkApi.v1.GetServiceRequest\x1a#.sylk.SylkApi.v1.GetServiceResponse\x12^\n\rCreateService\x12%.sylk.SylkApi.v1.CreateServiceRequest\x1a&.sylk.SylkApi.v1.CreateServiceResponse\x12^\n\rUpdateService\x12%.sylk.SylkApi.v1.UpdateServiceRequest\x1a&.sylk.SylkApi.v1.UpdateServiceResponse\x12^\n\rDeleteService\x12%.sylk.SylkApi.v1.DeleteServiceRequest\x1a&.sylk.SylkApi.v1.DeleteServiceResponse\x12[\n\x0cListServices\x12$.sylk.SylkApi.v1.ListServicesRequest\x1a#.sylk.SylkApi.v1.GetServiceResponse0\x01\x42\x39Z7github.com/sylk-build/sylk-cli/services/protos/Servicesb\x06proto3')
 
 
 
@@ -23,7 +23,7 @@ _SERVICES = DESCRIPTOR.services_by_name['Services']
 if _descriptor._USE_C_DESCRIPTORS == False:
 
   DESCRIPTOR._options = None
-  DESCRIPTOR._serialized_options = b'Z\031/services/protos/Services'
+  DESCRIPTOR._serialized_options = b'Z7github.com/sylk-build/sylk-cli/services/protos/Services'
   _SERVICES._serialized_start=34
   _SERVICES._serialized_end=512
 # @@protoc_insertion_point(module_scope)

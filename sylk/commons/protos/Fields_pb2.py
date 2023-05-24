@@ -15,7 +15,7 @@ _sym_db = _symbol_database.Default()
 from . import SylkApi_pb2 as SylkApi__pb2
 
 
-DESCRIPTOR = _descriptor_pool.Default().AddSerializedFile(b'\n\x0c\x46ields.proto\x1a\rSylkApi.proto2\xe7\x02\n\x06\x46ields\x12O\n\x08GetField\x12 .sylk.SylkApi.v1.GetFieldRequest\x1a!.sylk.SylkApi.v1.GetFieldResponse\x12X\n\x0b\x43reateField\x12#.sylk.SylkApi.v1.CreateFieldRequest\x1a$.sylk.SylkApi.v1.CreateFieldResponse\x12X\n\x0bUpdateField\x12#.sylk.SylkApi.v1.UpdateFieldRequest\x1a$.sylk.SylkApi.v1.UpdateFieldResponse\x12X\n\x0b\x44\x65leteField\x12#.sylk.SylkApi.v1.DeleteFieldRequest\x1a$.sylk.SylkApi.v1.DeleteFieldResponseB\x19Z\x17/services/protos/Fieldsb\x06proto3')
+DESCRIPTOR = _descriptor_pool.Default().AddSerializedFile(b'\n\x0c\x46ields.proto\x1a\rSylkApi.proto2\xe7\x02\n\x06\x46ields\x12O\n\x08GetField\x12 .sylk.SylkApi.v1.GetFieldRequest\x1a!.sylk.SylkApi.v1.GetFieldResponse\x12X\n\x0b\x43reateField\x12#.sylk.SylkApi.v1.CreateFieldRequest\x1a$.sylk.SylkApi.v1.CreateFieldResponse\x12X\n\x0bUpdateField\x12#.sylk.SylkApi.v1.UpdateFieldRequest\x1a$.sylk.SylkApi.v1.UpdateFieldResponse\x12X\n\x0b\x44\x65leteField\x12#.sylk.SylkApi.v1.DeleteFieldRequest\x1a$.sylk.SylkApi.v1.DeleteFieldResponseB7Z5github.com/sylk-build/sylk-cli/services/protos/Fieldsb\x06proto3')
 
 
 
@@ -23,7 +23,7 @@ _FIELDS = DESCRIPTOR.services_by_name['Fields']
 if _descriptor._USE_C_DESCRIPTORS == False:
 
   DESCRIPTOR._options = None
-  DESCRIPTOR._serialized_options = b'Z\027/services/protos/Fields'
+  DESCRIPTOR._serialized_options = b'Z5github.com/sylk-build/sylk-cli/services/protos/Fields'
   _FIELDS._serialized_start=32
   _FIELDS._serialized_end=391
 # @@protoc_insertion_point(module_scope)

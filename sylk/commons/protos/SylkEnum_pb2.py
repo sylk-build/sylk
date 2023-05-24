@@ -18,7 +18,7 @@ from . import SylkEnumValue_pb2 as SylkEnumValue__pb2
 from google.protobuf import timestamp_pb2 as google_dot_protobuf_dot_timestamp__pb2
 
 
-DESCRIPTOR = _descriptor_pool.Default().AddSerializedFile(b'\n\x0eSylkEnum.proto\x12\x10sylk.SylkEnum.v1\x1a\x13SylkEnumValue.proto\x1a\x1fgoogle/protobuf/timestamp.proto\"\x9f\x01\n\x08SylkEnum\x12\x0b\n\x03uri\x18\x01 \x01(\t\x12\x0c\n\x04name\x18\x02 \x01(\t\x12\x11\n\tfull_name\x18\x03 \x01(\t\x12\x13\n\x0b\x64\x65scription\x18\x04 \x01(\t\x12\x34\n\x06values\x18\x05 \x03(\x0b\x32$.sylk.SylkEnumValue.v1.SylkEnumValue\x12\x0c\n\x04type\x18\x06 \x01(\t\x12\x0c\n\x04kind\x18\x07 \x01(\t\"\x9b\x01\n\x0fSylkEnumDisplay\x12(\n\x04\x65num\x18\x01 \x01(\x0b\x32\x1a.sylk.SylkEnum.v1.SylkEnum\x12.\n\ncreated_at\x18\x02 \x01(\x0b\x32\x1a.google.protobuf.Timestamp\x12.\n\nupdated_at\x18\x03 \x01(\x0b\x32\x1a.google.protobuf.TimestampB\x1bZ\x19/services/protos/SylkEnumb\x06proto3')
+DESCRIPTOR = _descriptor_pool.Default().AddSerializedFile(b'\n\x0eSylkEnum.proto\x12\x10sylk.SylkEnum.v1\x1a\x13SylkEnumValue.proto\x1a\x1fgoogle/protobuf/timestamp.proto\"\x9f\x01\n\x08SylkEnum\x12\x0b\n\x03uri\x18\x01 \x01(\t\x12\x0c\n\x04name\x18\x02 \x01(\t\x12\x11\n\tfull_name\x18\x03 \x01(\t\x12\x13\n\x0b\x64\x65scription\x18\x04 \x01(\t\x12\x34\n\x06values\x18\x05 \x03(\x0b\x32$.sylk.SylkEnumValue.v1.SylkEnumValue\x12\x0c\n\x04type\x18\x06 \x01(\t\x12\x0c\n\x04kind\x18\x07 \x01(\t\"\x9b\x01\n\x0fSylkEnumDisplay\x12(\n\x04\x65num\x18\x01 \x01(\x0b\x32\x1a.sylk.SylkEnum.v1.SylkEnum\x12.\n\ncreated_at\x18\x02 \x01(\x0b\x32\x1a.google.protobuf.Timestamp\x12.\n\nupdated_at\x18\x03 \x01(\x0b\x32\x1a.google.protobuf.TimestampB9Z7github.com/sylk-build/sylk-cli/services/protos/SylkEnumb\x06proto3')
 
 
 
@@ -99,7 +99,7 @@ _sym_db.RegisterMessage(SylkEnumDisplay)
 if _descriptor._USE_C_DESCRIPTORS == False:
 
   DESCRIPTOR._options = None
-  DESCRIPTOR._serialized_options = b'Z\031/services/protos/SylkEnum'
+  DESCRIPTOR._serialized_options = b'Z7github.com/sylk-build/sylk-cli/services/protos/SylkEnum'
   _SYLKENUM._serialized_start=91
   _SYLKENUM._serialized_end=250
   _SYLKENUMDISPLAY._serialized_start=253

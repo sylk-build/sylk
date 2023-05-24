@@ -500,7 +500,7 @@ class SylkJson():
 
     def _parse_json(self):
         self._organization = self._sylk_json.get('organization')
-        self._domain = self._organization.get('domain') if self._organization is not None else 'public'
+        self._domain = self._organization.get('domain') if self._organization is not None and self._organization.get('domain') is not None else 'sylk'
         self._config = self._sylk_json.get('configs')
         self._project = self._sylk_json.get('project')
         self._services = self._sylk_json.get('services')

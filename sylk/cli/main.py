@@ -368,7 +368,6 @@ def main(args=None):
     parser.add_argument('--purge',action='store_true',help='Purge .sylk/contxt.json file')
     # Parse all command line arguments
     args = parser.parse_args(args)
-    print(args)
     
     # New sub-parsers
     if hasattr(args,"command"):
@@ -588,7 +587,7 @@ def main(args=None):
                 if args.edit:
                     print_warning('Not supporting editing of sylk.build configurations through the CLI yet...')
                 if args.token:
-                    config_command.set_global_token(args.token)
+                    config_command.refresh_global_token()
                 else:
                     config_command.display_configs(SYLK_JSON.path,dictionary=args.dict)
             else:

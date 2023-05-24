@@ -80,7 +80,7 @@ class SylkCloud:
     def set_token(self):
         if self._token is None or self._token[:5] != 'sylk_':
             _pretty.print_info('Couldn\'t find any global sylk.build token...')
-            token = prompter.ask_user_question(questions=[prompter.QText('token','Enter your cloud token',validate=validation_sylk_token)])
+            token = prompter.ask_user_question(questions=[prompter.QPass('token','Enter your cloud token',validate=validation_sylk_token)])
             if token is not None:
                 self._token = token['token']
                 self._validate_token()
@@ -98,11 +98,19 @@ class SylkCloud:
     def pull_project(self,project_id=None,overwrite=False):
         projectId = project_id if project_id is not None else self._org_id+'.'+self.sylkJson.project.get('packageName')
         try:
+            _md = (('sylk-build-token',self._token),)
+
+            org_id = projectId.split('.')[0]
+
+            # org = self._sylk_cloud.GetOrganization(request=GetOrganizationRequest(
+            #     org_id=org_id,
+            # ),metadata=_md)
+
             project = self._sylk_cloud.GetProject(
                 request=GetProjectRequest(
                     project=projectId
                 ),
-                metadata=(('sylk-build-token',self._token),)
+                metadata=_md
             )
             # org = self._sylk_cloud.GetOrganization(
             #     request=GetOrganizationRequest(
@@ -118,7 +126,7 @@ class SylkCloud:
                 ListPackagesRequest(
                     project_id=projectId
                 ),
-                (('sylk-build-token',self._token),)
+                _md
             )
 
             for p in pkgs:
@@ -128,14 +136,19 @@ class SylkCloud:
                 ListServicesRequest(
                     project_id=projectId
                 ),
-                (('sylk-build-token',self._token),)
+                _md
             )
 
             for s in svcs:
                 services[s.result.service.name] = s.result.service
 
+            sylk_org = SylkOrganization(
+                domain="sylk",
+                orgId=org_id
+            )
+            project.result.project.uri = _fs.get_current_location()
             sylk = SylkJson(
-                organization=SylkOrganization(orgId=projectId.split('.')[0]),
+                organization=sylk_org,
                 project=project.result.project,
                 packages=packages,
                 services=services,
@@ -145,7 +158,7 @@ class SylkCloud:
                 )
             )
             if overwrite:
-                _fs.wFile('sylk.json',MessageToJson(sylk),True,True)
+                _fs.wFile('sylk.json',MessageToDict(sylk),True,True)
             # _pretty.print_info(sylk,True,'Project')
             return sylk
         except Exception as e:

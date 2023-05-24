@@ -3,6 +3,7 @@
 # source: SylkConfigs.proto
 """Generated protocol buffer code."""
 from google.protobuf import descriptor as _descriptor
+from google.protobuf.internal import enum_type_wrapper
 
 from typing import overload, Iterator, List, Dict
 from google.protobuf import descriptor_pool as _descriptor_pool
@@ -16,7 +17,7 @@ _sym_db = _symbol_database.Default()
 
 
 
-DESCRIPTOR = _descriptor_pool.Default().AddSerializedFile(b'\n\x11SylkConfigs.proto\x12\x13sylk.SylkConfigs.v1\"y\n\x0eSylkCliConfigs\x12\x0c\n\x04host\x18\x01 \x01(\t\x12\x0c\n\x04port\x18\x02 \x01(\x05\x12\r\n\x05token\x18\x03 \x01(\t\x12\x11\n\tanalytics\x18\x04 \x01(\x08\x12\x11\n\tfirst_run\x18\x05 \x01(\x08\x12\x16\n\x0esylk_templates\x18\x06 \x03(\t\"\x9a\x01\n\x12SylkProjectConfigs\x12\x0c\n\x04host\x18\x01 \x01(\t\x12\x0c\n\x04port\x18\x02 \x01(\x05\x12\x13\n\x0b\x64\x65scription\x18\x03 \x01(\t\x12\x17\n\x0f\x63urrent_version\x18\x04 \x01(\t\x12:\n\x08template\x18\x05 \x01(\x0b\x32(.sylk.SylkConfigs.v1.SylkTemplateConfigs\"\x92\x01\n\x13SylkTemplateConfigs\x12\x14\n\x0cinclude_code\x18\x01 \x01(\x08\x12\x0f\n\x07\x65xclude\x18\x02 \x03(\t\x12\x0f\n\x07include\x18\x03 \x03(\t\x12\x13\n\x0b\x64\x65scription\x18\x04 \x01(\t\x12\x0c\n\x04name\x18\x05 \x01(\t\x12\x10\n\x08out_path\x18\x06 \x01(\t\x12\x0e\n\x06\x61uthor\x18\x07 \x01(\tB\x1eZ\x1c/services/protos/SylkConfigsb\x06proto3')
+DESCRIPTOR = _descriptor_pool.Default().AddSerializedFile(b'\n\x11SylkConfigs.proto\x12\x13sylk.SylkConfigs.v1\"y\n\x0eSylkCliConfigs\x12\x0c\n\x04host\x18\x01 \x01(\t\x12\x0c\n\x04port\x18\x02 \x01(\x05\x12\r\n\x05token\x18\x03 \x01(\t\x12\x11\n\tanalytics\x18\x04 \x01(\x08\x12\x11\n\tfirst_run\x18\x05 \x01(\x08\x12\x16\n\x0esylk_templates\x18\x06 \x03(\t\"\x9a\x01\n\x12SylkProjectConfigs\x12\x0c\n\x04host\x18\x01 \x01(\t\x12\x0c\n\x04port\x18\x02 \x01(\x05\x12\x13\n\x0b\x64\x65scription\x18\x03 \x01(\t\x12\x17\n\x0f\x63urrent_version\x18\x04 \x01(\t\x12:\n\x08template\x18\x05 \x01(\x0b\x32(.sylk.SylkConfigs.v1.SylkTemplateConfigs\"\x92\x01\n\x13SylkTemplateConfigs\x12\x14\n\x0cinclude_code\x18\x01 \x01(\x08\x12\x0f\n\x07\x65xclude\x18\x02 \x03(\t\x12\x0f\n\x07include\x18\x03 \x03(\t\x12\x13\n\x0b\x64\x65scription\x18\x04 \x01(\t\x12\x0c\n\x04name\x18\x05 \x01(\t\x12\x10\n\x08out_path\x18\x06 \x01(\t\x12\x0e\n\x06\x61uthor\x18\x07 \x01(\tB<Z:github.com/sylk-build/sylk-cli/services/protos/SylkConfigsb\x06proto3')
 
 
 
@@ -61,6 +62,8 @@ SylkCliConfigs = _reflection.GeneratedProtocolMessageType('SylkCliConfigs', (_me
   # @@protoc_insertion_point(class_scope:sylk.SylkConfigs.v1.SylkCliConfigs)
   })
 _sym_db.RegisterMessage(SylkCliConfigs)
+
+
 
 @overload
 class SylkTemplateConfigs(_message.Message):
@@ -143,7 +146,7 @@ _sym_db.RegisterMessage(SylkProjectConfigs)
 if _descriptor._USE_C_DESCRIPTORS == False:
 
   DESCRIPTOR._options = None
-  DESCRIPTOR._serialized_options = b'Z\034/services/protos/SylkConfigs'
+  DESCRIPTOR._serialized_options = b'Z:github.com/sylk-build/sylk-cli/services/protos/SylkConfigs'
   _SYLKCLICONFIGS._serialized_start=42
   _SYLKCLICONFIGS._serialized_end=163
   _SYLKPROJECTCONFIGS._serialized_start=166

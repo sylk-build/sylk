@@ -15,7 +15,7 @@ _sym_db = _symbol_database.Default()
 from . import SylkApi_pb2 as SylkApi__pb2
 
 
-DESCRIPTOR = _descriptor_pool.Default().AddSerializedFile(b'\n\x0eMessages.proto\x1a\rSylkApi.proto2\x81\x03\n\x08Messages\x12U\n\nGetMessage\x12\".sylk.SylkApi.v1.GetMessageRequest\x1a#.sylk.SylkApi.v1.GetMessageResponse\x12^\n\rCreateMessage\x12%.sylk.SylkApi.v1.CreateMessageRequest\x1a&.sylk.SylkApi.v1.CreateMessageResponse\x12^\n\rUpdateMessage\x12%.sylk.SylkApi.v1.UpdateMessageRequest\x1a&.sylk.SylkApi.v1.UpdateMessageResponse\x12^\n\rDeleteMessage\x12%.sylk.SylkApi.v1.DeleteMessageRequest\x1a&.sylk.SylkApi.v1.DeleteMessageResponseB\x1bZ\x19/services/protos/Messagesb\x06proto3')
+DESCRIPTOR = _descriptor_pool.Default().AddSerializedFile(b'\n\x0eMessages.proto\x1a\rSylkApi.proto2\x81\x03\n\x08Messages\x12U\n\nGetMessage\x12\".sylk.SylkApi.v1.GetMessageRequest\x1a#.sylk.SylkApi.v1.GetMessageResponse\x12^\n\rCreateMessage\x12%.sylk.SylkApi.v1.CreateMessageRequest\x1a&.sylk.SylkApi.v1.CreateMessageResponse\x12^\n\rUpdateMessage\x12%.sylk.SylkApi.v1.UpdateMessageRequest\x1a&.sylk.SylkApi.v1.UpdateMessageResponse\x12^\n\rDeleteMessage\x12%.sylk.SylkApi.v1.DeleteMessageRequest\x1a&.sylk.SylkApi.v1.DeleteMessageResponseB9Z7github.com/sylk-build/sylk-cli/services/protos/Messagesb\x06proto3')
 
 
 
@@ -23,7 +23,7 @@ _MESSAGES = DESCRIPTOR.services_by_name['Messages']
 if _descriptor._USE_C_DESCRIPTORS == False:
 
   DESCRIPTOR._options = None
-  DESCRIPTOR._serialized_options = b'Z\031/services/protos/Messages'
+  DESCRIPTOR._serialized_options = b'Z7github.com/sylk-build/sylk-cli/services/protos/Messages'
   _MESSAGES._serialized_start=34
   _MESSAGES._serialized_end=419
 # @@protoc_insertion_point(module_scope)

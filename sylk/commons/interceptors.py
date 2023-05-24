@@ -119,8 +119,8 @@ def _sylk_client_defaults(func):
     def sylk_client_defaults(client, context, *args, **kwargs):
         # Do something with the request and metadata objects here
         # For example, you could print the metadata object
-        args = sylk_enforce_version(*args)
-        sylk_log_client(func,context,*args)
+        args = sylk_enforce_version(*args if args is not None else ())
+        sylk_log_client(func,context,*args if args is not None else ())
 
         # Call the RPC method
         return func(client, context, *args, **kwargs)

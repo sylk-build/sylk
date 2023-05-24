@@ -100,6 +100,36 @@ class QConfirm:
         self.ignore = ignore if ignore is not None else False
         self.color = color
 
+class QPass:
+    """
+    A text set of question to be passed to the questions array for prompter function :func:`~sylk.cli.prompter.ask_user_question`
+    see: https://python-inquirer.readthedocs.io/en/latest/examples.html#password-py
+
+    Parameters:
+    -----------
+
+        name: The answer name see: https://python-inquirer.readthedocs.io/en/latest/usage.html#name
+        
+        message: The user prompt message 
+            see: https://python-inquirer.readthedocs.io/en/latest/usage.html#message
+        
+        ignore: Optional callback function that gets `answers` where answers contains the dict of previous
+            answers again and returns a boolean value if to ignore urrent question see: https://python-inquirer.readthedocs.io/en/latest/usage.html#ignore
+        
+        validate: Optional attribute that allows the program to check if the answer is valid or not see: https://python-inquirer.readthedocs.io/en/latest/usage.html#validate
+
+        color: The message color if needed extra customizations, can be passed with "danger" | "warning" - red color or yellow
+    """
+
+    def __init__(self, name:str, message:str, validate=None,ignore=None,default=None,color:user_message_color=None) -> None:
+      
+        self.name = name
+        self.message = message
+        self.validate = validate if validate is not None else True
+        self.ignore = ignore if ignore is not None else False
+        self.default = default
+        self.color = color
+
 class QText:
     """
     A text set of question to be passed to the questions array for prompter function :func:`~sylk.cli.prompter.ask_user_question`
@@ -190,7 +220,18 @@ def ask_user_question(questions):
                 message = bcolors.WARNING + message + bcolors.ENDC
             elif dict_obj.get('color') == 'danger':
                 message = bcolors.FAIL + message + bcolors.ENDC
-        if q.__class__.__name__ == 'QList':
+        if q.__class__.__name__ == 'QPass':
+            questions_temp.append(
+                inquirer.Password(
+                    dict_obj.get('name'),
+                    echo='*',
+                    message=message,
+                    ignore=dict_obj.get('ignore'),
+                    validate=dict_obj.get('validate'),
+                    default=dict_obj.get('default')
+                )
+            )
+        elif q.__class__.__name__ == 'QList':
             questions_temp.append(
                 inquirer.List(
                     dict_obj.get('name'),

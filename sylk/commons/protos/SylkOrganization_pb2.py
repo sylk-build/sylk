@@ -18,7 +18,7 @@ from . import SylkUser_pb2 as SylkUser__pb2
 from . import SylkProject_pb2 as SylkProject__pb2
 
 
-DESCRIPTOR = _descriptor_pool.Default().AddSerializedFile(b'\n\x16SylkOrganization.proto\x12\x18sylk.SylkOrganization.v1\x1a\x0eSylkUser.proto\x1a\x11SylkProject.proto\"N\n\x10SylkOrganization\x12\r\n\x05orgId\x18\x01 \x01(\t\x12\x0c\n\x04name\x18\x02 \x01(\t\x12\x0e\n\x06\x64omain\x18\x03 \x01(\t\x12\r\n\x05owner\x18\x04 \x01(\t\"\xc8\x01\n\x17SylkOrganizationDisplay\x12@\n\x0corganization\x18\x01 \x01(\x0b\x32*.sylk.SylkOrganization.v1.SylkOrganization\x12\x30\n\x05users\x18\x02 \x03(\x0b\x32!.sylk.SylkUser.v1.SylkUserDisplay\x12\x39\n\x08projects\x18\x03 \x03(\x0b\x32\'.sylk.SylkProject.v1.SylkProjectDisplayB#Z!/services/protos/SylkOrganizationb\x06proto3')
+DESCRIPTOR = _descriptor_pool.Default().AddSerializedFile(b'\n\x16SylkOrganization.proto\x12\x18sylk.SylkOrganization.v1\x1a\x0eSylkUser.proto\x1a\x11SylkProject.proto\"N\n\x10SylkOrganization\x12\r\n\x05orgId\x18\x01 \x01(\t\x12\x0c\n\x04name\x18\x02 \x01(\t\x12\x0e\n\x06\x64omain\x18\x03 \x01(\t\x12\r\n\x05owner\x18\x04 \x01(\t\"\xc8\x01\n\x17SylkOrganizationDisplay\x12@\n\x0corganization\x18\x01 \x01(\x0b\x32*.sylk.SylkOrganization.v1.SylkOrganization\x12\x30\n\x05users\x18\x02 \x03(\x0b\x32!.sylk.SylkUser.v1.SylkUserDisplay\x12\x39\n\x08projects\x18\x03 \x03(\x0b\x32\'.sylk.SylkProject.v1.SylkProjectDisplayBAZ?github.com/sylk-build/sylk-cli/services/protos/SylkOrganizationb\x06proto3')
 
 
 
@@ -90,7 +90,7 @@ _sym_db.RegisterMessage(SylkOrganizationDisplay)
 if _descriptor._USE_C_DESCRIPTORS == False:
 
   DESCRIPTOR._options = None
-  DESCRIPTOR._serialized_options = b'Z!/services/protos/SylkOrganization'
+  DESCRIPTOR._serialized_options = b'Z?github.com/sylk-build/sylk-cli/services/protos/SylkOrganization'
   _SYLKORGANIZATION._serialized_start=87
   _SYLKORGANIZATION._serialized_end=165
   _SYLKORGANIZATIONDISPLAY._serialized_start=168
