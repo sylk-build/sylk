@@ -6,8 +6,7 @@ from . import SylkApi_pb2 as SylkApi__pb2
 
 
 class MessagesStub(object):
-    """[webezyio] 
-    """
+    """Missing associated documentation comment in .proto file."""
 
     def __init__(self, channel):
         """Constructor.
@@ -20,15 +19,15 @@ class MessagesStub(object):
                 request_serializer=SylkApi__pb2.GetMessageRequest.SerializeToString,
                 response_deserializer=SylkApi__pb2.GetMessageResponse.FromString,
                 )
-        self.CreateMessage = channel.unary_unary(
-                '/Messages/CreateMessage',
-                request_serializer=SylkApi__pb2.CreateMessageRequest.SerializeToString,
-                response_deserializer=SylkApi__pb2.CreateMessageResponse.FromString,
-                )
         self.UpdateMessage = channel.unary_unary(
                 '/Messages/UpdateMessage',
                 request_serializer=SylkApi__pb2.UpdateMessageRequest.SerializeToString,
                 response_deserializer=SylkApi__pb2.UpdateMessageResponse.FromString,
+                )
+        self.CreateMessage = channel.unary_unary(
+                '/Messages/CreateMessage',
+                request_serializer=SylkApi__pb2.CreateMessageRequest.SerializeToString,
+                response_deserializer=SylkApi__pb2.CreateMessageResponse.FromString,
                 )
         self.DeleteMessage = channel.unary_unary(
                 '/Messages/DeleteMessage',
@@ -38,32 +37,31 @@ class MessagesStub(object):
 
 
 class MessagesServicer(object):
-    """[webezyio] 
-    """
+    """Missing associated documentation comment in .proto file."""
 
     def GetMessage(self, request, context):
-        """[webezyio] - 
-        """
-        context.set_code(grpc.StatusCode.UNIMPLEMENTED)
-        context.set_details('Method not implemented!')
-        raise NotImplementedError('Method not implemented!')
-
-    def CreateMessage(self, request, context):
-        """[webezyio] - 
+        """[sylk] - None
         """
         context.set_code(grpc.StatusCode.UNIMPLEMENTED)
         context.set_details('Method not implemented!')
         raise NotImplementedError('Method not implemented!')
 
     def UpdateMessage(self, request, context):
-        """[webezyio] - 
+        """[sylk] - None
+        """
+        context.set_code(grpc.StatusCode.UNIMPLEMENTED)
+        context.set_details('Method not implemented!')
+        raise NotImplementedError('Method not implemented!')
+
+    def CreateMessage(self, request, context):
+        """[sylk] - None
         """
         context.set_code(grpc.StatusCode.UNIMPLEMENTED)
         context.set_details('Method not implemented!')
         raise NotImplementedError('Method not implemented!')
 
     def DeleteMessage(self, request, context):
-        """[webezyio] - 
+        """[sylk] - None
         """
         context.set_code(grpc.StatusCode.UNIMPLEMENTED)
         context.set_details('Method not implemented!')
@@ -77,15 +75,15 @@ def add_MessagesServicer_to_server(servicer, server):
                     request_deserializer=SylkApi__pb2.GetMessageRequest.FromString,
                     response_serializer=SylkApi__pb2.GetMessageResponse.SerializeToString,
             ),
-            'CreateMessage': grpc.unary_unary_rpc_method_handler(
-                    servicer.CreateMessage,
-                    request_deserializer=SylkApi__pb2.CreateMessageRequest.FromString,
-                    response_serializer=SylkApi__pb2.CreateMessageResponse.SerializeToString,
-            ),
             'UpdateMessage': grpc.unary_unary_rpc_method_handler(
                     servicer.UpdateMessage,
                     request_deserializer=SylkApi__pb2.UpdateMessageRequest.FromString,
                     response_serializer=SylkApi__pb2.UpdateMessageResponse.SerializeToString,
+            ),
+            'CreateMessage': grpc.unary_unary_rpc_method_handler(
+                    servicer.CreateMessage,
+                    request_deserializer=SylkApi__pb2.CreateMessageRequest.FromString,
+                    response_serializer=SylkApi__pb2.CreateMessageResponse.SerializeToString,
             ),
             'DeleteMessage': grpc.unary_unary_rpc_method_handler(
                     servicer.DeleteMessage,
@@ -100,8 +98,7 @@ def add_MessagesServicer_to_server(servicer, server):
 
  # This class is part of an EXPERIMENTAL API.
 class Messages(object):
-    """[webezyio] 
-    """
+    """Missing associated documentation comment in .proto file."""
 
     @staticmethod
     def GetMessage(request,
@@ -121,23 +118,6 @@ class Messages(object):
             insecure, call_credentials, compression, wait_for_ready, timeout, metadata)
 
     @staticmethod
-    def CreateMessage(request,
-            target,
-            options=(),
-            channel_credentials=None,
-            call_credentials=None,
-            insecure=False,
-            compression=None,
-            wait_for_ready=None,
-            timeout=None,
-            metadata=None):
-        return grpc.experimental.unary_unary(request, target, '/Messages/CreateMessage',
-            SylkApi__pb2.CreateMessageRequest.SerializeToString,
-            SylkApi__pb2.CreateMessageResponse.FromString,
-            options, channel_credentials,
-            insecure, call_credentials, compression, wait_for_ready, timeout, metadata)
-
-    @staticmethod
     def UpdateMessage(request,
             target,
             options=(),
@@ -151,6 +131,23 @@ class Messages(object):
         return grpc.experimental.unary_unary(request, target, '/Messages/UpdateMessage',
             SylkApi__pb2.UpdateMessageRequest.SerializeToString,
             SylkApi__pb2.UpdateMessageResponse.FromString,
+            options, channel_credentials,
+            insecure, call_credentials, compression, wait_for_ready, timeout, metadata)
+
+    @staticmethod
+    def CreateMessage(request,
+            target,
+            options=(),
+            channel_credentials=None,
+            call_credentials=None,
+            insecure=False,
+            compression=None,
+            wait_for_ready=None,
+            timeout=None,
+            metadata=None):
+        return grpc.experimental.unary_unary(request, target, '/Messages/CreateMessage',
+            SylkApi__pb2.CreateMessageRequest.SerializeToString,
+            SylkApi__pb2.CreateMessageResponse.FromString,
             options, channel_credentials,
             insecure, call_credentials, compression, wait_for_ready, timeout, metadata)
 

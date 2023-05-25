@@ -31,17 +31,17 @@ log = logging.getLogger('sylk.cli.main')
 class Core:
 
     def get_sylk_json(self,*args,**kwargs):
-        logging.debug(args)
+        # log.debug(args)
         if args[0][0] is None:
             current_path = get_current_location()
             destination_path = join_path(current_path,'sylk.json')
-            logging.debug("Writing new sylk json {1}".format(args[0][0],destination_path))
+            log.debug("Writing new sylk json {1}".format(args[0][0],destination_path))
             sylkJson = get_blank_sylk_json(True)
             wFile(destination_path,sylkJson,json=True)
             # destination_path = destination_path.replace('sylk.json','.sylk')
             # mkdir(destination_path)
         else:
-            logging.debug("Getting sylk json {0}".format(args[0][0]))
+            log.debug("Getting sylk json {0}".format(args[0][0]))
             try:
                 sylkJson = rFile(args[0][0],json=True)
             except Exception:
@@ -51,19 +51,19 @@ class Core:
         return sylkJson
 
     def save_sylk_json(self,*args,**kwargs):
-        logging.debug("Saving sylk json {0} {1}".format(args,kwargs))
+        log.debug("Saving sylk json")
         wFile(args[0][0],args[0][1][0],json=True,overwrite=True)
 
 
 class Builder:
 
     def log(self,hook,command_name,*args,**kwargs):
-        logging.debug(f"[EXCUTE-HOOK-{hook.upper()}] {command_name} : {args}")
+        log.debug(f"[EXCUTE-HOOK-{hook.upper()}] {command_name} : {args}")
    
     def add_resource(self,sylkJson,*args,**kwargs):
         request = args[0][0][0]
         for k in request:
-            logging.debug(f"Adding resource : {k}")
+            log.debug(f"Adding resource : {k}")
             if sylkJson.get(k) is None:
                 sylkJson[k] = request[k]
             else:
@@ -227,9 +227,9 @@ class Builder:
         log.debug("Removing resource "+full_name)
 
     def create_new_project(self,*args,**kwargs):
-        logging.debug("Create new project {0}".format(args))
+        log.debug("Create new project {0}".format(args))
 
     def set_domain(self,*args,**kwargs):
-        # logging.debug(args[0])
+        # log.debug(args[0])
         args[0]['domain'] = args[1][0][0]
-        logging.debug("Setting project domain {0}".format(args[1][0][0]))
+        log.debug("Setting project domain {0}".format(args[1][0][0]))

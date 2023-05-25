@@ -258,6 +258,7 @@ def main(args=None):
                              'rpc', 'enum','extension'], help='List a sylk.build resource from specific resource type')
     parser_list.add_argument('-d', '--dependencies',action='store_true', help='List the dependencies graph for your project')
     parser_list.add_argument('-c', '--cloud',action='store_true', help='List the cloud project for your sylk.build account')
+    parser_list.add_argument('--templates',action='store_true', help='List all available templates')
     
     """Package command"""
     
@@ -349,7 +350,7 @@ def main(args=None):
     # Log level optional argument
     parser.add_argument(
         '--loglevel', default='ERROR', help='Log level',
-        choices=['DEBUG', 'DEBUG', 'WARNING', 'ERROR', 'CRITICAL', ])
+        choices=['DEBUG', 'INFO', 'WARNING', 'ERROR', 'CRITICAL', ])
 
     parser.add_argument(
         '--verbose', action='store_true', help='Control on verbose logging')
@@ -600,12 +601,15 @@ def main(args=None):
                                 cloud_projects.append(prj)
 
                             ls.list_projects(sylkCloud._org_id,cloud_projects) 
+                        # List templates execution
+                        elif args.templates:
+                            sylk_project_config = prj_conf.parse_project_config(os.getcwd())
+                            ls.list_templates(sylk_project_config,SYLK_JSON)
                             # ls.list_cloud_projects(args.full_name,SYLK_JSON)
                         elif hasattr(args, 'type'):
                             ls.list_by_resource(args.type,SYLK_JSON)
                     else:
                         ls.list_by_name(args.full_name,SYLK_JSON)
-
                 else:
                     if hasattr(args,'protos'):
                         print_warning("Cant migrate existing sylk.build project !")
@@ -629,16 +633,23 @@ def main(args=None):
                 print_info(f'Logging into "{args.organization}"')
                 cloud.SylkCloud(sylk_project_config.get('token'),args.organization,None)
                 print_success(f'Logged into: "{args.organization}"')
-            elif hasattr(args,'cloud'):
-                """Cloud commands - list projects"""
-                sylk_project_config = prj_conf.parse_project_config(os.getcwd())
-                print_info(f'Listing cloud projects')
-                sylkCloud = cloud.SylkCloud(sylk_project_config.get('token'),None,None)
-                cloud_projects = []
-                for prj in sylkCloud.listProjects():
-                    cloud_projects.append(prj)
+            if args.command == 'ls':
+                if args.cloud:
+                    """Cloud commands - list projects"""
+                    sylk_project_config = prj_conf.parse_project_config(os.getcwd())
+                    print_info(f'Listing cloud projects')
+                    sylkCloud = cloud.SylkCloud(sylk_project_config.get('token'),None,None)
+                    cloud_projects = []
+                    for prj in sylkCloud.listProjects():
+                        cloud_projects.append(prj)
 
-                ls.list_projects(sylkCloud._org_id,cloud_projects) 
+                    ls.list_projects(sylkCloud._org_id,cloud_projects) 
+                elif args.templates:
+                    """Templates commands - list templates"""
+                    sylk_project_config = prj_conf.parse_project_config(os.getcwd())
+                    print_info(f'Listing sylk templates')
+
+                    ls.list_templates(sylk_project_config,None) 
             elif hasattr(args,'edit'):
                 """Configs commands"""
                 if args.token is not None:

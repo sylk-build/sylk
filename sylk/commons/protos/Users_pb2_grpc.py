@@ -6,8 +6,7 @@ from . import SylkApi_pb2 as SylkApi__pb2
 
 
 class UsersStub(object):
-    """[webezyio] 
-    """
+    """Missing associated documentation comment in .proto file."""
 
     def __init__(self, channel):
         """Constructor.
@@ -15,30 +14,25 @@ class UsersStub(object):
         Args:
             channel: A grpc.Channel.
         """
-        self.GetUser = channel.unary_unary(
-                '/Users/GetUser',
-                request_serializer=SylkApi__pb2.GetUserRequest.SerializeToString,
-                response_deserializer=SylkApi__pb2.GetUserResponse.FromString,
-                )
-        self.UpdateUser = channel.unary_unary(
-                '/Users/UpdateUser',
-                request_serializer=SylkApi__pb2.UpdateUserRequest.SerializeToString,
-                response_deserializer=SylkApi__pb2.UpdateUserResponse.FromString,
-                )
         self.CreateUser = channel.unary_unary(
                 '/Users/CreateUser',
                 request_serializer=SylkApi__pb2.CreateUserRequest.SerializeToString,
                 response_deserializer=SylkApi__pb2.CreateUserResponse.FromString,
+                )
+        self.GetAccessToken = channel.unary_unary(
+                '/Users/GetAccessToken',
+                request_serializer=SylkApi__pb2.GetAccessTokenRequest.SerializeToString,
+                response_deserializer=SylkApi__pb2.GetAccessTokenResponse.FromString,
                 )
         self.CreateAccessToken = channel.unary_unary(
                 '/Users/CreateAccessToken',
                 request_serializer=SylkApi__pb2.CreateAccessTokenRequest.SerializeToString,
                 response_deserializer=SylkApi__pb2.CreateAccessTokenResponse.FromString,
                 )
-        self.GetAccessToken = channel.unary_unary(
-                '/Users/GetAccessToken',
-                request_serializer=SylkApi__pb2.GetAccessTokenRequest.SerializeToString,
-                response_deserializer=SylkApi__pb2.GetAccessTokenResponse.FromString,
+        self.GetUser = channel.unary_unary(
+                '/Users/GetUser',
+                request_serializer=SylkApi__pb2.GetUserRequest.SerializeToString,
+                response_deserializer=SylkApi__pb2.GetUserResponse.FromString,
                 )
         self.ListAccessTokens = channel.unary_stream(
                 '/Users/ListAccessTokens',
@@ -50,56 +44,60 @@ class UsersStub(object):
                 request_serializer=SylkApi__pb2.RevokeAccessTokenRequest.SerializeToString,
                 response_deserializer=SylkApi__pb2.RevokeAccessTokenResponse.FromString,
                 )
+        self.UpdateUser = channel.unary_unary(
+                '/Users/UpdateUser',
+                request_serializer=SylkApi__pb2.UpdateUserRequest.SerializeToString,
+                response_deserializer=SylkApi__pb2.UpdateUserResponse.FromString,
+                )
 
 
 class UsersServicer(object):
-    """[webezyio] 
-    """
-
-    def GetUser(self, request, context):
-        """[webezyio] - 
-        """
-        context.set_code(grpc.StatusCode.UNIMPLEMENTED)
-        context.set_details('Method not implemented!')
-        raise NotImplementedError('Method not implemented!')
-
-    def UpdateUser(self, request, context):
-        """[webezyio] - 
-        """
-        context.set_code(grpc.StatusCode.UNIMPLEMENTED)
-        context.set_details('Method not implemented!')
-        raise NotImplementedError('Method not implemented!')
+    """Missing associated documentation comment in .proto file."""
 
     def CreateUser(self, request, context):
-        """[webezyio] - 
-        """
-        context.set_code(grpc.StatusCode.UNIMPLEMENTED)
-        context.set_details('Method not implemented!')
-        raise NotImplementedError('Method not implemented!')
-
-    def CreateAccessToken(self, request, context):
-        """[webezyio] - 
+        """[sylk] - None
         """
         context.set_code(grpc.StatusCode.UNIMPLEMENTED)
         context.set_details('Method not implemented!')
         raise NotImplementedError('Method not implemented!')
 
     def GetAccessToken(self, request, context):
-        """[webezyio] - 
+        """[sylk] - None
+        """
+        context.set_code(grpc.StatusCode.UNIMPLEMENTED)
+        context.set_details('Method not implemented!')
+        raise NotImplementedError('Method not implemented!')
+
+    def CreateAccessToken(self, request, context):
+        """[sylk] - None
+        """
+        context.set_code(grpc.StatusCode.UNIMPLEMENTED)
+        context.set_details('Method not implemented!')
+        raise NotImplementedError('Method not implemented!')
+
+    def GetUser(self, request, context):
+        """[sylk] - None
         """
         context.set_code(grpc.StatusCode.UNIMPLEMENTED)
         context.set_details('Method not implemented!')
         raise NotImplementedError('Method not implemented!')
 
     def ListAccessTokens(self, request, context):
-        """[webezyio] - 
+        """[sylk] - None
         """
         context.set_code(grpc.StatusCode.UNIMPLEMENTED)
         context.set_details('Method not implemented!')
         raise NotImplementedError('Method not implemented!')
 
     def RevokeAccessToken(self, request, context):
-        """[webezyio] - 
+        """[sylk] - None
+        """
+        context.set_code(grpc.StatusCode.UNIMPLEMENTED)
+        context.set_details('Method not implemented!')
+        raise NotImplementedError('Method not implemented!')
+
+    def UpdateUser(self, request, context):
+        """[sylk] - None
         """
         context.set_code(grpc.StatusCode.UNIMPLEMENTED)
         context.set_details('Method not implemented!')
@@ -108,30 +106,25 @@ class UsersServicer(object):
 
 def add_UsersServicer_to_server(servicer, server):
     rpc_method_handlers = {
-            'GetUser': grpc.unary_unary_rpc_method_handler(
-                    servicer.GetUser,
-                    request_deserializer=SylkApi__pb2.GetUserRequest.FromString,
-                    response_serializer=SylkApi__pb2.GetUserResponse.SerializeToString,
-            ),
-            'UpdateUser': grpc.unary_unary_rpc_method_handler(
-                    servicer.UpdateUser,
-                    request_deserializer=SylkApi__pb2.UpdateUserRequest.FromString,
-                    response_serializer=SylkApi__pb2.UpdateUserResponse.SerializeToString,
-            ),
             'CreateUser': grpc.unary_unary_rpc_method_handler(
                     servicer.CreateUser,
                     request_deserializer=SylkApi__pb2.CreateUserRequest.FromString,
                     response_serializer=SylkApi__pb2.CreateUserResponse.SerializeToString,
+            ),
+            'GetAccessToken': grpc.unary_unary_rpc_method_handler(
+                    servicer.GetAccessToken,
+                    request_deserializer=SylkApi__pb2.GetAccessTokenRequest.FromString,
+                    response_serializer=SylkApi__pb2.GetAccessTokenResponse.SerializeToString,
             ),
             'CreateAccessToken': grpc.unary_unary_rpc_method_handler(
                     servicer.CreateAccessToken,
                     request_deserializer=SylkApi__pb2.CreateAccessTokenRequest.FromString,
                     response_serializer=SylkApi__pb2.CreateAccessTokenResponse.SerializeToString,
             ),
-            'GetAccessToken': grpc.unary_unary_rpc_method_handler(
-                    servicer.GetAccessToken,
-                    request_deserializer=SylkApi__pb2.GetAccessTokenRequest.FromString,
-                    response_serializer=SylkApi__pb2.GetAccessTokenResponse.SerializeToString,
+            'GetUser': grpc.unary_unary_rpc_method_handler(
+                    servicer.GetUser,
+                    request_deserializer=SylkApi__pb2.GetUserRequest.FromString,
+                    response_serializer=SylkApi__pb2.GetUserResponse.SerializeToString,
             ),
             'ListAccessTokens': grpc.unary_stream_rpc_method_handler(
                     servicer.ListAccessTokens,
@@ -143,6 +136,11 @@ def add_UsersServicer_to_server(servicer, server):
                     request_deserializer=SylkApi__pb2.RevokeAccessTokenRequest.FromString,
                     response_serializer=SylkApi__pb2.RevokeAccessTokenResponse.SerializeToString,
             ),
+            'UpdateUser': grpc.unary_unary_rpc_method_handler(
+                    servicer.UpdateUser,
+                    request_deserializer=SylkApi__pb2.UpdateUserRequest.FromString,
+                    response_serializer=SylkApi__pb2.UpdateUserResponse.SerializeToString,
+            ),
     }
     generic_handler = grpc.method_handlers_generic_handler(
             'Users', rpc_method_handlers)
@@ -151,42 +149,7 @@ def add_UsersServicer_to_server(servicer, server):
 
  # This class is part of an EXPERIMENTAL API.
 class Users(object):
-    """[webezyio] 
-    """
-
-    @staticmethod
-    def GetUser(request,
-            target,
-            options=(),
-            channel_credentials=None,
-            call_credentials=None,
-            insecure=False,
-            compression=None,
-            wait_for_ready=None,
-            timeout=None,
-            metadata=None):
-        return grpc.experimental.unary_unary(request, target, '/Users/GetUser',
-            SylkApi__pb2.GetUserRequest.SerializeToString,
-            SylkApi__pb2.GetUserResponse.FromString,
-            options, channel_credentials,
-            insecure, call_credentials, compression, wait_for_ready, timeout, metadata)
-
-    @staticmethod
-    def UpdateUser(request,
-            target,
-            options=(),
-            channel_credentials=None,
-            call_credentials=None,
-            insecure=False,
-            compression=None,
-            wait_for_ready=None,
-            timeout=None,
-            metadata=None):
-        return grpc.experimental.unary_unary(request, target, '/Users/UpdateUser',
-            SylkApi__pb2.UpdateUserRequest.SerializeToString,
-            SylkApi__pb2.UpdateUserResponse.FromString,
-            options, channel_credentials,
-            insecure, call_credentials, compression, wait_for_ready, timeout, metadata)
+    """Missing associated documentation comment in .proto file."""
 
     @staticmethod
     def CreateUser(request,
@@ -202,6 +165,23 @@ class Users(object):
         return grpc.experimental.unary_unary(request, target, '/Users/CreateUser',
             SylkApi__pb2.CreateUserRequest.SerializeToString,
             SylkApi__pb2.CreateUserResponse.FromString,
+            options, channel_credentials,
+            insecure, call_credentials, compression, wait_for_ready, timeout, metadata)
+
+    @staticmethod
+    def GetAccessToken(request,
+            target,
+            options=(),
+            channel_credentials=None,
+            call_credentials=None,
+            insecure=False,
+            compression=None,
+            wait_for_ready=None,
+            timeout=None,
+            metadata=None):
+        return grpc.experimental.unary_unary(request, target, '/Users/GetAccessToken',
+            SylkApi__pb2.GetAccessTokenRequest.SerializeToString,
+            SylkApi__pb2.GetAccessTokenResponse.FromString,
             options, channel_credentials,
             insecure, call_credentials, compression, wait_for_ready, timeout, metadata)
 
@@ -223,7 +203,7 @@ class Users(object):
             insecure, call_credentials, compression, wait_for_ready, timeout, metadata)
 
     @staticmethod
-    def GetAccessToken(request,
+    def GetUser(request,
             target,
             options=(),
             channel_credentials=None,
@@ -233,9 +213,9 @@ class Users(object):
             wait_for_ready=None,
             timeout=None,
             metadata=None):
-        return grpc.experimental.unary_unary(request, target, '/Users/GetAccessToken',
-            SylkApi__pb2.GetAccessTokenRequest.SerializeToString,
-            SylkApi__pb2.GetAccessTokenResponse.FromString,
+        return grpc.experimental.unary_unary(request, target, '/Users/GetUser',
+            SylkApi__pb2.GetUserRequest.SerializeToString,
+            SylkApi__pb2.GetUserResponse.FromString,
             options, channel_credentials,
             insecure, call_credentials, compression, wait_for_ready, timeout, metadata)
 
@@ -270,5 +250,22 @@ class Users(object):
         return grpc.experimental.unary_unary(request, target, '/Users/RevokeAccessToken',
             SylkApi__pb2.RevokeAccessTokenRequest.SerializeToString,
             SylkApi__pb2.RevokeAccessTokenResponse.FromString,
+            options, channel_credentials,
+            insecure, call_credentials, compression, wait_for_ready, timeout, metadata)
+
+    @staticmethod
+    def UpdateUser(request,
+            target,
+            options=(),
+            channel_credentials=None,
+            call_credentials=None,
+            insecure=False,
+            compression=None,
+            wait_for_ready=None,
+            timeout=None,
+            metadata=None):
+        return grpc.experimental.unary_unary(request, target, '/Users/UpdateUser',
+            SylkApi__pb2.UpdateUserRequest.SerializeToString,
+            SylkApi__pb2.UpdateUserResponse.FromString,
             options, channel_credentials,
             insecure, call_credentials, compression, wait_for_ready, timeout, metadata)

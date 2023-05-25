@@ -6,8 +6,7 @@ from . import SylkApi_pb2 as SylkApi__pb2
 
 
 class OrganizationsStub(object):
-    """[webezyio] 
-    """
+    """Missing associated documentation comment in .proto file."""
 
     def __init__(self, channel):
         """Constructor.
@@ -15,6 +14,11 @@ class OrganizationsStub(object):
         Args:
             channel: A grpc.Channel.
         """
+        self.AcceprUserInvite = channel.unary_unary(
+                '/Organizations/AcceprUserInvite',
+                request_serializer=SylkApi__pb2.AcceptUserInviteRequest.SerializeToString,
+                response_deserializer=SylkApi__pb2.AcceptUserInviteResponse.FromString,
+                )
         self.GetOrganization = channel.unary_unary(
                 '/Organizations/GetOrganization',
                 request_serializer=SylkApi__pb2.GetOrganizationRequest.SerializeToString,
@@ -30,20 +34,10 @@ class OrganizationsStub(object):
                 request_serializer=SylkApi__pb2.ListOrganizationsRequest.SerializeToString,
                 response_deserializer=SylkApi__pb2.GetOrganizationResponse.FromString,
                 )
-        self.AcceprUserInvite = channel.unary_unary(
-                '/Organizations/AcceprUserInvite',
-                request_serializer=SylkApi__pb2.AcceptUserInviteRequest.SerializeToString,
-                response_deserializer=SylkApi__pb2.AcceptUserInviteResponse.FromString,
-                )
         self.AddUser = channel.unary_unary(
                 '/Organizations/AddUser',
                 request_serializer=SylkApi__pb2.AddUserRequest.SerializeToString,
                 response_deserializer=SylkApi__pb2.AddUserResponse.FromString,
-                )
-        self.UpdateUserRole = channel.unary_unary(
-                '/Organizations/UpdateUserRole',
-                request_serializer=SylkApi__pb2.UpdateUserRoleRequest.SerializeToString,
-                response_deserializer=SylkApi__pb2.UpdateUserRoleResponse.FromString,
                 )
         self.UpdateUserStatus = channel.unary_unary(
                 '/Organizations/UpdateUserStatus',
@@ -55,63 +49,67 @@ class OrganizationsStub(object):
                 request_serializer=SylkApi__pb2.RemoveUserRequest.SerializeToString,
                 response_deserializer=SylkApi__pb2.RemoveUserResponse.FromString,
                 )
+        self.UpdateUserRole = channel.unary_unary(
+                '/Organizations/UpdateUserRole',
+                request_serializer=SylkApi__pb2.UpdateUserRoleRequest.SerializeToString,
+                response_deserializer=SylkApi__pb2.UpdateUserRoleResponse.FromString,
+                )
 
 
 class OrganizationsServicer(object):
-    """[webezyio] 
-    """
+    """Missing associated documentation comment in .proto file."""
+
+    def AcceprUserInvite(self, request, context):
+        """[sylk] - None
+        """
+        context.set_code(grpc.StatusCode.UNIMPLEMENTED)
+        context.set_details('Method not implemented!')
+        raise NotImplementedError('Method not implemented!')
 
     def GetOrganization(self, request, context):
-        """[webezyio] - 
+        """[sylk] - None
         """
         context.set_code(grpc.StatusCode.UNIMPLEMENTED)
         context.set_details('Method not implemented!')
         raise NotImplementedError('Method not implemented!')
 
     def UpdateOrganization(self, request, context):
-        """[webezyio] - 
+        """[sylk] - None
         """
         context.set_code(grpc.StatusCode.UNIMPLEMENTED)
         context.set_details('Method not implemented!')
         raise NotImplementedError('Method not implemented!')
 
     def ListOrganizations(self, request, context):
-        """[webezyio] - 
-        """
-        context.set_code(grpc.StatusCode.UNIMPLEMENTED)
-        context.set_details('Method not implemented!')
-        raise NotImplementedError('Method not implemented!')
-
-    def AcceprUserInvite(self, request, context):
-        """[webezyio] - 
+        """[sylk] - None
         """
         context.set_code(grpc.StatusCode.UNIMPLEMENTED)
         context.set_details('Method not implemented!')
         raise NotImplementedError('Method not implemented!')
 
     def AddUser(self, request, context):
-        """[webezyio] - 
-        """
-        context.set_code(grpc.StatusCode.UNIMPLEMENTED)
-        context.set_details('Method not implemented!')
-        raise NotImplementedError('Method not implemented!')
-
-    def UpdateUserRole(self, request, context):
-        """[webezyio] - 
+        """[sylk] - None
         """
         context.set_code(grpc.StatusCode.UNIMPLEMENTED)
         context.set_details('Method not implemented!')
         raise NotImplementedError('Method not implemented!')
 
     def UpdateUserStatus(self, request, context):
-        """[webezyio] - 
+        """[sylk] - None
         """
         context.set_code(grpc.StatusCode.UNIMPLEMENTED)
         context.set_details('Method not implemented!')
         raise NotImplementedError('Method not implemented!')
 
     def RemoveUser(self, request, context):
-        """[webezyio] - 
+        """[sylk] - None
+        """
+        context.set_code(grpc.StatusCode.UNIMPLEMENTED)
+        context.set_details('Method not implemented!')
+        raise NotImplementedError('Method not implemented!')
+
+    def UpdateUserRole(self, request, context):
+        """[sylk] - None
         """
         context.set_code(grpc.StatusCode.UNIMPLEMENTED)
         context.set_details('Method not implemented!')
@@ -120,6 +118,11 @@ class OrganizationsServicer(object):
 
 def add_OrganizationsServicer_to_server(servicer, server):
     rpc_method_handlers = {
+            'AcceprUserInvite': grpc.unary_unary_rpc_method_handler(
+                    servicer.AcceprUserInvite,
+                    request_deserializer=SylkApi__pb2.AcceptUserInviteRequest.FromString,
+                    response_serializer=SylkApi__pb2.AcceptUserInviteResponse.SerializeToString,
+            ),
             'GetOrganization': grpc.unary_unary_rpc_method_handler(
                     servicer.GetOrganization,
                     request_deserializer=SylkApi__pb2.GetOrganizationRequest.FromString,
@@ -135,20 +138,10 @@ def add_OrganizationsServicer_to_server(servicer, server):
                     request_deserializer=SylkApi__pb2.ListOrganizationsRequest.FromString,
                     response_serializer=SylkApi__pb2.GetOrganizationResponse.SerializeToString,
             ),
-            'AcceprUserInvite': grpc.unary_unary_rpc_method_handler(
-                    servicer.AcceprUserInvite,
-                    request_deserializer=SylkApi__pb2.AcceptUserInviteRequest.FromString,
-                    response_serializer=SylkApi__pb2.AcceptUserInviteResponse.SerializeToString,
-            ),
             'AddUser': grpc.unary_unary_rpc_method_handler(
                     servicer.AddUser,
                     request_deserializer=SylkApi__pb2.AddUserRequest.FromString,
                     response_serializer=SylkApi__pb2.AddUserResponse.SerializeToString,
-            ),
-            'UpdateUserRole': grpc.unary_unary_rpc_method_handler(
-                    servicer.UpdateUserRole,
-                    request_deserializer=SylkApi__pb2.UpdateUserRoleRequest.FromString,
-                    response_serializer=SylkApi__pb2.UpdateUserRoleResponse.SerializeToString,
             ),
             'UpdateUserStatus': grpc.unary_unary_rpc_method_handler(
                     servicer.UpdateUserStatus,
@@ -160,6 +153,11 @@ def add_OrganizationsServicer_to_server(servicer, server):
                     request_deserializer=SylkApi__pb2.RemoveUserRequest.FromString,
                     response_serializer=SylkApi__pb2.RemoveUserResponse.SerializeToString,
             ),
+            'UpdateUserRole': grpc.unary_unary_rpc_method_handler(
+                    servicer.UpdateUserRole,
+                    request_deserializer=SylkApi__pb2.UpdateUserRoleRequest.FromString,
+                    response_serializer=SylkApi__pb2.UpdateUserRoleResponse.SerializeToString,
+            ),
     }
     generic_handler = grpc.method_handlers_generic_handler(
             'Organizations', rpc_method_handlers)
@@ -168,8 +166,24 @@ def add_OrganizationsServicer_to_server(servicer, server):
 
  # This class is part of an EXPERIMENTAL API.
 class Organizations(object):
-    """[webezyio] 
-    """
+    """Missing associated documentation comment in .proto file."""
+
+    @staticmethod
+    def AcceprUserInvite(request,
+            target,
+            options=(),
+            channel_credentials=None,
+            call_credentials=None,
+            insecure=False,
+            compression=None,
+            wait_for_ready=None,
+            timeout=None,
+            metadata=None):
+        return grpc.experimental.unary_unary(request, target, '/Organizations/AcceprUserInvite',
+            SylkApi__pb2.AcceptUserInviteRequest.SerializeToString,
+            SylkApi__pb2.AcceptUserInviteResponse.FromString,
+            options, channel_credentials,
+            insecure, call_credentials, compression, wait_for_ready, timeout, metadata)
 
     @staticmethod
     def GetOrganization(request,
@@ -223,23 +237,6 @@ class Organizations(object):
             insecure, call_credentials, compression, wait_for_ready, timeout, metadata)
 
     @staticmethod
-    def AcceprUserInvite(request,
-            target,
-            options=(),
-            channel_credentials=None,
-            call_credentials=None,
-            insecure=False,
-            compression=None,
-            wait_for_ready=None,
-            timeout=None,
-            metadata=None):
-        return grpc.experimental.unary_unary(request, target, '/Organizations/AcceprUserInvite',
-            SylkApi__pb2.AcceptUserInviteRequest.SerializeToString,
-            SylkApi__pb2.AcceptUserInviteResponse.FromString,
-            options, channel_credentials,
-            insecure, call_credentials, compression, wait_for_ready, timeout, metadata)
-
-    @staticmethod
     def AddUser(request,
             target,
             options=(),
@@ -253,23 +250,6 @@ class Organizations(object):
         return grpc.experimental.unary_unary(request, target, '/Organizations/AddUser',
             SylkApi__pb2.AddUserRequest.SerializeToString,
             SylkApi__pb2.AddUserResponse.FromString,
-            options, channel_credentials,
-            insecure, call_credentials, compression, wait_for_ready, timeout, metadata)
-
-    @staticmethod
-    def UpdateUserRole(request,
-            target,
-            options=(),
-            channel_credentials=None,
-            call_credentials=None,
-            insecure=False,
-            compression=None,
-            wait_for_ready=None,
-            timeout=None,
-            metadata=None):
-        return grpc.experimental.unary_unary(request, target, '/Organizations/UpdateUserRole',
-            SylkApi__pb2.UpdateUserRoleRequest.SerializeToString,
-            SylkApi__pb2.UpdateUserRoleResponse.FromString,
             options, channel_credentials,
             insecure, call_credentials, compression, wait_for_ready, timeout, metadata)
 
@@ -304,5 +284,22 @@ class Organizations(object):
         return grpc.experimental.unary_unary(request, target, '/Organizations/RemoveUser',
             SylkApi__pb2.RemoveUserRequest.SerializeToString,
             SylkApi__pb2.RemoveUserResponse.FromString,
+            options, channel_credentials,
+            insecure, call_credentials, compression, wait_for_ready, timeout, metadata)
+
+    @staticmethod
+    def UpdateUserRole(request,
+            target,
+            options=(),
+            channel_credentials=None,
+            call_credentials=None,
+            insecure=False,
+            compression=None,
+            wait_for_ready=None,
+            timeout=None,
+            metadata=None):
+        return grpc.experimental.unary_unary(request, target, '/Organizations/UpdateUserRole',
+            SylkApi__pb2.UpdateUserRoleRequest.SerializeToString,
+            SylkApi__pb2.UpdateUserRoleResponse.FromString,
             options, channel_credentials,
             insecure, call_credentials, compression, wait_for_ready, timeout, metadata)

@@ -6,8 +6,7 @@ from . import SylkApi_pb2 as SylkApi__pb2
 
 
 class EnumsStub(object):
-    """[webezyio] 
-    """
+    """Missing associated documentation comment in .proto file."""
 
     def __init__(self, channel):
         """Constructor.
@@ -20,11 +19,6 @@ class EnumsStub(object):
                 request_serializer=SylkApi__pb2.GetEnumRequest.SerializeToString,
                 response_deserializer=SylkApi__pb2.GetEnumResponse.FromString,
                 )
-        self.CreateEnum = channel.unary_unary(
-                '/Enums/CreateEnum',
-                request_serializer=SylkApi__pb2.CreateEnumRequest.SerializeToString,
-                response_deserializer=SylkApi__pb2.CreateEnumResponse.FromString,
-                )
         self.UpdateEnum = channel.unary_unary(
                 '/Enums/UpdateEnum',
                 request_serializer=SylkApi__pb2.UpdateEnumRequest.SerializeToString,
@@ -35,35 +29,39 @@ class EnumsStub(object):
                 request_serializer=SylkApi__pb2.DeleteEnumRequest.SerializeToString,
                 response_deserializer=SylkApi__pb2.DeleteEnumResponse.FromString,
                 )
+        self.CreateEnum = channel.unary_unary(
+                '/Enums/CreateEnum',
+                request_serializer=SylkApi__pb2.CreateEnumRequest.SerializeToString,
+                response_deserializer=SylkApi__pb2.CreateEnumResponse.FromString,
+                )
 
 
 class EnumsServicer(object):
-    """[webezyio] 
-    """
+    """Missing associated documentation comment in .proto file."""
 
     def GetEnum(self, request, context):
-        """[webezyio] - 
-        """
-        context.set_code(grpc.StatusCode.UNIMPLEMENTED)
-        context.set_details('Method not implemented!')
-        raise NotImplementedError('Method not implemented!')
-
-    def CreateEnum(self, request, context):
-        """[webezyio] - 
+        """[sylk] - None
         """
         context.set_code(grpc.StatusCode.UNIMPLEMENTED)
         context.set_details('Method not implemented!')
         raise NotImplementedError('Method not implemented!')
 
     def UpdateEnum(self, request, context):
-        """[webezyio] - 
+        """[sylk] - None
         """
         context.set_code(grpc.StatusCode.UNIMPLEMENTED)
         context.set_details('Method not implemented!')
         raise NotImplementedError('Method not implemented!')
 
     def DeleteEnum(self, request, context):
-        """[webezyio] - 
+        """[sylk] - None
+        """
+        context.set_code(grpc.StatusCode.UNIMPLEMENTED)
+        context.set_details('Method not implemented!')
+        raise NotImplementedError('Method not implemented!')
+
+    def CreateEnum(self, request, context):
+        """[sylk] - None
         """
         context.set_code(grpc.StatusCode.UNIMPLEMENTED)
         context.set_details('Method not implemented!')
@@ -77,11 +75,6 @@ def add_EnumsServicer_to_server(servicer, server):
                     request_deserializer=SylkApi__pb2.GetEnumRequest.FromString,
                     response_serializer=SylkApi__pb2.GetEnumResponse.SerializeToString,
             ),
-            'CreateEnum': grpc.unary_unary_rpc_method_handler(
-                    servicer.CreateEnum,
-                    request_deserializer=SylkApi__pb2.CreateEnumRequest.FromString,
-                    response_serializer=SylkApi__pb2.CreateEnumResponse.SerializeToString,
-            ),
             'UpdateEnum': grpc.unary_unary_rpc_method_handler(
                     servicer.UpdateEnum,
                     request_deserializer=SylkApi__pb2.UpdateEnumRequest.FromString,
@@ -92,6 +85,11 @@ def add_EnumsServicer_to_server(servicer, server):
                     request_deserializer=SylkApi__pb2.DeleteEnumRequest.FromString,
                     response_serializer=SylkApi__pb2.DeleteEnumResponse.SerializeToString,
             ),
+            'CreateEnum': grpc.unary_unary_rpc_method_handler(
+                    servicer.CreateEnum,
+                    request_deserializer=SylkApi__pb2.CreateEnumRequest.FromString,
+                    response_serializer=SylkApi__pb2.CreateEnumResponse.SerializeToString,
+            ),
     }
     generic_handler = grpc.method_handlers_generic_handler(
             'Enums', rpc_method_handlers)
@@ -100,8 +98,7 @@ def add_EnumsServicer_to_server(servicer, server):
 
  # This class is part of an EXPERIMENTAL API.
 class Enums(object):
-    """[webezyio] 
-    """
+    """Missing associated documentation comment in .proto file."""
 
     @staticmethod
     def GetEnum(request,
@@ -117,23 +114,6 @@ class Enums(object):
         return grpc.experimental.unary_unary(request, target, '/Enums/GetEnum',
             SylkApi__pb2.GetEnumRequest.SerializeToString,
             SylkApi__pb2.GetEnumResponse.FromString,
-            options, channel_credentials,
-            insecure, call_credentials, compression, wait_for_ready, timeout, metadata)
-
-    @staticmethod
-    def CreateEnum(request,
-            target,
-            options=(),
-            channel_credentials=None,
-            call_credentials=None,
-            insecure=False,
-            compression=None,
-            wait_for_ready=None,
-            timeout=None,
-            metadata=None):
-        return grpc.experimental.unary_unary(request, target, '/Enums/CreateEnum',
-            SylkApi__pb2.CreateEnumRequest.SerializeToString,
-            SylkApi__pb2.CreateEnumResponse.FromString,
             options, channel_credentials,
             insecure, call_credentials, compression, wait_for_ready, timeout, metadata)
 
@@ -168,5 +148,22 @@ class Enums(object):
         return grpc.experimental.unary_unary(request, target, '/Enums/DeleteEnum',
             SylkApi__pb2.DeleteEnumRequest.SerializeToString,
             SylkApi__pb2.DeleteEnumResponse.FromString,
+            options, channel_credentials,
+            insecure, call_credentials, compression, wait_for_ready, timeout, metadata)
+
+    @staticmethod
+    def CreateEnum(request,
+            target,
+            options=(),
+            channel_credentials=None,
+            call_credentials=None,
+            insecure=False,
+            compression=None,
+            wait_for_ready=None,
+            timeout=None,
+            metadata=None):
+        return grpc.experimental.unary_unary(request, target, '/Enums/CreateEnum',
+            SylkApi__pb2.CreateEnumRequest.SerializeToString,
+            SylkApi__pb2.CreateEnumResponse.FromString,
             options, channel_credentials,
             insecure, call_credentials, compression, wait_for_ready, timeout, metadata)

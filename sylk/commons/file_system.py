@@ -25,6 +25,7 @@ import os
 import json as JSON
 import shutil
 from distutils.dir_util import copy_tree
+log = logging.getLogger('sylk.cli.main')
 
 
 def mv(old_path, new_path):
@@ -36,7 +37,7 @@ def mkdir(path):
     if check_if_dir_exists(path) == False:
         os.mkdir(path)
     else:
-        logging.debug("Directory is already exists ! {0}"
+        log.debug("Directory is already exists ! {0}"
                       .format(path))
 
 def cpDir(dir_path,target_path):
@@ -69,17 +70,17 @@ def wFile(path, content, overwrite=False, json=False,force=False):
                 # Serializing json
                 json_object = JSON.dumps(content, indent=4)
                 # Writing to sample.json
-                logging.debug(f"Overwriting json file {path}")
+                log.debug(f"Overwriting json file {path}")
                 with open(path, "w") as outfile:
                     outfile.write(json_object)
             else:
 
-                logging.debug(f"Overwriting file {path}")
+                log.debug(f"Overwriting file {path}")
                 with open(path, 'w') as file:
                     file.write(content)
                     file.close()
         else:
-            logging.debug("{0} File is already existing ! [pass function with 'overwrite' argument if you want to override this behaviour]"
+            log.debug("{0} File is already existing ! [pass function with 'overwrite' argument if you want to override this behaviour]"
                           .format(path))
     else:
         if force:
@@ -89,18 +90,18 @@ def wFile(path, content, overwrite=False, json=False,force=False):
             # Serializing json
             json_object = JSON.dumps(content, indent=4)
             # Writing to sample.json
-            logging.debug(f"Writing json file {path}")
+            log.debug(f"Writing json file {path}")
             with open(path, "w") as outfile:
                 outfile.write(json_object)
         else:
-            logging.debug(f"Writing file {path}")
+            log.debug(f"Writing file {path}")
             with open(path, 'w') as file:
                 file.write(content)
                 file.close()
 
 
 def rFile(path, json=False):
-    logging.debug(f"Reading file -> {path}")
+    log.debug(f"Reading file -> {path}")
     if check_if_file_exists(path) == True:
         if json:
             f = open(path)

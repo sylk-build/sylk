@@ -15,7 +15,7 @@ _sym_db = _symbol_database.Default()
 from . import SylkApi_pb2 as SylkApi__pb2
 
 
-DESCRIPTOR = _descriptor_pool.Default().AddSerializedFile(b'\n\x0b\x45nums.proto\x1a\rSylkApi.proto2\xda\x02\n\x05\x45nums\x12L\n\x07GetEnum\x12\x1f.sylk.SylkApi.v1.GetEnumRequest\x1a .sylk.SylkApi.v1.GetEnumResponse\x12U\n\nCreateEnum\x12\".sylk.SylkApi.v1.CreateEnumRequest\x1a#.sylk.SylkApi.v1.CreateEnumResponse\x12U\n\nUpdateEnum\x12\".sylk.SylkApi.v1.UpdateEnumRequest\x1a#.sylk.SylkApi.v1.UpdateEnumResponse\x12U\n\nDeleteEnum\x12\".sylk.SylkApi.v1.DeleteEnumRequest\x1a#.sylk.SylkApi.v1.DeleteEnumResponseB6Z4github.com/sylk-build/sylk-cli/services/protos/Enumsb\x06proto3')
+DESCRIPTOR = _descriptor_pool.Default().AddSerializedFile(b'\n\x0b\x45nums.proto\x1a\rSylkApi.proto2\xda\x02\n\x05\x45nums\x12L\n\x07GetEnum\x12\x1f.sylk.SylkApi.v1.GetEnumRequest\x1a .sylk.SylkApi.v1.GetEnumResponse\x12U\n\nUpdateEnum\x12\".sylk.SylkApi.v1.UpdateEnumRequest\x1a#.sylk.SylkApi.v1.UpdateEnumResponse\x12U\n\nDeleteEnum\x12\".sylk.SylkApi.v1.DeleteEnumRequest\x1a#.sylk.SylkApi.v1.DeleteEnumResponse\x12U\n\nCreateEnum\x12\".sylk.SylkApi.v1.CreateEnumRequest\x1a#.sylk.SylkApi.v1.CreateEnumResponseb\x06proto3')
 
 
 
@@ -23,7 +23,6 @@ _ENUMS = DESCRIPTOR.services_by_name['Enums']
 if _descriptor._USE_C_DESCRIPTORS == False:
 
   DESCRIPTOR._options = None
-  DESCRIPTOR._serialized_options = b'Z4github.com/sylk-build/sylk-cli/services/protos/Enums'
   _ENUMS._serialized_start=31
   _ENUMS._serialized_end=377
 # @@protoc_insertion_point(module_scope)

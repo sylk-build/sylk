@@ -309,32 +309,42 @@ function _preMethodCallDecorator(fn) {_OPEN_BRCK}\n\
 	  return fn.apply(this, args);\n\
 	{_CLOSING_BRCK};\n\
 {_CLOSING_BRCK}\n\n\
-function _retry(next) {_CLOSING_BRCK}\n\
+function _retry(next) {_OPEN_BRCK}\n\
 	return function (...args) {_OPEN_BRCK}\n\
 		const {_OPEN_BRCK} request, metadata, cb, options {_CLOSING_BRCK} = unpack(...args);\n\
-		let {_OPEN_BRCK} retriesPolicy {_CLOSING_BRCK} = options;\n\
-		if(retriesPolicy === undefined) {_OPEN_BRCK}\n\
+        if (options) {_OPEN_BRCK}\n\
+			if(options.retriesPolicy === undefined) {_OPEN_BRCK}\n\
+				retriesPolicy = defaultRetriesPolicy\n\
+			{_CLOSING_BRCK} else {_OPEN_BRCK}\n\
+				retriesPolicy = options.retriesPolicy\n\
+			{_CLOSING_BRCK}\n\
+		{_CLOSING_BRCK} else {_OPEN_BRCK}\n\
 			retriesPolicy = defaultRetriesPolicy\n\
 		{_CLOSING_BRCK}\n\
+        const retryCodes = retriesPolicy.retryCodes ? retriesPolicy.retryCodes : [];\n\
 		const maxRetries = retriesPolicy.maxRetries ? retriesPolicy.maxRetries : 3;\n\n\
 		const originalCB = cb;\n\
 		let retryAttempt = 0;\n\
 		let interval = retriesPolicy.interval ? retriesPolicy.interval : 100;\n\
 		const retryCB = (err,res) => {_OPEN_BRCK}\n\
 			if(err) {_OPEN_BRCK}\n\
-				retryAttempt += 1;\n\
-				const sylkMaxRetries = \'x-sylk-retries\';\n\
-				let maxRetriesCount = metadata.get(sylkMaxRetries)\n\
-				maxRetriesCount.length>0 ? metadata.set(sylkMaxRetries,Number(maxRetriesCount[0])+1) : metadata.add(sylkMaxRetries,retryAttempt)\n\n\
-				if(retryAttempt >= maxRetries) {_OPEN_BRCK}\n\
-					args[3]=originalCB\n\
-				{_CLOSING_BRCK}\n\
-				setTimeout(() => {_OPEN_BRCK}\n\
-					request.todo_id = Number(request.todo_id) - 1\n\
-					next(...args)\n\n\
-				{_CLOSING_BRCK},interval * (retriesPolicy.backoff ? Math.pow(2, retryAttempt) : 1))\n\
+                if (!retryCodes.includes(err.code)) {_OPEN_BRCK}\n\
+					return originalCB ? originalCB(err,null) : err\n\
+				{_CLOSING_BRCK} else {_OPEN_BRCK}\n\
+                    retryAttempt += 1;\n\
+                    const sylkMaxRetries = \'x-sylk-retries\';\n\
+                    let maxRetriesCount = metadata.get(sylkMaxRetries)\n\
+                    maxRetriesCount.length>0 ? metadata.set(sylkMaxRetries,Number(maxRetriesCount[0])+1) : metadata.add(sylkMaxRetries,retryAttempt)\n\n\
+                    if(retryAttempt >= maxRetries) {_OPEN_BRCK}\n\
+                        args[3]=originalCB\n\
+                    {_CLOSING_BRCK}\n\
+                    setTimeout(() => {_OPEN_BRCK}\n\
+                        request.todo_id = Number(request.todo_id) - 1\n\
+                        next(...args)\n\n\
+                    {_CLOSING_BRCK},interval * (retriesPolicy.backoff ? Math.pow(2, retryAttempt) : 1))\n\
+                {_CLOSING_BRCK}\n\
 			{_CLOSING_BRCK} else {_OPEN_BRCK}\n\
-				return originalCB(null,res)\n\
+				return originalCB ? originalCB(null,res) : res\n\
 			{_CLOSING_BRCK}\n\
 		{_CLOSING_BRCK};\n\
 		args[3] = retryCB\n\
@@ -343,8 +353,8 @@ function _retry(next) {_CLOSING_BRCK}\n\
 	{_CLOSING_BRCK};\n\
 {_CLOSING_BRCK}\n\n\
 module.exports = {_OPEN_BRCK}\n\
-	clientMethodWrapper : _preMethodCallDecorator\n\
-    clientReries : _retry\n\
+	clientMethodWrapper : _preMethodCallDecorator,\n\
+    clientRetries : _retry\n\
 {_CLOSING_BRCK}'
 
 def js_package_json(prj_name):

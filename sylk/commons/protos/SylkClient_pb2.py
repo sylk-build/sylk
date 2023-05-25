@@ -17,7 +17,7 @@ _sym_db = _symbol_database.Default()
 
 
 
-DESCRIPTOR = _descriptor_pool.Default().AddSerializedFile(b'\n\x10SylkClient.proto\x12\x12sylk.SylkClient.v1\"X\n\nSylkClient\x12\x39\n\x08language\x18\x01 \x01(\x0e\x32\'.sylk.SylkClient.v1.SylkClientLanguages\x12\x0f\n\x07out_dir\x18\x02 \x01(\t*f\n\x13SylkClientLanguages\x12\x1f\n\x1b\x44\x45\x46\x41ULT_SYLKCLIENTLANGUAGES\x10\x00\x12\n\n\x06python\x10\x01\x12\n\n\x06nodejs\x10\x02\x12\x0e\n\ntypescript\x10\x03\x12\x06\n\x02go\x10\x04\x42;Z9github.com/sylk-build/sylk-cli/services/protos/SylkClientb\x06proto3')
+DESCRIPTOR = _descriptor_pool.Default().AddSerializedFile(b'\n\x10SylkClient.proto\x12\x12sylk.SylkClient.v1\"X\n\nSylkClient\x12\x0f\n\x07out_dir\x18\x02 \x01(\t\x12\x39\n\x08language\x18\x01 \x01(\x0e\x32\'.sylk.SylkClient.v1.SylkClientLanguages*f\n\x13SylkClientLanguages\x12\x1f\n\x1b\x44\x45\x46\x41ULT_SYLKCLIENTLANGUAGES\x10\x00\x12\n\n\x06python\x10\x01\x12\n\n\x06nodejs\x10\x02\x12\x0e\n\ntypescript\x10\x03\x12\x06\n\x02go\x10\x04\x62\x06proto3')
 
 _SYLKCLIENTLANGUAGES = DESCRIPTOR.enum_types_by_name['SylkClientLanguages']
 SylkClientLanguages = enum_type_wrapper.EnumTypeWrapper(_SYLKCLIENTLANGUAGES)
@@ -32,20 +32,22 @@ _SYLKCLIENT = DESCRIPTOR.message_types_by_name['SylkClient']
 
 @overload
 class SylkClient(_message.Message):
-	"""webezyio generated message [sylk.SylkClient.v1.SylkClient]
+	"""sylk.build generated message [sylk.SylkClient.v1.SylkClient]
 	A class respresent a SylkClient type
 	
 		"""
-	language = enum_type_wrapper.EnumTypeWrapper # type: enum_type_wrapper.EnumTypeWrapper
 	out_dir = str # type: str
+	language = int # type: int
 
-	def __init__(self, language=enum_type_wrapper.EnumTypeWrapper, out_dir=str):
+	def __init__(self, out_dir=str, language=int):
 		"""
+		
+
 		Attributes:
 		----------
-		language : enum_type_wrapper.EnumTypeWrapper
-			
 		out_dir : str
+			
+		language : int
 			
 		"""
 		pass
@@ -59,7 +61,6 @@ _sym_db.RegisterMessage(SylkClient)
 if _descriptor._USE_C_DESCRIPTORS == False:
 
   DESCRIPTOR._options = None
-  DESCRIPTOR._serialized_options = b'Z9github.com/sylk-build/sylk-cli/services/protos/SylkClient'
   _SYLKCLIENTLANGUAGES._serialized_start=130
   _SYLKCLIENTLANGUAGES._serialized_end=232
   _SYLKCLIENT._serialized_start=40

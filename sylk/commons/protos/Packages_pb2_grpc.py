@@ -6,8 +6,7 @@ from . import SylkApi_pb2 as SylkApi__pb2
 
 
 class PackagesStub(object):
-    """[webezyio] 
-    """
+    """Missing associated documentation comment in .proto file."""
 
     def __init__(self, channel):
         """Constructor.
@@ -25,15 +24,15 @@ class PackagesStub(object):
                 request_serializer=SylkApi__pb2.CreatePackageRequest.SerializeToString,
                 response_deserializer=SylkApi__pb2.CreatePackageResponse.FromString,
                 )
-        self.UpdatePackage = channel.unary_unary(
-                '/Packages/UpdatePackage',
-                request_serializer=SylkApi__pb2.UpdatePackageRequest.SerializeToString,
-                response_deserializer=SylkApi__pb2.UpdatePackageResponse.FromString,
-                )
         self.DeletePackage = channel.unary_unary(
                 '/Packages/DeletePackage',
                 request_serializer=SylkApi__pb2.DeletePackageRequest.SerializeToString,
                 response_deserializer=SylkApi__pb2.DeletePackageResponse.FromString,
+                )
+        self.UpdatePackage = channel.unary_unary(
+                '/Packages/UpdatePackage',
+                request_serializer=SylkApi__pb2.UpdatePackageRequest.SerializeToString,
+                response_deserializer=SylkApi__pb2.UpdatePackageResponse.FromString,
                 )
         self.ListPackages = channel.unary_stream(
                 '/Packages/ListPackages',
@@ -43,39 +42,38 @@ class PackagesStub(object):
 
 
 class PackagesServicer(object):
-    """[webezyio] 
-    """
+    """Missing associated documentation comment in .proto file."""
 
     def GetPackage(self, request, context):
-        """[webezyio] - 
+        """[sylk] - None
         """
         context.set_code(grpc.StatusCode.UNIMPLEMENTED)
         context.set_details('Method not implemented!')
         raise NotImplementedError('Method not implemented!')
 
     def CreatePackage(self, request, context):
-        """[webezyio] - 
-        """
-        context.set_code(grpc.StatusCode.UNIMPLEMENTED)
-        context.set_details('Method not implemented!')
-        raise NotImplementedError('Method not implemented!')
-
-    def UpdatePackage(self, request, context):
-        """[webezyio] - 
+        """[sylk] - None
         """
         context.set_code(grpc.StatusCode.UNIMPLEMENTED)
         context.set_details('Method not implemented!')
         raise NotImplementedError('Method not implemented!')
 
     def DeletePackage(self, request, context):
-        """[webezyio] - 
+        """[sylk] - None
+        """
+        context.set_code(grpc.StatusCode.UNIMPLEMENTED)
+        context.set_details('Method not implemented!')
+        raise NotImplementedError('Method not implemented!')
+
+    def UpdatePackage(self, request, context):
+        """[sylk] - None
         """
         context.set_code(grpc.StatusCode.UNIMPLEMENTED)
         context.set_details('Method not implemented!')
         raise NotImplementedError('Method not implemented!')
 
     def ListPackages(self, request, context):
-        """[webezyio] - 
+        """[sylk] - None
         """
         context.set_code(grpc.StatusCode.UNIMPLEMENTED)
         context.set_details('Method not implemented!')
@@ -94,15 +92,15 @@ def add_PackagesServicer_to_server(servicer, server):
                     request_deserializer=SylkApi__pb2.CreatePackageRequest.FromString,
                     response_serializer=SylkApi__pb2.CreatePackageResponse.SerializeToString,
             ),
-            'UpdatePackage': grpc.unary_unary_rpc_method_handler(
-                    servicer.UpdatePackage,
-                    request_deserializer=SylkApi__pb2.UpdatePackageRequest.FromString,
-                    response_serializer=SylkApi__pb2.UpdatePackageResponse.SerializeToString,
-            ),
             'DeletePackage': grpc.unary_unary_rpc_method_handler(
                     servicer.DeletePackage,
                     request_deserializer=SylkApi__pb2.DeletePackageRequest.FromString,
                     response_serializer=SylkApi__pb2.DeletePackageResponse.SerializeToString,
+            ),
+            'UpdatePackage': grpc.unary_unary_rpc_method_handler(
+                    servicer.UpdatePackage,
+                    request_deserializer=SylkApi__pb2.UpdatePackageRequest.FromString,
+                    response_serializer=SylkApi__pb2.UpdatePackageResponse.SerializeToString,
             ),
             'ListPackages': grpc.unary_stream_rpc_method_handler(
                     servicer.ListPackages,
@@ -117,8 +115,7 @@ def add_PackagesServicer_to_server(servicer, server):
 
  # This class is part of an EXPERIMENTAL API.
 class Packages(object):
-    """[webezyio] 
-    """
+    """Missing associated documentation comment in .proto file."""
 
     @staticmethod
     def GetPackage(request,
@@ -155,23 +152,6 @@ class Packages(object):
             insecure, call_credentials, compression, wait_for_ready, timeout, metadata)
 
     @staticmethod
-    def UpdatePackage(request,
-            target,
-            options=(),
-            channel_credentials=None,
-            call_credentials=None,
-            insecure=False,
-            compression=None,
-            wait_for_ready=None,
-            timeout=None,
-            metadata=None):
-        return grpc.experimental.unary_unary(request, target, '/Packages/UpdatePackage',
-            SylkApi__pb2.UpdatePackageRequest.SerializeToString,
-            SylkApi__pb2.UpdatePackageResponse.FromString,
-            options, channel_credentials,
-            insecure, call_credentials, compression, wait_for_ready, timeout, metadata)
-
-    @staticmethod
     def DeletePackage(request,
             target,
             options=(),
@@ -185,6 +165,23 @@ class Packages(object):
         return grpc.experimental.unary_unary(request, target, '/Packages/DeletePackage',
             SylkApi__pb2.DeletePackageRequest.SerializeToString,
             SylkApi__pb2.DeletePackageResponse.FromString,
+            options, channel_credentials,
+            insecure, call_credentials, compression, wait_for_ready, timeout, metadata)
+
+    @staticmethod
+    def UpdatePackage(request,
+            target,
+            options=(),
+            channel_credentials=None,
+            call_credentials=None,
+            insecure=False,
+            compression=None,
+            wait_for_ready=None,
+            timeout=None,
+            metadata=None):
+        return grpc.experimental.unary_unary(request, target, '/Packages/UpdatePackage',
+            SylkApi__pb2.UpdatePackageRequest.SerializeToString,
+            SylkApi__pb2.UpdatePackageResponse.FromString,
             options, channel_credentials,
             insecure, call_credentials, compression, wait_for_ready, timeout, metadata)
 

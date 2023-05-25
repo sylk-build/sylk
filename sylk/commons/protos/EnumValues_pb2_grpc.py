@@ -6,8 +6,7 @@ from . import SylkApi_pb2 as SylkApi__pb2
 
 
 class EnumValuesStub(object):
-    """[webezyio] 
-    """
+    """Missing associated documentation comment in .proto file."""
 
     def __init__(self, channel):
         """Constructor.
@@ -25,45 +24,44 @@ class EnumValuesStub(object):
                 request_serializer=SylkApi__pb2.CreateEnumValueRequest.SerializeToString,
                 response_deserializer=SylkApi__pb2.CreateEnumValueResponse.FromString,
                 )
-        self.UpdateEnumValue = channel.unary_unary(
-                '/EnumValues/UpdateEnumValue',
-                request_serializer=SylkApi__pb2.UpdateEnumValueRequest.SerializeToString,
-                response_deserializer=SylkApi__pb2.UpdateEnumValueResponse.FromString,
-                )
         self.DeleteEnumValue = channel.unary_unary(
                 '/EnumValues/DeleteEnumValue',
                 request_serializer=SylkApi__pb2.DeleteEnumValueRequest.SerializeToString,
                 response_deserializer=SylkApi__pb2.DeleteEnumValueResponse.FromString,
                 )
+        self.UpdateEnumValue = channel.unary_unary(
+                '/EnumValues/UpdateEnumValue',
+                request_serializer=SylkApi__pb2.UpdateEnumValueRequest.SerializeToString,
+                response_deserializer=SylkApi__pb2.UpdateEnumValueResponse.FromString,
+                )
 
 
 class EnumValuesServicer(object):
-    """[webezyio] 
-    """
+    """Missing associated documentation comment in .proto file."""
 
     def GetEnumValue(self, request, context):
-        """[webezyio] - 
+        """[sylk] - None
         """
         context.set_code(grpc.StatusCode.UNIMPLEMENTED)
         context.set_details('Method not implemented!')
         raise NotImplementedError('Method not implemented!')
 
     def CreateEnumValue(self, request, context):
-        """[webezyio] - 
-        """
-        context.set_code(grpc.StatusCode.UNIMPLEMENTED)
-        context.set_details('Method not implemented!')
-        raise NotImplementedError('Method not implemented!')
-
-    def UpdateEnumValue(self, request, context):
-        """[webezyio] - 
+        """[sylk] - None
         """
         context.set_code(grpc.StatusCode.UNIMPLEMENTED)
         context.set_details('Method not implemented!')
         raise NotImplementedError('Method not implemented!')
 
     def DeleteEnumValue(self, request, context):
-        """[webezyio] - 
+        """[sylk] - None
+        """
+        context.set_code(grpc.StatusCode.UNIMPLEMENTED)
+        context.set_details('Method not implemented!')
+        raise NotImplementedError('Method not implemented!')
+
+    def UpdateEnumValue(self, request, context):
+        """[sylk] - None
         """
         context.set_code(grpc.StatusCode.UNIMPLEMENTED)
         context.set_details('Method not implemented!')
@@ -82,15 +80,15 @@ def add_EnumValuesServicer_to_server(servicer, server):
                     request_deserializer=SylkApi__pb2.CreateEnumValueRequest.FromString,
                     response_serializer=SylkApi__pb2.CreateEnumValueResponse.SerializeToString,
             ),
-            'UpdateEnumValue': grpc.unary_unary_rpc_method_handler(
-                    servicer.UpdateEnumValue,
-                    request_deserializer=SylkApi__pb2.UpdateEnumValueRequest.FromString,
-                    response_serializer=SylkApi__pb2.UpdateEnumValueResponse.SerializeToString,
-            ),
             'DeleteEnumValue': grpc.unary_unary_rpc_method_handler(
                     servicer.DeleteEnumValue,
                     request_deserializer=SylkApi__pb2.DeleteEnumValueRequest.FromString,
                     response_serializer=SylkApi__pb2.DeleteEnumValueResponse.SerializeToString,
+            ),
+            'UpdateEnumValue': grpc.unary_unary_rpc_method_handler(
+                    servicer.UpdateEnumValue,
+                    request_deserializer=SylkApi__pb2.UpdateEnumValueRequest.FromString,
+                    response_serializer=SylkApi__pb2.UpdateEnumValueResponse.SerializeToString,
             ),
     }
     generic_handler = grpc.method_handlers_generic_handler(
@@ -100,8 +98,7 @@ def add_EnumValuesServicer_to_server(servicer, server):
 
  # This class is part of an EXPERIMENTAL API.
 class EnumValues(object):
-    """[webezyio] 
-    """
+    """Missing associated documentation comment in .proto file."""
 
     @staticmethod
     def GetEnumValue(request,
@@ -138,23 +135,6 @@ class EnumValues(object):
             insecure, call_credentials, compression, wait_for_ready, timeout, metadata)
 
     @staticmethod
-    def UpdateEnumValue(request,
-            target,
-            options=(),
-            channel_credentials=None,
-            call_credentials=None,
-            insecure=False,
-            compression=None,
-            wait_for_ready=None,
-            timeout=None,
-            metadata=None):
-        return grpc.experimental.unary_unary(request, target, '/EnumValues/UpdateEnumValue',
-            SylkApi__pb2.UpdateEnumValueRequest.SerializeToString,
-            SylkApi__pb2.UpdateEnumValueResponse.FromString,
-            options, channel_credentials,
-            insecure, call_credentials, compression, wait_for_ready, timeout, metadata)
-
-    @staticmethod
     def DeleteEnumValue(request,
             target,
             options=(),
@@ -168,5 +148,22 @@ class EnumValues(object):
         return grpc.experimental.unary_unary(request, target, '/EnumValues/DeleteEnumValue',
             SylkApi__pb2.DeleteEnumValueRequest.SerializeToString,
             SylkApi__pb2.DeleteEnumValueResponse.FromString,
+            options, channel_credentials,
+            insecure, call_credentials, compression, wait_for_ready, timeout, metadata)
+
+    @staticmethod
+    def UpdateEnumValue(request,
+            target,
+            options=(),
+            channel_credentials=None,
+            call_credentials=None,
+            insecure=False,
+            compression=None,
+            wait_for_ready=None,
+            timeout=None,
+            metadata=None):
+        return grpc.experimental.unary_unary(request, target, '/EnumValues/UpdateEnumValue',
+            SylkApi__pb2.UpdateEnumValueRequest.SerializeToString,
+            SylkApi__pb2.UpdateEnumValueResponse.FromString,
             options, channel_credentials,
             insecure, call_credentials, compression, wait_for_ready, timeout, metadata)

@@ -15,10 +15,9 @@ from google.protobuf import symbol_database as _symbol_database
 _sym_db = _symbol_database.Default()
 
 
-from google.protobuf import descriptor_pb2 as google_dot_protobuf_dot_descriptor__pb2
 
 
-DESCRIPTOR = _descriptor_pool.Default().AddSerializedFile(b'\n\x11SylkCommons.proto\x12\x13sylk.SylkCommons.v1\x1a google/protobuf/descriptor.proto\"=\n\x11SylkMethodContext\x12\x0c\n\x04name\x18\x01 \x01(\t\x12\x0c\n\x04\x63ode\x18\x02 \x01(\t\x12\x0c\n\x04type\x18\x03 \x01(\t\"f\n\x0fSylkFileContext\x12\x0c\n\x04\x66ile\x18\x01 \x01(\t\x12\x37\n\x07methods\x18\x02 \x03(\x0b\x32&.sylk.SylkCommons.v1.SylkMethodContext\x12\x0c\n\x04\x63ode\x18\x03 \x01(\x0c\"B\n\x0bSylkContext\x12\x33\n\x05\x66iles\x18\x01 \x03(\x0b\x32$.sylk.SylkCommons.v1.SylkFileContext*\x8a\x01\n\x0eSylkExtensions\x12\x1a\n\x16\x44\x45\x46\x41ULT_SYLKEXTENSIONS\x10\x00\x12\x0f\n\x0b\x46ileOptions\x10\x01\x12\x12\n\x0eMessageOptions\x10\x02\x12\x10\n\x0c\x46ieldOptions\x10\x03\x12\x12\n\x0eServiceOptions\x10\x04\x12\x11\n\rMethodOptions\x10\x05\x42<Z:github.com/sylk-build/sylk-cli/services/protos/SylkCommonsb\x06proto3')
+DESCRIPTOR = _descriptor_pool.Default().AddSerializedFile(b'\n\x11SylkCommons.proto\x12\x13sylk.SylkCommons.v1\"=\n\x11SylkMethodContext\x12\x0c\n\x04\x63ode\x18\x02 \x01(\t\x12\x0c\n\x04type\x18\x03 \x01(\t\x12\x0c\n\x04name\x18\x01 \x01(\t\"f\n\x0fSylkFileContext\x12\x0c\n\x04\x66ile\x18\x01 \x01(\t\x12\x0c\n\x04\x63ode\x18\x03 \x01(\x0c\x12\x37\n\x07methods\x18\x02 \x03(\x0b\x32&.sylk.SylkCommons.v1.SylkMethodContext\"B\n\x0bSylkContext\x12\x33\n\x05\x66iles\x18\x01 \x03(\x0b\x32$.sylk.SylkCommons.v1.SylkFileContext*\x8a\x01\n\x0eSylkExtensions\x12\x1a\n\x16\x44\x45\x46\x41ULT_SYLKEXTENSIONS\x10\x00\x12\x0f\n\x0b\x46ileOptions\x10\x01\x12\x12\n\x0eMessageOptions\x10\x02\x12\x10\n\x0c\x46ieldOptions\x10\x03\x12\x12\n\x0eServiceOptions\x10\x04\x12\x11\n\rMethodOptions\x10\x05\x62\x06proto3')
 
 _SYLKEXTENSIONS = DESCRIPTOR.enum_types_by_name['SylkExtensions']
 SylkExtensions = enum_type_wrapper.EnumTypeWrapper(_SYLKEXTENSIONS)
@@ -36,23 +35,25 @@ _SYLKCONTEXT = DESCRIPTOR.message_types_by_name['SylkContext']
 
 @overload
 class SylkMethodContext(_message.Message):
-	"""webezyio generated message [sylk.SylkCommons.v1.SylkMethodContext]
+	"""sylk.build generated message [sylk.SylkCommons.v1.SylkMethodContext]
 	A class respresent a SylkMethodContext type
 	
 		"""
-	name = str # type: str
 	code = str # type: str
 	type = str # type: str
+	name = str # type: str
 
-	def __init__(self, name=str, code=str, type=str):
+	def __init__(self, code=str, type=str, name=str):
 		"""
+		
+
 		Attributes:
 		----------
-		name : str
-			
 		code : str
 			
 		type : str
+			
+		name : str
 			
 		"""
 		pass
@@ -66,23 +67,25 @@ _sym_db.RegisterMessage(SylkMethodContext)
 
 @overload
 class SylkFileContext(_message.Message):
-	"""webezyio generated message [sylk.SylkCommons.v1.SylkFileContext]
+	"""sylk.build generated message [sylk.SylkCommons.v1.SylkFileContext]
 	A class respresent a SylkFileContext type
 	
 		"""
 	file = str # type: str
-	methods = List[SylkMethodContext] # type: List[SylkMethodContext]
 	code = None # type: None
+	methods = List[SylkMethodContext] # type: List[SylkMethodContext]
 
-	def __init__(self, file=str, methods=List[SylkMethodContext], code=None):
+	def __init__(self, file=str, code=None, methods=List[SylkMethodContext]):
 		"""
+		
+
 		Attributes:
 		----------
 		file : str
 			
-		methods : List[SylkMethodContext]
-			
 		code : None
+			
+		methods : List[SylkMethodContext]
 			
 		"""
 		pass
@@ -96,7 +99,7 @@ _sym_db.RegisterMessage(SylkFileContext)
 
 @overload
 class SylkContext(_message.Message):
-	"""webezyio generated message [sylk.SylkCommons.v1.SylkContext]
+	"""sylk.build generated message [sylk.SylkCommons.v1.SylkContext]
 	A class respresent a SylkContext type
 	
 		"""
@@ -104,6 +107,8 @@ class SylkContext(_message.Message):
 
 	def __init__(self, files=List[SylkFileContext]):
 		"""
+		
+
 		Attributes:
 		----------
 		files : List[SylkFileContext]
@@ -120,13 +125,12 @@ _sym_db.RegisterMessage(SylkContext)
 if _descriptor._USE_C_DESCRIPTORS == False:
 
   DESCRIPTOR._options = None
-  DESCRIPTOR._serialized_options = b'Z:github.com/sylk-build/sylk-cli/services/protos/SylkCommons'
-  _SYLKEXTENSIONS._serialized_start=312
-  _SYLKEXTENSIONS._serialized_end=450
-  _SYLKMETHODCONTEXT._serialized_start=76
-  _SYLKMETHODCONTEXT._serialized_end=137
-  _SYLKFILECONTEXT._serialized_start=139
-  _SYLKFILECONTEXT._serialized_end=241
-  _SYLKCONTEXT._serialized_start=243
-  _SYLKCONTEXT._serialized_end=309
+  _SYLKEXTENSIONS._serialized_start=278
+  _SYLKEXTENSIONS._serialized_end=416
+  _SYLKMETHODCONTEXT._serialized_start=42
+  _SYLKMETHODCONTEXT._serialized_end=103
+  _SYLKFILECONTEXT._serialized_start=105
+  _SYLKFILECONTEXT._serialized_end=207
+  _SYLKCONTEXT._serialized_start=209
+  _SYLKCONTEXT._serialized_end=275
 # @@protoc_insertion_point(module_scope)

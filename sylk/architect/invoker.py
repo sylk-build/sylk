@@ -29,6 +29,7 @@ from sylk.commons.helpers import SylkJsonToMessage, MessageToDict
 from sylk.architect.commands import GetSylkJson, SaveSylkJson
 from sylk.architect.recievers import Core
 from sylk.architect.interfaces import IUndoRedo
+log = logging.getLogger('sylk.cli.main')
 
 try:
    import cPickle as pickle
@@ -39,7 +40,7 @@ class CoreInvoker:
     """The Invoker Class"""
 
     def __init__(self, path):
-        logging.debug("Invoker class __init__")
+        log.debug("Invoker class __init__")
         self._commands = {}
         self._history = []
         self._path = path
@@ -60,12 +61,12 @@ class CoreInvoker:
             response = self._commands[command_name].execute(self._path, args)
             self._history.append((time.time(), command_name, args, response))
         else:
-            logging.error(f"Command [{command_name}] not recognised")
+            log.error(f"Command [{command_name}] not recognised")
 
 
 class Sylk(IUndoRedo):
     def __init__(self, path=None, load=None):
-        logging.debug(
+        log.debug(
             "Architect class __init__ | path to project -> {0}".format(path))
         self._saves = 0
         self._load = load
@@ -104,13 +105,13 @@ class Sylk(IUndoRedo):
                     loaded_save = next(
                         (f for f in cache if f == self._load), None)
                     if loaded_save is None:
-                        logging.error(
+                        log.error(
                             f"Couldnt load cached save [{self._load}]")
                     else:
                         path = join_path(self._sylk_json.get('project').get(
                             'uri'), '.sylk', 'cache', f'{loaded_save}')
                         sylkJson = SylkJsonToMessage(rFile(path, json=True))
-                        # logging.error(sylkJson)
+                        # log.error(sylkJson)
                         self._sylk_json = MessageToDict(sylkJson) 
 
     def registerCommand(self, command_name, command):
@@ -128,19 +129,19 @@ class Sylk(IUndoRedo):
         hook_map = self._hooks.get(command_name)
         if hook_map is not None:
             for hook in hook_map.get('before'):
-                logging.debug("Running before hook")
+                log.debug("Running before hook")
                 hook_map['before'][hook].execute('before', command_name, args)
 
     def after_execute(self, command_name, *args):
         hook_map = self._hooks.get(command_name)
         if hook_map is not None:
             for hook in hook_map.get('after'):
-                logging.debug("Running after hook")
+                log.debug("Running after hook")
                 hook_map['after'][hook].execute('after', command_name, args)
 
     def execute(self, command_name, *args, **kwargs):
         if command_name in self._commands.keys():
-            logging.debug(f"[EXCUTE] {command_name}")
+            log.debug(f"[EXCUTE] {command_name}")
             if self._history_position != 0 and self._unsaved_changes == False:
                 self._get_sylk_json()
             # else:
@@ -165,7 +166,7 @@ class Sylk(IUndoRedo):
                     time.time(): [command_name, args]
                 }
         else:
-            logging.error(f"Command [{command_name}] not recognised")
+            log.error(f"Command [{command_name}] not recognised")
 
     def undo(self):
         """Undo a command if there is a command that can be undone.
@@ -173,31 +174,31 @@ class Sylk(IUndoRedo):
         point to the correct index"""
         if self._history_position > 0:
             self._history_position -= 1
-            logging.debug(
+            log.debug(
                 f"[UNDO] {self._history_position} / {len(self.history)}")
             self._sylk_json = self.history[self._history_position][0]
             # self._commands[
             #     self._history[self._history_position][1]
             # ].execute(self._history[self._history_position][0],self._history[self._history_position][2])
         else:
-            logging.warning("nothing to undo")
+            log.warning("nothing to undo")
 
     def redo(self):
         """Perform a REDO if the history_position is less than the end of the history list"""
         if self._history_position + 1 < len(self._history):
             self._history_position += 1
-            logging.debug(
+            log.debug(
                 f"[REDO] {self._history_position} / {len(self.history)}")
             self._commands[
                 self._history[self._history_position][1]
             ].execute(self._history[self._history_position][0], self._history[self._history_position][2])
         else:
-            logging.warning("nothing to REDO")
+            log.warning("nothing to REDO")
 
     def save(self, sylkJson=True):
         """Saving current state"""
         current_state = self._sylk_json
-        logging.debug(f"[SAVE] {current_state}")
+        log.debug(f"[SAVE] {current_state}")
         self._unsaved_changes = False
         self._core_invoker.execute('SaveSylkJson', current_state)
         self._saves += 1
@@ -208,7 +209,7 @@ class Sylk(IUndoRedo):
             old_save = SylkJsonToMessage(rFile(join_path(self._sylk_json.get('project').get(
                 'uri'), '.sylk', 'cache', f'save_{self._saves-1}.json'), True))
             if old_save != message :
-                logging.info(old_save)
+                log.info(old_save)
                 message = SylkJsonToMessage(self._sylk_json,validate=True)
                 try:
                     wFile(path, MessageToDict(message),
@@ -218,26 +219,26 @@ class Sylk(IUndoRedo):
                     mkdir(temp_path)
                     wFile(path, MessageToDict(message),
                         overwrite=True, json=True)
-                logging.info(
+                log.info(
                     f"Saving cache to [{join_path('.sylk','cache',f'save_{self._saves}.json')}]")
         else:
             try:
                 temp_p = path.replace('/cache/save_1.json', '')
-                logging.info(temp_p)
+                log.info(temp_p)
                 mkdir(temp_p)
                 wFile(path, MessageToDict(message), overwrite=True, json=True)
             except Exception:
                 temp_path = '/'.join(path.split('/')[:-1])
                 mkdir(temp_path)
                 wFile(path, MessageToDict(message), overwrite=True, json=True)
-            logging.info(
+            log.info(
                 f"Saving cache to [{join_path('.sylk','cache',f'save_{self._saves}.json')}]")
       
         # self._cache.insert(f'save_{self._saves}.json',MessageToDict(message))
         # out_s = open(join_path(self._sylk_json.get('project').get(
         #     'uri'), '.sylk', 'cache','dump'), 'wb')
         # try:
-        #     logging.debug('WRITING: %s' % (message.domain))
+        #     log.debug('WRITING: %s' % (message.domain))
         #     pickle.dump(message, out_s)
         # finally:
         #     out_s.close()

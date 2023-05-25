@@ -56,7 +56,14 @@ def display_resource(resource_name,sylk_json:SylkJson,count,level=None,nested=Fa
                 count_pkgs_dep +=1
                 display_resource(d,sylk_json,count,level=count,nested=nested if nested ==True else len(sylk_json.packages[f'protos/{pkg_ver}/{pkg_name}.proto'].get('dependencies'))>count_pkgs_dep )
 
-        
+
+def list_templates(configs,sylk_json:SylkJson):
+    print_note("Sylk templates:")
+    for tmp in configs.get('sylk_templates'):
+        print_info(tmp)
+    print()
+    print_note("In order to create a new project based on template run the following\n\t-> $ sylk new MyTodo --template @sylk/TodoAppPy")
+
 def list_dependencies(resource,sylk_json:SylkJson):
     resources = []
 

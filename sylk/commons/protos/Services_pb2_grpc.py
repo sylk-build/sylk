@@ -6,8 +6,7 @@ from . import SylkApi_pb2 as SylkApi__pb2
 
 
 class ServicesStub(object):
-    """[webezyio] 
-    """
+    """Missing associated documentation comment in .proto file."""
 
     def __init__(self, channel):
         """Constructor.
@@ -15,67 +14,66 @@ class ServicesStub(object):
         Args:
             channel: A grpc.Channel.
         """
-        self.GetService = channel.unary_unary(
-                '/Services/GetService',
-                request_serializer=SylkApi__pb2.GetServiceRequest.SerializeToString,
-                response_deserializer=SylkApi__pb2.GetServiceResponse.FromString,
-                )
         self.CreateService = channel.unary_unary(
                 '/Services/CreateService',
                 request_serializer=SylkApi__pb2.CreateServiceRequest.SerializeToString,
                 response_deserializer=SylkApi__pb2.CreateServiceResponse.FromString,
+                )
+        self.GetService = channel.unary_unary(
+                '/Services/GetService',
+                request_serializer=SylkApi__pb2.GetServiceRequest.SerializeToString,
+                response_deserializer=SylkApi__pb2.GetServiceResponse.FromString,
                 )
         self.UpdateService = channel.unary_unary(
                 '/Services/UpdateService',
                 request_serializer=SylkApi__pb2.UpdateServiceRequest.SerializeToString,
                 response_deserializer=SylkApi__pb2.UpdateServiceResponse.FromString,
                 )
-        self.DeleteService = channel.unary_unary(
-                '/Services/DeleteService',
-                request_serializer=SylkApi__pb2.DeleteServiceRequest.SerializeToString,
-                response_deserializer=SylkApi__pb2.DeleteServiceResponse.FromString,
-                )
         self.ListServices = channel.unary_stream(
                 '/Services/ListServices',
                 request_serializer=SylkApi__pb2.ListServicesRequest.SerializeToString,
                 response_deserializer=SylkApi__pb2.GetServiceResponse.FromString,
                 )
+        self.DeleteService = channel.unary_unary(
+                '/Services/DeleteService',
+                request_serializer=SylkApi__pb2.DeleteServiceRequest.SerializeToString,
+                response_deserializer=SylkApi__pb2.DeleteServiceResponse.FromString,
+                )
 
 
 class ServicesServicer(object):
-    """[webezyio] 
-    """
+    """Missing associated documentation comment in .proto file."""
 
-    def GetService(self, request, context):
-        """[webezyio] - 
+    def CreateService(self, request, context):
+        """[sylk] - None
         """
         context.set_code(grpc.StatusCode.UNIMPLEMENTED)
         context.set_details('Method not implemented!')
         raise NotImplementedError('Method not implemented!')
 
-    def CreateService(self, request, context):
-        """[webezyio] - 
+    def GetService(self, request, context):
+        """[sylk] - None
         """
         context.set_code(grpc.StatusCode.UNIMPLEMENTED)
         context.set_details('Method not implemented!')
         raise NotImplementedError('Method not implemented!')
 
     def UpdateService(self, request, context):
-        """[webezyio] - 
-        """
-        context.set_code(grpc.StatusCode.UNIMPLEMENTED)
-        context.set_details('Method not implemented!')
-        raise NotImplementedError('Method not implemented!')
-
-    def DeleteService(self, request, context):
-        """[webezyio] - 
+        """[sylk] - None
         """
         context.set_code(grpc.StatusCode.UNIMPLEMENTED)
         context.set_details('Method not implemented!')
         raise NotImplementedError('Method not implemented!')
 
     def ListServices(self, request, context):
-        """[webezyio] - 
+        """[sylk] - None
+        """
+        context.set_code(grpc.StatusCode.UNIMPLEMENTED)
+        context.set_details('Method not implemented!')
+        raise NotImplementedError('Method not implemented!')
+
+    def DeleteService(self, request, context):
+        """[sylk] - None
         """
         context.set_code(grpc.StatusCode.UNIMPLEMENTED)
         context.set_details('Method not implemented!')
@@ -84,30 +82,30 @@ class ServicesServicer(object):
 
 def add_ServicesServicer_to_server(servicer, server):
     rpc_method_handlers = {
-            'GetService': grpc.unary_unary_rpc_method_handler(
-                    servicer.GetService,
-                    request_deserializer=SylkApi__pb2.GetServiceRequest.FromString,
-                    response_serializer=SylkApi__pb2.GetServiceResponse.SerializeToString,
-            ),
             'CreateService': grpc.unary_unary_rpc_method_handler(
                     servicer.CreateService,
                     request_deserializer=SylkApi__pb2.CreateServiceRequest.FromString,
                     response_serializer=SylkApi__pb2.CreateServiceResponse.SerializeToString,
+            ),
+            'GetService': grpc.unary_unary_rpc_method_handler(
+                    servicer.GetService,
+                    request_deserializer=SylkApi__pb2.GetServiceRequest.FromString,
+                    response_serializer=SylkApi__pb2.GetServiceResponse.SerializeToString,
             ),
             'UpdateService': grpc.unary_unary_rpc_method_handler(
                     servicer.UpdateService,
                     request_deserializer=SylkApi__pb2.UpdateServiceRequest.FromString,
                     response_serializer=SylkApi__pb2.UpdateServiceResponse.SerializeToString,
             ),
-            'DeleteService': grpc.unary_unary_rpc_method_handler(
-                    servicer.DeleteService,
-                    request_deserializer=SylkApi__pb2.DeleteServiceRequest.FromString,
-                    response_serializer=SylkApi__pb2.DeleteServiceResponse.SerializeToString,
-            ),
             'ListServices': grpc.unary_stream_rpc_method_handler(
                     servicer.ListServices,
                     request_deserializer=SylkApi__pb2.ListServicesRequest.FromString,
                     response_serializer=SylkApi__pb2.GetServiceResponse.SerializeToString,
+            ),
+            'DeleteService': grpc.unary_unary_rpc_method_handler(
+                    servicer.DeleteService,
+                    request_deserializer=SylkApi__pb2.DeleteServiceRequest.FromString,
+                    response_serializer=SylkApi__pb2.DeleteServiceResponse.SerializeToString,
             ),
     }
     generic_handler = grpc.method_handlers_generic_handler(
@@ -117,25 +115,7 @@ def add_ServicesServicer_to_server(servicer, server):
 
  # This class is part of an EXPERIMENTAL API.
 class Services(object):
-    """[webezyio] 
-    """
-
-    @staticmethod
-    def GetService(request,
-            target,
-            options=(),
-            channel_credentials=None,
-            call_credentials=None,
-            insecure=False,
-            compression=None,
-            wait_for_ready=None,
-            timeout=None,
-            metadata=None):
-        return grpc.experimental.unary_unary(request, target, '/Services/GetService',
-            SylkApi__pb2.GetServiceRequest.SerializeToString,
-            SylkApi__pb2.GetServiceResponse.FromString,
-            options, channel_credentials,
-            insecure, call_credentials, compression, wait_for_ready, timeout, metadata)
+    """Missing associated documentation comment in .proto file."""
 
     @staticmethod
     def CreateService(request,
@@ -151,6 +131,23 @@ class Services(object):
         return grpc.experimental.unary_unary(request, target, '/Services/CreateService',
             SylkApi__pb2.CreateServiceRequest.SerializeToString,
             SylkApi__pb2.CreateServiceResponse.FromString,
+            options, channel_credentials,
+            insecure, call_credentials, compression, wait_for_ready, timeout, metadata)
+
+    @staticmethod
+    def GetService(request,
+            target,
+            options=(),
+            channel_credentials=None,
+            call_credentials=None,
+            insecure=False,
+            compression=None,
+            wait_for_ready=None,
+            timeout=None,
+            metadata=None):
+        return grpc.experimental.unary_unary(request, target, '/Services/GetService',
+            SylkApi__pb2.GetServiceRequest.SerializeToString,
+            SylkApi__pb2.GetServiceResponse.FromString,
             options, channel_credentials,
             insecure, call_credentials, compression, wait_for_ready, timeout, metadata)
 
@@ -172,23 +169,6 @@ class Services(object):
             insecure, call_credentials, compression, wait_for_ready, timeout, metadata)
 
     @staticmethod
-    def DeleteService(request,
-            target,
-            options=(),
-            channel_credentials=None,
-            call_credentials=None,
-            insecure=False,
-            compression=None,
-            wait_for_ready=None,
-            timeout=None,
-            metadata=None):
-        return grpc.experimental.unary_unary(request, target, '/Services/DeleteService',
-            SylkApi__pb2.DeleteServiceRequest.SerializeToString,
-            SylkApi__pb2.DeleteServiceResponse.FromString,
-            options, channel_credentials,
-            insecure, call_credentials, compression, wait_for_ready, timeout, metadata)
-
-    @staticmethod
     def ListServices(request,
             target,
             options=(),
@@ -202,5 +182,22 @@ class Services(object):
         return grpc.experimental.unary_stream(request, target, '/Services/ListServices',
             SylkApi__pb2.ListServicesRequest.SerializeToString,
             SylkApi__pb2.GetServiceResponse.FromString,
+            options, channel_credentials,
+            insecure, call_credentials, compression, wait_for_ready, timeout, metadata)
+
+    @staticmethod
+    def DeleteService(request,
+            target,
+            options=(),
+            channel_credentials=None,
+            call_credentials=None,
+            insecure=False,
+            compression=None,
+            wait_for_ready=None,
+            timeout=None,
+            metadata=None):
+        return grpc.experimental.unary_unary(request, target, '/Services/DeleteService',
+            SylkApi__pb2.DeleteServiceRequest.SerializeToString,
+            SylkApi__pb2.DeleteServiceResponse.FromString,
             options, channel_credentials,
             insecure, call_credentials, compression, wait_for_ready, timeout, metadata)

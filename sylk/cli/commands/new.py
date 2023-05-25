@@ -228,9 +228,9 @@ def attach_template(ARCHITECT:SylkArchitect,template:_TEMPLATES):
         template_domain_name = template.split('/')[0].split('@')[-1]
         template_name = template.split('/')[-1]
         print(file_dir + '/commons/templates/{0}/{1}.template.py'.format(template_domain_name,template_name))
-        print(file_system.get_current_location())
+        # print(file_system.get_current_location())
         os.chdir(ARCHITECT._path.split('sylk.json')[0])
-        print(file_system.get_current_location())
+        # print(file_system.get_current_location())
 
         subprocess.run(['python',file_dir + '/commons/templates/{0}/{1}.template.py'.format(template_domain_name,template_name),'--project-name',ARCHITECT._project_name])
     # if template == '@sylk/Sample':

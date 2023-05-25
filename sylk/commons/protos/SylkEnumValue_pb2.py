@@ -17,7 +17,7 @@ _sym_db = _symbol_database.Default()
 from google.protobuf import timestamp_pb2 as google_dot_protobuf_dot_timestamp__pb2
 
 
-DESCRIPTOR = _descriptor_pool.Default().AddSerializedFile(b'\n\x13SylkEnumValue.proto\x12\x15sylk.SylkEnumValue.v1\x1a\x1fgoogle/protobuf/timestamp.proto\"\x8d\x01\n\rSylkEnumValue\x12\x0b\n\x03uri\x18\x01 \x01(\t\x12\x0c\n\x04name\x18\x02 \x01(\t\x12\x11\n\tfull_name\x18\x03 \x01(\t\x12\r\n\x05index\x18\x04 \x01(\x05\x12\x0e\n\x06number\x18\x05 \x01(\x05\x12\x13\n\x0b\x64\x65scription\x18\x06 \x01(\t\x12\x0c\n\x04type\x18\x07 \x01(\t\x12\x0c\n\x04kind\x18\x08 \x01(\t\"\xb0\x01\n\x14SylkEnumValueDisplay\x12\x38\n\nenum_value\x18\x01 \x01(\x0b\x32$.sylk.SylkEnumValue.v1.SylkEnumValue\x12.\n\ncreated_at\x18\x02 \x01(\x0b\x32\x1a.google.protobuf.Timestamp\x12.\n\nupdated_at\x18\x03 \x01(\x0b\x32\x1a.google.protobuf.TimestampB>Z<github.com/sylk-build/sylk-cli/services/protos/SylkEnumValueb\x06proto3')
+DESCRIPTOR = _descriptor_pool.Default().AddSerializedFile(b'\n\x13SylkEnumValue.proto\x12\x15sylk.SylkEnumValue.v1\x1a\x1fgoogle/protobuf/timestamp.proto\"\x8d\x01\n\rSylkEnumValue\x12\x0c\n\x04kind\x18\x08 \x01(\t\x12\x13\n\x0b\x64\x65scription\x18\x06 \x01(\t\x12\r\n\x05index\x18\x04 \x01(\x05\x12\x0b\n\x03uri\x18\x01 \x01(\t\x12\x0c\n\x04name\x18\x02 \x01(\t\x12\x0e\n\x06number\x18\x05 \x01(\x05\x12\x11\n\tfull_name\x18\x03 \x01(\t\x12\x0c\n\x04type\x18\x07 \x01(\t\"\xb0\x01\n\x14SylkEnumValueDisplay\x12\x38\n\nenum_value\x18\x01 \x01(\x0b\x32$.sylk.SylkEnumValue.v1.SylkEnumValue\x12.\n\nupdated_at\x18\x03 \x01(\x0b\x32\x1a.google.protobuf.Timestamp\x12.\n\ncreated_at\x18\x02 \x01(\x0b\x32\x1a.google.protobuf.Timestampb\x06proto3')
 
 
 
@@ -26,38 +26,40 @@ _SYLKENUMVALUEDISPLAY = DESCRIPTOR.message_types_by_name['SylkEnumValueDisplay']
 
 @overload
 class SylkEnumValue(_message.Message):
-	"""webezyio generated message [sylk.SylkEnumValue.v1.SylkEnumValue]
+	"""sylk.build generated message [sylk.SylkEnumValue.v1.SylkEnumValue]
 	A class respresent a SylkEnumValue type
 	
 		"""
+	kind = str # type: str
+	description = str # type: str
+	index = int # type: int
 	uri = str # type: str
 	name = str # type: str
-	full_name = str # type: str
-	index = int # type: int
 	number = int # type: int
-	description = str # type: str
+	full_name = str # type: str
 	type = str # type: str
-	kind = str # type: str
 
-	def __init__(self, uri=str, name=str, full_name=str, index=int, number=int, description=str, type=str, kind=str):
+	def __init__(self, kind=str, description=str, index=int, uri=str, name=str, number=int, full_name=str, type=str):
 		"""
+		
+
 		Attributes:
 		----------
+		kind : str
+			
+		description : str
+			
+		index : int
+			
 		uri : str
 			
 		name : str
 			
-		full_name : str
-			
-		index : int
-			
 		number : int
 			
-		description : str
+		full_name : str
 			
 		type : str
-			
-		kind : str
 			
 		"""
 		pass
@@ -71,23 +73,25 @@ _sym_db.RegisterMessage(SylkEnumValue)
 
 @overload
 class SylkEnumValueDisplay(_message.Message):
-	"""webezyio generated message [sylk.SylkEnumValue.v1.SylkEnumValueDisplay]
+	"""sylk.build generated message [sylk.SylkEnumValue.v1.SylkEnumValueDisplay]
 	A class respresent a SylkEnumValueDisplay type
 	
 		"""
 	enum_value = SylkEnumValue # type: SylkEnumValue
-	created_at = google_dot_protobuf_dot_timestamp__pb2.Timestamp # type: google_dot_protobuf_dot_timestamp__pb2.Timestamp
 	updated_at = google_dot_protobuf_dot_timestamp__pb2.Timestamp # type: google_dot_protobuf_dot_timestamp__pb2.Timestamp
+	created_at = google_dot_protobuf_dot_timestamp__pb2.Timestamp # type: google_dot_protobuf_dot_timestamp__pb2.Timestamp
 
-	def __init__(self, enum_value=SylkEnumValue, created_at=google_dot_protobuf_dot_timestamp__pb2.Timestamp, updated_at=google_dot_protobuf_dot_timestamp__pb2.Timestamp):
+	def __init__(self, enum_value=SylkEnumValue, updated_at=google_dot_protobuf_dot_timestamp__pb2.Timestamp, created_at=google_dot_protobuf_dot_timestamp__pb2.Timestamp):
 		"""
+		
+
 		Attributes:
 		----------
 		enum_value : SylkEnumValue
 			
-		created_at : google_dot_protobuf_dot_timestamp__pb2.Timestamp
-			
 		updated_at : google_dot_protobuf_dot_timestamp__pb2.Timestamp
+			
+		created_at : google_dot_protobuf_dot_timestamp__pb2.Timestamp
 			
 		"""
 		pass
@@ -101,7 +105,6 @@ _sym_db.RegisterMessage(SylkEnumValueDisplay)
 if _descriptor._USE_C_DESCRIPTORS == False:
 
   DESCRIPTOR._options = None
-  DESCRIPTOR._serialized_options = b'Z<github.com/sylk-build/sylk-cli/services/protos/SylkEnumValue'
   _SYLKENUMVALUE._serialized_start=80
   _SYLKENUMVALUE._serialized_end=221
   _SYLKENUMVALUEDISPLAY._serialized_start=224

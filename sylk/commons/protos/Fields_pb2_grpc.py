@@ -6,8 +6,7 @@ from . import SylkApi_pb2 as SylkApi__pb2
 
 
 class FieldsStub(object):
-    """[webezyio] 
-    """
+    """Missing associated documentation comment in .proto file."""
 
     def __init__(self, channel):
         """Constructor.
@@ -15,55 +14,54 @@ class FieldsStub(object):
         Args:
             channel: A grpc.Channel.
         """
-        self.GetField = channel.unary_unary(
-                '/Fields/GetField',
-                request_serializer=SylkApi__pb2.GetFieldRequest.SerializeToString,
-                response_deserializer=SylkApi__pb2.GetFieldResponse.FromString,
-                )
         self.CreateField = channel.unary_unary(
                 '/Fields/CreateField',
                 request_serializer=SylkApi__pb2.CreateFieldRequest.SerializeToString,
                 response_deserializer=SylkApi__pb2.CreateFieldResponse.FromString,
                 )
-        self.UpdateField = channel.unary_unary(
-                '/Fields/UpdateField',
-                request_serializer=SylkApi__pb2.UpdateFieldRequest.SerializeToString,
-                response_deserializer=SylkApi__pb2.UpdateFieldResponse.FromString,
+        self.GetField = channel.unary_unary(
+                '/Fields/GetField',
+                request_serializer=SylkApi__pb2.GetFieldRequest.SerializeToString,
+                response_deserializer=SylkApi__pb2.GetFieldResponse.FromString,
                 )
         self.DeleteField = channel.unary_unary(
                 '/Fields/DeleteField',
                 request_serializer=SylkApi__pb2.DeleteFieldRequest.SerializeToString,
                 response_deserializer=SylkApi__pb2.DeleteFieldResponse.FromString,
                 )
+        self.UpdateField = channel.unary_unary(
+                '/Fields/UpdateField',
+                request_serializer=SylkApi__pb2.UpdateFieldRequest.SerializeToString,
+                response_deserializer=SylkApi__pb2.UpdateFieldResponse.FromString,
+                )
 
 
 class FieldsServicer(object):
-    """[webezyio] 
-    """
-
-    def GetField(self, request, context):
-        """[webezyio] - 
-        """
-        context.set_code(grpc.StatusCode.UNIMPLEMENTED)
-        context.set_details('Method not implemented!')
-        raise NotImplementedError('Method not implemented!')
+    """Missing associated documentation comment in .proto file."""
 
     def CreateField(self, request, context):
-        """[webezyio] - 
+        """[sylk] - None
         """
         context.set_code(grpc.StatusCode.UNIMPLEMENTED)
         context.set_details('Method not implemented!')
         raise NotImplementedError('Method not implemented!')
 
-    def UpdateField(self, request, context):
-        """[webezyio] - 
+    def GetField(self, request, context):
+        """[sylk] - None
         """
         context.set_code(grpc.StatusCode.UNIMPLEMENTED)
         context.set_details('Method not implemented!')
         raise NotImplementedError('Method not implemented!')
 
     def DeleteField(self, request, context):
-        """[webezyio] - 
+        """[sylk] - None
+        """
+        context.set_code(grpc.StatusCode.UNIMPLEMENTED)
+        context.set_details('Method not implemented!')
+        raise NotImplementedError('Method not implemented!')
+
+    def UpdateField(self, request, context):
+        """[sylk] - None
         """
         context.set_code(grpc.StatusCode.UNIMPLEMENTED)
         context.set_details('Method not implemented!')
@@ -72,25 +70,25 @@ class FieldsServicer(object):
 
 def add_FieldsServicer_to_server(servicer, server):
     rpc_method_handlers = {
-            'GetField': grpc.unary_unary_rpc_method_handler(
-                    servicer.GetField,
-                    request_deserializer=SylkApi__pb2.GetFieldRequest.FromString,
-                    response_serializer=SylkApi__pb2.GetFieldResponse.SerializeToString,
-            ),
             'CreateField': grpc.unary_unary_rpc_method_handler(
                     servicer.CreateField,
                     request_deserializer=SylkApi__pb2.CreateFieldRequest.FromString,
                     response_serializer=SylkApi__pb2.CreateFieldResponse.SerializeToString,
             ),
-            'UpdateField': grpc.unary_unary_rpc_method_handler(
-                    servicer.UpdateField,
-                    request_deserializer=SylkApi__pb2.UpdateFieldRequest.FromString,
-                    response_serializer=SylkApi__pb2.UpdateFieldResponse.SerializeToString,
+            'GetField': grpc.unary_unary_rpc_method_handler(
+                    servicer.GetField,
+                    request_deserializer=SylkApi__pb2.GetFieldRequest.FromString,
+                    response_serializer=SylkApi__pb2.GetFieldResponse.SerializeToString,
             ),
             'DeleteField': grpc.unary_unary_rpc_method_handler(
                     servicer.DeleteField,
                     request_deserializer=SylkApi__pb2.DeleteFieldRequest.FromString,
                     response_serializer=SylkApi__pb2.DeleteFieldResponse.SerializeToString,
+            ),
+            'UpdateField': grpc.unary_unary_rpc_method_handler(
+                    servicer.UpdateField,
+                    request_deserializer=SylkApi__pb2.UpdateFieldRequest.FromString,
+                    response_serializer=SylkApi__pb2.UpdateFieldResponse.SerializeToString,
             ),
     }
     generic_handler = grpc.method_handlers_generic_handler(
@@ -100,25 +98,7 @@ def add_FieldsServicer_to_server(servicer, server):
 
  # This class is part of an EXPERIMENTAL API.
 class Fields(object):
-    """[webezyio] 
-    """
-
-    @staticmethod
-    def GetField(request,
-            target,
-            options=(),
-            channel_credentials=None,
-            call_credentials=None,
-            insecure=False,
-            compression=None,
-            wait_for_ready=None,
-            timeout=None,
-            metadata=None):
-        return grpc.experimental.unary_unary(request, target, '/Fields/GetField',
-            SylkApi__pb2.GetFieldRequest.SerializeToString,
-            SylkApi__pb2.GetFieldResponse.FromString,
-            options, channel_credentials,
-            insecure, call_credentials, compression, wait_for_ready, timeout, metadata)
+    """Missing associated documentation comment in .proto file."""
 
     @staticmethod
     def CreateField(request,
@@ -138,7 +118,7 @@ class Fields(object):
             insecure, call_credentials, compression, wait_for_ready, timeout, metadata)
 
     @staticmethod
-    def UpdateField(request,
+    def GetField(request,
             target,
             options=(),
             channel_credentials=None,
@@ -148,9 +128,9 @@ class Fields(object):
             wait_for_ready=None,
             timeout=None,
             metadata=None):
-        return grpc.experimental.unary_unary(request, target, '/Fields/UpdateField',
-            SylkApi__pb2.UpdateFieldRequest.SerializeToString,
-            SylkApi__pb2.UpdateFieldResponse.FromString,
+        return grpc.experimental.unary_unary(request, target, '/Fields/GetField',
+            SylkApi__pb2.GetFieldRequest.SerializeToString,
+            SylkApi__pb2.GetFieldResponse.FromString,
             options, channel_credentials,
             insecure, call_credentials, compression, wait_for_ready, timeout, metadata)
 
@@ -168,5 +148,22 @@ class Fields(object):
         return grpc.experimental.unary_unary(request, target, '/Fields/DeleteField',
             SylkApi__pb2.DeleteFieldRequest.SerializeToString,
             SylkApi__pb2.DeleteFieldResponse.FromString,
+            options, channel_credentials,
+            insecure, call_credentials, compression, wait_for_ready, timeout, metadata)
+
+    @staticmethod
+    def UpdateField(request,
+            target,
+            options=(),
+            channel_credentials=None,
+            call_credentials=None,
+            insecure=False,
+            compression=None,
+            wait_for_ready=None,
+            timeout=None,
+            metadata=None):
+        return grpc.experimental.unary_unary(request, target, '/Fields/UpdateField',
+            SylkApi__pb2.UpdateFieldRequest.SerializeToString,
+            SylkApi__pb2.UpdateFieldResponse.FromString,
             options, channel_credentials,
             insecure, call_credentials, compression, wait_for_ready, timeout, metadata)

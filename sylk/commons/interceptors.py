@@ -3,6 +3,8 @@ import grpc
 import logging
 from functools import wraps
 from sylk import __version__
+import time
+
 
 import os
 import logging
@@ -64,6 +66,56 @@ class SylkLoggingInterceptor(grpc.ServerInterceptor):
         return continuation(handler_call_details)
 
 # Client side interceptors and decorators
+
+class SylkClientLoggingInterceptor(grpc.UnaryUnaryClientInterceptor, grpc.StreamUnaryClientInterceptor, grpc.UnaryStreamClientInterceptor, grpc.StreamStreamClientInterceptor):
+    def __init__(self,format:str='[%(levelname)s] %(asctime)s: %(name)s - %(message)s') -> None:
+        
+        self._log = logging.getLogger()
+        self._log.setLevel(logging.DEBUG)
+
+    def intercept_unary_unary(self, continuation, client_call_details, request):
+        ua = dict(client_call_details.metadata).get('user-agent')
+        sylk_version = dict(client_call_details.metadata).get('sylk-version')
+        self._log.debug('RPC:{method: <20} UA:{ua: <24} {sver}'.format(
+            method=client_call_details.method,
+            ua=ua if ua is not None else 'sylk-py',
+            sver=f'SYLK:{sylk_version}' if sylk_version is not None else 'SYLK:'+__version__.__version__))
+        start_time = time.time()
+        response_future = continuation(client_call_details, request)
+        end_time = time.time()
+        execution_time = (end_time - start_time) * 1000
+        self._log.debug('Responded -> {runtime}ms RPC:{method: <20} UA:{ua: <24} {sver}'.format(
+            method=client_call_details.method,
+            ua=ua if ua is not None else 'sylk-py',
+            runtime='{:.3f}'.format(execution_time),
+            sver=f'SYLK:{sylk_version}' if sylk_version is not None else 'SYLK:'+__version__.__version__,
+        ))
+        if response_future.code() != grpc.StatusCode.OK:
+            self._log.error('{code} ERROR: {err_msg: <20}'.format(
+            method=client_call_details.method,
+            ua=ua if ua is not None else 'sylk-py',
+            sver=f'SYLK:{sylk_version}' if sylk_version is not None else 'SYLK:'+__version__.__version__,
+            code=response_future.code(),
+            err_msg=response_future.details())
+            )
+        return response_future
+
+        # return continuation(client_call_details)
+    def intercept_stream_unary(self, continuation, client_call_details, request_iterator):
+        # Handle the stream-unary RPC method
+        response_future = continuation(client_call_details, request_iterator)
+        return response_future
+
+    def intercept_unary_stream(self, continuation, client_call_details, request):
+        # Handle the unary-stream RPC method
+        response_iterator = continuation(client_call_details, request)
+        return response_iterator
+
+    def intercept_stream_stream(self, continuation, client_call_details, request_iterator):
+        # Handle the stream-stream RPC method
+        response_iterator = continuation(client_call_details, request_iterator)
+        return response_iterator
+
 
 
 class SylkRetries(grpc.UnaryUnaryClientInterceptor, grpc.StreamUnaryClientInterceptor, grpc.UnaryStreamClientInterceptor, grpc.StreamStreamClientInterceptor):

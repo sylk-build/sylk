@@ -6,8 +6,7 @@ from . import SylkApi_pb2 as SylkApi__pb2
 
 
 class MethodsStub(object):
-    """[webezyio] 
-    """
+    """Missing associated documentation comment in .proto file."""
 
     def __init__(self, channel):
         """Constructor.
@@ -15,55 +14,54 @@ class MethodsStub(object):
         Args:
             channel: A grpc.Channel.
         """
-        self.GetMethod = channel.unary_unary(
-                '/Methods/GetMethod',
-                request_serializer=SylkApi__pb2.GetMethodRequest.SerializeToString,
-                response_deserializer=SylkApi__pb2.GetMethodResponse.FromString,
-                )
         self.CreateMethod = channel.unary_unary(
                 '/Methods/CreateMethod',
                 request_serializer=SylkApi__pb2.CreateMethodRequest.SerializeToString,
                 response_deserializer=SylkApi__pb2.CreateMethodResponse.FromString,
                 )
-        self.UpdateMethod = channel.unary_unary(
-                '/Methods/UpdateMethod',
-                request_serializer=SylkApi__pb2.UpdateMethodRequest.SerializeToString,
-                response_deserializer=SylkApi__pb2.UpdateMethodResponse.FromString,
+        self.GetMethod = channel.unary_unary(
+                '/Methods/GetMethod',
+                request_serializer=SylkApi__pb2.GetMethodRequest.SerializeToString,
+                response_deserializer=SylkApi__pb2.GetMethodResponse.FromString,
                 )
         self.DeleteMethod = channel.unary_unary(
                 '/Methods/DeleteMethod',
                 request_serializer=SylkApi__pb2.DeleteMethodRequest.SerializeToString,
                 response_deserializer=SylkApi__pb2.DeleteMethodResponse.FromString,
                 )
+        self.UpdateMethod = channel.unary_unary(
+                '/Methods/UpdateMethod',
+                request_serializer=SylkApi__pb2.UpdateMethodRequest.SerializeToString,
+                response_deserializer=SylkApi__pb2.UpdateMethodResponse.FromString,
+                )
 
 
 class MethodsServicer(object):
-    """[webezyio] 
-    """
-
-    def GetMethod(self, request, context):
-        """[webezyio] - 
-        """
-        context.set_code(grpc.StatusCode.UNIMPLEMENTED)
-        context.set_details('Method not implemented!')
-        raise NotImplementedError('Method not implemented!')
+    """Missing associated documentation comment in .proto file."""
 
     def CreateMethod(self, request, context):
-        """[webezyio] - 
+        """[sylk] - None
         """
         context.set_code(grpc.StatusCode.UNIMPLEMENTED)
         context.set_details('Method not implemented!')
         raise NotImplementedError('Method not implemented!')
 
-    def UpdateMethod(self, request, context):
-        """[webezyio] - 
+    def GetMethod(self, request, context):
+        """[sylk] - None
         """
         context.set_code(grpc.StatusCode.UNIMPLEMENTED)
         context.set_details('Method not implemented!')
         raise NotImplementedError('Method not implemented!')
 
     def DeleteMethod(self, request, context):
-        """[webezyio] - 
+        """[sylk] - None
+        """
+        context.set_code(grpc.StatusCode.UNIMPLEMENTED)
+        context.set_details('Method not implemented!')
+        raise NotImplementedError('Method not implemented!')
+
+    def UpdateMethod(self, request, context):
+        """[sylk] - None
         """
         context.set_code(grpc.StatusCode.UNIMPLEMENTED)
         context.set_details('Method not implemented!')
@@ -72,25 +70,25 @@ class MethodsServicer(object):
 
 def add_MethodsServicer_to_server(servicer, server):
     rpc_method_handlers = {
-            'GetMethod': grpc.unary_unary_rpc_method_handler(
-                    servicer.GetMethod,
-                    request_deserializer=SylkApi__pb2.GetMethodRequest.FromString,
-                    response_serializer=SylkApi__pb2.GetMethodResponse.SerializeToString,
-            ),
             'CreateMethod': grpc.unary_unary_rpc_method_handler(
                     servicer.CreateMethod,
                     request_deserializer=SylkApi__pb2.CreateMethodRequest.FromString,
                     response_serializer=SylkApi__pb2.CreateMethodResponse.SerializeToString,
             ),
-            'UpdateMethod': grpc.unary_unary_rpc_method_handler(
-                    servicer.UpdateMethod,
-                    request_deserializer=SylkApi__pb2.UpdateMethodRequest.FromString,
-                    response_serializer=SylkApi__pb2.UpdateMethodResponse.SerializeToString,
+            'GetMethod': grpc.unary_unary_rpc_method_handler(
+                    servicer.GetMethod,
+                    request_deserializer=SylkApi__pb2.GetMethodRequest.FromString,
+                    response_serializer=SylkApi__pb2.GetMethodResponse.SerializeToString,
             ),
             'DeleteMethod': grpc.unary_unary_rpc_method_handler(
                     servicer.DeleteMethod,
                     request_deserializer=SylkApi__pb2.DeleteMethodRequest.FromString,
                     response_serializer=SylkApi__pb2.DeleteMethodResponse.SerializeToString,
+            ),
+            'UpdateMethod': grpc.unary_unary_rpc_method_handler(
+                    servicer.UpdateMethod,
+                    request_deserializer=SylkApi__pb2.UpdateMethodRequest.FromString,
+                    response_serializer=SylkApi__pb2.UpdateMethodResponse.SerializeToString,
             ),
     }
     generic_handler = grpc.method_handlers_generic_handler(
@@ -100,25 +98,7 @@ def add_MethodsServicer_to_server(servicer, server):
 
  # This class is part of an EXPERIMENTAL API.
 class Methods(object):
-    """[webezyio] 
-    """
-
-    @staticmethod
-    def GetMethod(request,
-            target,
-            options=(),
-            channel_credentials=None,
-            call_credentials=None,
-            insecure=False,
-            compression=None,
-            wait_for_ready=None,
-            timeout=None,
-            metadata=None):
-        return grpc.experimental.unary_unary(request, target, '/Methods/GetMethod',
-            SylkApi__pb2.GetMethodRequest.SerializeToString,
-            SylkApi__pb2.GetMethodResponse.FromString,
-            options, channel_credentials,
-            insecure, call_credentials, compression, wait_for_ready, timeout, metadata)
+    """Missing associated documentation comment in .proto file."""
 
     @staticmethod
     def CreateMethod(request,
@@ -138,7 +118,7 @@ class Methods(object):
             insecure, call_credentials, compression, wait_for_ready, timeout, metadata)
 
     @staticmethod
-    def UpdateMethod(request,
+    def GetMethod(request,
             target,
             options=(),
             channel_credentials=None,
@@ -148,9 +128,9 @@ class Methods(object):
             wait_for_ready=None,
             timeout=None,
             metadata=None):
-        return grpc.experimental.unary_unary(request, target, '/Methods/UpdateMethod',
-            SylkApi__pb2.UpdateMethodRequest.SerializeToString,
-            SylkApi__pb2.UpdateMethodResponse.FromString,
+        return grpc.experimental.unary_unary(request, target, '/Methods/GetMethod',
+            SylkApi__pb2.GetMethodRequest.SerializeToString,
+            SylkApi__pb2.GetMethodResponse.FromString,
             options, channel_credentials,
             insecure, call_credentials, compression, wait_for_ready, timeout, metadata)
 
@@ -168,5 +148,22 @@ class Methods(object):
         return grpc.experimental.unary_unary(request, target, '/Methods/DeleteMethod',
             SylkApi__pb2.DeleteMethodRequest.SerializeToString,
             SylkApi__pb2.DeleteMethodResponse.FromString,
+            options, channel_credentials,
+            insecure, call_credentials, compression, wait_for_ready, timeout, metadata)
+
+    @staticmethod
+    def UpdateMethod(request,
+            target,
+            options=(),
+            channel_credentials=None,
+            call_credentials=None,
+            insecure=False,
+            compression=None,
+            wait_for_ready=None,
+            timeout=None,
+            metadata=None):
+        return grpc.experimental.unary_unary(request, target, '/Methods/UpdateMethod',
+            SylkApi__pb2.UpdateMethodRequest.SerializeToString,
+            SylkApi__pb2.UpdateMethodResponse.FromString,
             options, channel_credentials,
             insecure, call_credentials, compression, wait_for_ready, timeout, metadata)
