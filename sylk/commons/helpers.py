@@ -1032,7 +1032,7 @@ class SylkClientPy():
                     out_close_type = ']' if rpc.get('serverStreaming') is not None and rpc.get(
                         'serverStreaming') == True else ''
                     rpcs.append(
-                        f'@sylk_client_pre_rpc()\n\tdef {rpc_name}_WithCall(self, request: {in_open_type}{rpc_in_type}{in_close_type}, metadata: Tuple[Tuple[str,str]] = _METADATA) -> Tuple[{out_open_type}{rpc_out_type}{out_close_type}, Any]:\n\t\t"""sylk - {description} Returns: RPC output and a call object"""\n\n\t\treturn self.{svc}Stub.{rpc_name}.with_call(request,metadata=metadata)')
+                        f'\n\tdef {rpc_name}_WithCall(self, request: {in_open_type}{rpc_in_type}{in_close_type}, metadata: Tuple[Tuple[str,str]] = _METADATA) -> Tuple[{out_open_type}{rpc_out_type}{out_close_type}, Any]:\n\t\t"""sylk - {description} Returns: RPC output and a call object"""\n\n\t\treturn self.{svc}Stub.{rpc_name}.with_call(request,metadata=metadata)')
                     rpcs.append(
                         f'@sylk_client_pre_rpc()\n\tdef {rpc_name}(self, request: {in_open_type}{rpc_in_type}{in_close_type}, metadata: Tuple[Tuple[str,str]] = _METADATA) -> {out_open_type}{rpc_out_type}{out_close_type}:\n\t\t"""sylk - {description}"""\n\n\t\treturn self.{svc}Stub.{rpc_name}(request,metadata=metadata)')
 

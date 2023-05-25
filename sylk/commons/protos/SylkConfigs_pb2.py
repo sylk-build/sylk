@@ -63,8 +63,6 @@ SylkCliConfigs = _reflection.GeneratedProtocolMessageType('SylkCliConfigs', (_me
   })
 _sym_db.RegisterMessage(SylkCliConfigs)
 
-
-
 @overload
 class SylkTemplateConfigs(_message.Message):
 	"""webezyio generated message [sylk.SylkConfigs.v1.SylkTemplateConfigs]

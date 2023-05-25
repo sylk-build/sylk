@@ -3,7 +3,6 @@
 # source: SylkApi.proto
 """Generated protocol buffer code."""
 from google.protobuf import descriptor as _descriptor
-from google.protobuf.internal import enum_type_wrapper
 
 from typing import overload, Iterator, List, Dict
 from google.protobuf import descriptor_pool as _descriptor_pool
@@ -13,6 +12,7 @@ from google.protobuf import symbol_database as _symbol_database
 # @@protoc_insertion_point(imports)
 
 _sym_db = _symbol_database.Default()
+from google.protobuf.internal import enum_type_wrapper
 
 
 from . import SylkOrganization_pb2 as SylkOrganization__pb2

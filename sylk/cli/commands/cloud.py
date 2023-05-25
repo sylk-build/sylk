@@ -27,7 +27,7 @@ from sylk.cli.theme import SylkTheme
 from sylk.commons import client_wrapper , helpers as _helpers, file_system as _fs, pretty as _pretty
 from sylk.commons.protos import sylkcore
 import ast
-from sylk.commons.helpers import MessageToDict,MessageToJson
+from sylk.commons.helpers import Graph, MessageToDict,MessageToJson
 
 from sylk.commons.protos.SylkApi_pb2 import GetAccessTokenRequest, GetOrganizationRequest, GetProjectRequest, ListPackagesRequest, ListProjectsRequest, ListServicesRequest
 from sylk.commons.protos.SylkConfigs_pb2 import SylkCliConfigs, SylkProjectConfigs
@@ -157,8 +157,26 @@ class SylkCloud:
                     port=48800
                 )
             )
+
+            resources = []
+            sylk = MessageToDict(sylk)
+            for pkg in sylk['packages']:
+                resources.append(sylk['packages'][pkg])
+                try:
+                    sort_topological = Graph(sylk['packages'][pkg]['messages']).topologicalSort()
+                    temp_messages = []
+                    for m in sort_topological[::-1]:
+                        temp_messages.append(next((tmpM for tmpM in sylk['packages'][pkg]['messages'] if tmpM.get('fullName') == m),None))
+                    sylk['packages'][pkg]['messages'] = temp_messages
+                except KeyError as e:
+                    _pretty.print_warning("Error while sorting the dependencies graph of package messages\n\t- If this error appeared right after making rename of message then ignore it...\n\t- Else please issue a bug report !")
+                
+            # for svc in sylk.services:
+                # resources.append(sylk.services[svc])
+            # resourcesSorted = Graph(resources,True).topologicalSort()
+            # print(resourcesSorted)
             if overwrite:
-                _fs.wFile('sylk.json',MessageToDict(sylk),True,True)
+                _fs.wFile('sylk.json',sylk,True,True)
             # _pretty.print_info(sylk,True,'Project')
             return sylk
         except Exception as e:
