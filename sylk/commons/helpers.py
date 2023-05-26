@@ -506,6 +506,7 @@ class SylkJson():
         self._services = self._sylk_json.get('services')
         self._packages = self._sylk_json.get('packages')
         self._path = self._sylk_json.get('project').get('uri')
+        self._sylk_version = self._sylk_json.get('sylkVersion')
 
     def get_service(self, name, json=True,sylk_json=None):
         if json:
@@ -690,6 +691,11 @@ class SylkJson():
     @property
     def path(self):
         return self._path
+    
+    @property
+    def sylk_version(self):
+        return self._sylk_version
+
 
 def load_sylk_json(path:str):
     SYLK_JSON = file_system.rFile(path, json=True)

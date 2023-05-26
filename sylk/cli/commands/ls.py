@@ -310,6 +310,10 @@ def list_by_resource(type,sylk_json:SylkJson):
 def list_all(sylk_json:SylkJson):
     """Will print all sylk.build project resource that are declared on sylk.json file"""
 
+    prj_name = sylk_json.project.get('name')
+    sylk_ver = sylk_json.sylk_version
+    print_info(f'Listing project \'{prj_name}\' resources (sylk version: {sylk_ver})')
+
     # Services list
     header = ['Service','RPC\'s','Dependencies','Extensions']
     tab = PrettyTable(header)
@@ -330,7 +334,7 @@ def list_all(sylk_json:SylkJson):
                 for rpc in service.get('methods'):
                     add_rpc_desc(tab_rpcs,rpc,)
     
-        print_info(tab,True,'Listing services resources')
+        print_info(tab,True,'📡 Listing services resources')
         print_info(tab_rpcs,True,'Listing RPC\'s')
     
     # Packages list
@@ -347,7 +351,7 @@ def list_all(sylk_json:SylkJson):
     else:
         print_warning("No packages on project")
 
-    print_info(tab,True,'Listing packages resources')
+    print_info(tab,True,'📁 Listing packages resources')
 
     # Messages List
     header = ['Message','Fields','Package','Extensions','Extending']
@@ -367,7 +371,7 @@ def list_all(sylk_json:SylkJson):
     else:
         print_warning("No packages on project")
     
-    print_info(tab,True,'Listing packages messages')
+    print_info(tab,True,'📝 Listing packages messages')
     
     # Enums list
     header = ['Enum','Values','Package']
@@ -381,7 +385,7 @@ def list_all(sylk_json:SylkJson):
                     add_enum_desc(tab,e,package)
     else:
         print_warning("No packages on project")
-    print_info(tab,True,'Listing packages enums')
+    print_info(tab,True,'📝 Listing packages enums')
 
 
 def add_project_desc(tab,prj,org):

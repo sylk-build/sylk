@@ -54,7 +54,7 @@ class SylkCloud:
         self.set_org_id()
     
     def _validate_token(self):
-        _pretty.print_note(f'Validating token: {self._token[0:5]}[REDACTED]')
+        _pretty.print_note(f'🔑 Validating token: {self._token[0:5]}[REDACTED]')
         res, call = self._sylk_cloud.GetAccessToken_WithCall(GetAccessTokenRequest(token=self._token))
         for key, value in call.trailing_metadata():
             _pretty.print_note('cloud client received trailing metadata: key=%s value=%s' %
@@ -67,7 +67,7 @@ class SylkCloud:
             exit(1)
         else:
             self._org_id = res.result.org_id
-            _pretty.print_success('Passed token validation')
+            _pretty.print_success('🔓 Passed token validation')
             return True
         
 
@@ -159,15 +159,15 @@ class SylkCloud:
             )
 
             resources = []
-            sylk = MessageToDict(sylk)
-            for pkg in sylk['packages']:
-                resources.append(sylk['packages'][pkg])
+            sylkDict = MessageToDict(sylk)
+            for pkg in sylkDict['packages']:
+                resources.append(sylkDict['packages'][pkg])
                 try:
-                    sort_topological = Graph(sylk['packages'][pkg]['messages']).topologicalSort()
+                    sort_topological = Graph(sylkDict['packages'][pkg]['messages']).topologicalSort()
                     temp_messages = []
                     for m in sort_topological[::-1]:
-                        temp_messages.append(next((tmpM for tmpM in sylk['packages'][pkg]['messages'] if tmpM.get('fullName') == m),None))
-                    sylk['packages'][pkg]['messages'] = temp_messages
+                        temp_messages.append(next((tmpM for tmpM in sylkDict['packages'][pkg]['messages'] if tmpM.get('fullName') == m),None))
+                    sylkDict['packages'][pkg]['messages'] = temp_messages
                 except KeyError as e:
                     _pretty.print_warning("Error while sorting the dependencies graph of package messages\n\t- If this error appeared right after making rename of message then ignore it...\n\t- Else please issue a bug report !")
                 

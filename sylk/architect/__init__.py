@@ -21,6 +21,7 @@
 
 from enum import Enum
 import logging
+from sylk import __version__
 from sylk.commons.errors import SylkProtoError
 from sylk.commons.file_system import join_path
 from sylk.commons.pretty import print_error, print_info, print_note
@@ -82,6 +83,9 @@ class SylkArchitect():
     
     def SetConfig(self,config):
         self._sylk.execute(CommandMap._ADD_RESOURCE, { 'configs' : config })
+
+    def SetSylkVersion(self):
+        self._sylk.execute(CommandMap._ADD_RESOURCE, { 'sylkVersion' : __version__.__version__ })
 
     def AddProject(self,name=None,server_language=SylkServer_pb2.SylkServerLanguages.Name(SylkServer_pb2.python),clients=[]) -> SylkProject_pb2.SylkProject:
         name = name if name is not None else self._project_name
