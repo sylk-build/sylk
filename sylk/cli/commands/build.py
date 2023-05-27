@@ -19,13 +19,19 @@
 # OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION
 # WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 
+from time import time
 from sylk.builder.src.main import SylkBuilder
 from sylk.commons.config import parse_project_config
-
+from sylk.commons.pretty import print_note, print_success
 def build_all(path:str):
+    st = time()
     prj_configs = parse_project_config(path,proto=True)
     sylkBuilder = SylkBuilder(path=path,configs=prj_configs)
     sylkBuilder.BuildAll()
+    et = time()
+    rt = et - st
+    print_success('Sylk build finished succesfully')
+    print_note(f'Build time: {rt:.3f}s')
 
 def build_code(path:str):
     prj_configs = parse_project_config(path,proto=True)

@@ -151,7 +151,7 @@ def CallRPC(service_module_path:str,service_rpc_name:str,sylk_json:_helpers.Sylk
     # TODO allow support for UNARY / STREAM
     # get the start time
     if debug:
-        st = time.time()    
+        st = time.time()
     try:
         response , call = getattr(stub,rpc)(msg)
         _pretty.print_info('Waiting for server response... [{0}]'.format(output_message_description['fullName']))

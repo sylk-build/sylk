@@ -24,13 +24,14 @@ class SylkBuilder:
 
     def __init__(self, path, hooks=None, project_name=None, server_language=None, clients=None, configs:resources.SylkConfigs_pb2.SylkProjectConfigs=None):
         self._configs = configs
+        # print(self._configs)
         self._pm = pluggy.PluginManager("sylk")
         self._sylk_context = None
         self._pm.add_hookspecs(hookspecs)
         
         loaded_plugins = self._pm.load_setuptools_entrypoints("sylk")
         # print_info(importlib_metadata.distributions())
-        print_info("Found installed plugins: {}".format(loaded_plugins))
+        block_all = False
         if hasattr(self._configs,'plugins'):
             # If plugins array specified under `SylkConfig.plugins` and not empty -
             # The plugins specified under project configurations will be cross-validated against the `load_setuptools_entrypoints()` values
@@ -51,13 +52,17 @@ class SylkBuilder:
                     print_warning("All installed sylk-XXX plugins will be blocked, since `SylkConfig.plugins` array is empty")
                     for name, mod in self._pm.list_name_plugin():
                         self._pm.set_blocked(name)
-
+        else:
+            block_all = True
 
         for name, mod in self._pm.list_name_plugin():
             if mod is None:
-                print_warning("Found \"sylk-{}\" plugin that is not passed to `SylkConfig.plugins` array".format(name))
+                print_warning("Found \"sylk-{}\" plugin that is not passed to `sylk.json/configs.plugins` array".format(name))
             else:
-                print_info(mod.__name__,True,'Loaded Plugin -> {}'.format(name))
+                if block_all:
+                    self._pm.set_blocked(name)
+                else:
+                    print_info(mod.__name__,True,'Loaded Plugin -> {}'.format(name))
 
         self._plugins = pluggy.PluginManager("plugins")
         self._plugins.add_hookspecs(hookspecs)
@@ -81,6 +86,7 @@ class SylkBuilder:
         self._parse_sylk_context(path)
         self._parse_protos(path)
         self._validate_json_proto()
+
     def _validate_json_proto(self):
         pass
 

@@ -204,7 +204,7 @@ def create_new_project(project_name:str,path:str=None,host:str=None,port:int=Non
         ARCHITECT = SylkArchitect(
             path=sylk_json_path, domain=domain_name, project_name=project_name)
         if template != '@sylk/Blank' and template is not None:
-            print_info('Starting sylk.build project from template:')
+            print_info('Starting sylk build project from template:')
             print_info(f'Creating new sylk.build project "{project_name}" [{template}]')
             attach_template(ARCHITECT,template)
             print_success(

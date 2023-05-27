@@ -176,7 +176,7 @@ class SylkCloud:
             # resourcesSorted = Graph(resources,True).topologicalSort()
             # print(resourcesSorted)
             if overwrite:
-                _fs.wFile('sylk.json',sylk,True,True)
+                _fs.wFile('sylk.json',sylkDict,True,True)
             # _pretty.print_info(sylk,True,'Project')
             return sylk
         except Exception as e:

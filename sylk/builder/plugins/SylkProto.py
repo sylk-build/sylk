@@ -24,11 +24,12 @@ import sylk.builder as builder
 from sylk.commons import helpers, file_system
 from sylk.commons.pretty import print_error, print_info
 
+log = logging.getLogger('sylk.cli.main')
 
 @builder.hookimpl
 def pre_build(sylk_json: helpers.SylkJson, sylk_context: helpers.SylkContext):
     if file_system.check_if_dir_exists(file_system.join_path(sylk_json.path, 'protos')):
-        print_info("Starting sylk build process %s plugin" % (__name__))
+        print_info("🔌 Starting sylk build process %s plugin" % (__name__))
     else:
         file_system.mkdir(file_system.join_path(sylk_json.path, 'protos'))
     return (__name__,'OK')
@@ -36,7 +37,8 @@ def pre_build(sylk_json: helpers.SylkJson, sylk_context: helpers.SylkContext):
 
 @builder.hookimpl
 def post_build(sylk_json: helpers.SylkJson, sylk_context: helpers.SylkContext):
-    logging.debug("Finished sylk build process %s plugin" % (__name__))
+    # log.debug("Finished sylk build process %s plugin" % (__name__))
+    return (__name__,'OK')
 
 
 @builder.hookimpl
@@ -57,7 +59,7 @@ def write_protos(sylk_json: helpers.SylkJson):
         svc_def = helpers.SylkProto(svc, sylk_json.services[svc].get(
             'dependencies'), sylk_json.services[svc], description=sylk_json.services[svc].get('description'),extensions=sylk_json.services[svc].get('extensions'),sylk_json=sylk_json)
         
-        logging.debug(f"Writing proto file for service: {svc}")
+        log.debug(f"Writing proto file for service: {svc}")
         file_system.wFile(file_system.join_path(
             sylk_json.path, 'protos', f'{svc}.proto'), svc_def.__str__(), True)
 
@@ -75,6 +77,6 @@ def write_protos(sylk_json: helpers.SylkJson):
                                   enums=sylk_json.packages[pkg].get('enums'),
                                   extensions=sylk_json.packages[pkg].get('extensions'),
                                   sylk_json=sylk_json)
-        logging.debug(f"Writing proto file for package: {pkg_name}")
+        log.debug(f"Writing proto file for package: {pkg_name}")
         file_system.wFile(file_system.join_path(
             sylk_json.path, 'protos', f'{pkg_name}.proto'), pkg_def.__str__(), True)

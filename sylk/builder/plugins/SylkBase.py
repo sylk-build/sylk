@@ -27,7 +27,7 @@ from sylk.commons.errors import SylkValidationError
 
 @builder.hookimpl
 def pre_build(sylk_json:helpers.SylkJson, sylk_context: helpers.SylkContext):
-    pretty.print_info("Starting sylk.build build process %s plugin" % (__name__))
+    pretty.print_info("🔌 Starting sylk build process %s plugin" % (__name__))
 
     directories = [
         # Clients
@@ -44,12 +44,14 @@ def pre_build(sylk_json:helpers.SylkJson, sylk_context: helpers.SylkContext):
 
 @builder.hookimpl(hookwrapper=True)
 def post_build(sylk_json:helpers.SylkJson, sylk_context: helpers.SylkContext):
-    pretty.print_success("Finished sylk.build build process %s plugin" % (__name__))
+    # pretty.print_success("Finished sylk.build build process %s plugin" % (__name__))
     # all corresponding hookimpls are invoked here
     outcome = yield
     results = outcome.get_result()
     if results != []:
-        pretty.print_info(results,True,'post_build')
+        pretty.print_info('Sylk finished build for:')
+        for p in results:
+            print(f'\t- {p[0]}')
 
 @builder.hookimpl(hookwrapper=True)
 def pre_build_server(sylk_json:helpers.SylkJson, sylk_context: helpers.SylkContext):

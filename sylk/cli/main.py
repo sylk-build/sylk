@@ -512,13 +512,13 @@ def main(args=None):
                 """Build command process"""
 
                 if args.code:
-                    print_info("Building project resources code files")
+                    print_info("🔨 Building project resources code files")
                     build.build_code(sylk_json_path)
                 elif args.protos:
-                    print_info("Building project resources proto's files")
+                    print_info("🔨 Building project resources proto's files")
                     build.build_protos(sylk_json_path)
                 elif args.code == False and args.protos == False:
-                    print_info("Building project resources")
+                    print_info("🔨 Building project resources")
                     build.build_all(sylk_json_path)
                     
             elif args.purge:

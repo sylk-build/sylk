@@ -425,7 +425,7 @@ def generate_rpc(path, name, client_streaming, server_streaming, in_type, out_ty
 
 
 def parse_proto(proto_path) -> FileDescriptor:
-    print_note(f"Parsing proto file into python module -> {proto_path}")
+    # print_note(f"Parsing proto file into python module -> {proto_path}")
     try:
         sys.path.index(os.getcwd()+'/protos')
     except:

@@ -11,3 +11,6 @@ twine
 
 [dev]
 bumpver
+
+[docs]
+sylk-docs

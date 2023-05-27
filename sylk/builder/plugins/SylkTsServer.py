@@ -29,13 +29,13 @@ import inspect
 
 @builder.hookimpl
 def pre_build(sylk_json: helpers.SylkJson, sylk_context: helpers.SylkContext):
-    pretty.print_info("Starting sylk build process %s plugin" % (__name__))
+    pretty.print_info("🔌 Starting sylk build process %s plugin" % (__name__))
 
 
 @builder.hookimpl
 def post_build(sylk_json: helpers.SylkJson, sylk_context: helpers.SylkContext):
     # TODO add postbuild validation of generated code
-    pretty.print_success("Finished sylk build process %s plugin" % (__name__))
+    # pretty.print_success("Finished sylk build process %s plugin" % (__name__))
     return (__name__,'OK')
 
 
@@ -89,9 +89,11 @@ def write_services(sylk_json: helpers.SylkJson, sylk_context: helpers.SylkContex
                 'dependencies'), sylk_json.services[svc], context=sylk_context,sylk_json=sylk_json).to_str()
             file_system.wFile(file_system.join_path(
                 sylk_json.path, 'services', f'{svc}.ts'), service_code, overwrite=True)
-        else:
-            pretty.print_info("Make sure you are editing the {0} file\n - See how to edit service written in Typescript".format(file_system.join_path(
-                sylk_json.path, 'services', f'{svc}.ts')))
+        # else:
+        #     pretty.print_info("Make sure you are editing the {0} file\n - See how to edit service written in Typescript".format(file_system.join_path(
+        #         sylk_json.path, 'services', f'{svc}.ts')))
+            # return (f'{svc}.ts',)
+            
 
 @builder.hookimpl
 def compile_protos(sylk_json: helpers.SylkJson, sylk_context: helpers.SylkContext):
@@ -132,87 +134,88 @@ _CLOSING_BRCK = '}'
 
 @builder.hookimpl
 def rebuild_context(sylk_json: helpers.SylkJson, sylk_context: helpers.SylkContext):
-    pretty.print_note("Re-Building sylk.context")
-    if sylk_json.services is not None:
-        for svc in sylk_json.services:
-            try:
-                svcFile = file_system.rFile(file_system.join_path(
-                    sylk_json.path, 'services', f'{svc}.ts'))
-                is_init = False
-                for l in svcFile:
-                    if '__init__' in l:
-                        is_init = True
-                        break
-                # Non RPC functions should have # @skip line above func name
-                function_code_inlines = helpers.parse_code_file(svcFile, '@skip')
-                # Parse all rpc's in file by default # @rpc seperator
-                rpc_code_inlines = helpers.parse_code_file(svcFile)
-                for f in sylk_context.files:
+    pass
+    # pretty.print_note("Re-Building sylk.context")
+    # if sylk_json.services is not None:
+    #     for svc in sylk_json.services:
+    #         try:
+    #             svcFile = file_system.rFile(file_system.join_path(
+    #                 sylk_json.path, 'services', f'{svc}.ts'))
+    #             is_init = False
+    #             for l in svcFile:
+    #                 if '__init__' in l:
+    #                     is_init = True
+    #                     break
+    #             # Non RPC functions should have # @skip line above func name
+    #             function_code_inlines = helpers.parse_code_file(svcFile, '@skip')
+    #             # Parse all rpc's in file by default # @rpc seperator
+    #             rpc_code_inlines = helpers.parse_code_file(svcFile)
+    #             for f in sylk_context.files:
 
-                    if svc in f.get('file'):
-                        # Iterating all regular functions
-                        for func in function_code_inlines:
-                            func_code = []
-                            for l in func:
-                                if '@rpc @@sylk' in l:
-                                    break
+    #                 if svc in f.get('file'):
+    #                     # Iterating all regular functions
+    #                     for func in function_code_inlines:
+    #                         func_code = []
+    #                         for l in func:
+    #                             if '@rpc @@sylk' in l:
+    #                                 break
 
-                                func_code.append(l)
-                            func_name = func_code[0].split(
-                            '(')[0].split('private')
-                            if len(func_name) > 1:
-                                func_name = func_name[1].strip()
-                            else:
-                                func_name = func_name[0].strip()
-                            sylk_context.set_method_code(svc, func_name, ''.join(func_code))
-                        methods_i = 0
-                        for r in sylk_json.services[svc]['methods']:
-                            if next((m for m in f.get('methods') if m['name'] == r['name']),None) is None:
-                                pretty.print_note(f"Starting new RPC at sylk.context [{r.get('name')}]")
-                                new_rpc_context = {'name': r.get('name'), 'type': 'rpc', 'code': '\t\tbreak;'}
-                                sylk_context.new_rpc(svc, new_rpc_context, suffix='ts')
-                        # Iterating all RPC's functions
-                        for m in f.get('methods'):
-                            if m['type'] == 'rpc':
-                                # Checking if edit to method has happened - meaning canot find in sylk.json all context methods
-                                if next((r for r in sylk_json.services[svc]['methods'] if r['name'] == m['name']), None) == None:
-                                    # Getting method details from sylk.json
-                                    new_method = sylk_json.services[svc]['methods'][methods_i]
-                                    # Building new context with old func code
-                                    new_rpc_context = {'name': new_method.get(
-                                        'name'), 'type': 'rpc', 'code': ''.join(rpc_code_inlines[methods_i][1:])}
-                                    # Editing inplace the RPC context
-                                    sylk_context.edit_rpc(
-                                        svc, m.get('name'), new_rpc_context)
-                                else:
-                                    # Setting new context
-                                    temp_lines = []
-                                    num_lines = 4
-                                    for l in rpc_code_inlines[methods_i]:
-                                        if 'ServerWritableStream<' in l:
-                                            num_lines = 3
-                                            break
-                                    for line in rpc_code_inlines[methods_i][num_lines:]:
+    #                             func_code.append(l)
+    #                         func_name = func_code[0].split(
+    #                         '(')[0].split('private')
+    #                         if len(func_name) > 1:
+    #                             func_name = func_name[1].strip()
+    #                         else:
+    #                             func_name = func_name[0].strip()
+    #                         sylk_context.set_method_code(svc, func_name, ''.join(func_code))
+    #                     methods_i = 0
+    #                     for r in sylk_json.services[svc]['methods']:
+    #                         if next((m for m in f.get('methods') if m['name'] == r['name']),None) is None:
+    #                             pretty.print_note(f"Starting new RPC at sylk.context [{r.get('name')}]")
+    #                             new_rpc_context = {'name': r.get('name'), 'type': 'rpc', 'code': '\t\tbreak;'}
+    #                             sylk_context.new_rpc(svc, new_rpc_context, suffix='ts')
+    #                     # Iterating all RPC's functions
+    #                     for m in f.get('methods'):
+    #                         if m['type'] == 'rpc':
+    #                             # Checking if edit to method has happened - meaning canot find in sylk.json all context methods
+    #                             if next((r for r in sylk_json.services[svc]['methods'] if r['name'] == m['name']), None) == None:
+    #                                 # Getting method details from sylk.json
+    #                                 new_method = sylk_json.services[svc]['methods'][methods_i]
+    #                                 # Building new context with old func code
+    #                                 new_rpc_context = {'name': new_method.get(
+    #                                     'name'), 'type': 'rpc', 'code': ''.join(rpc_code_inlines[methods_i][1:])}
+    #                                 # Editing inplace the RPC context
+    #                                 sylk_context.edit_rpc(
+    #                                     svc, m.get('name'), new_rpc_context)
+    #                             else:
+    #                                 # Setting new context
+    #                                 temp_lines = []
+    #                                 num_lines = 4
+    #                                 for l in rpc_code_inlines[methods_i]:
+    #                                     if 'ServerWritableStream<' in l:
+    #                                         num_lines = 3
+    #                                         break
+    #                                 for line in rpc_code_inlines[methods_i][num_lines:]:
                                         
-                                        if '\t}\n' == line:
-                                            if '\n' == temp_lines[-1]:
-                                                break
+    #                                     if '\t}\n' == line:
+    #                                         if '\n' == temp_lines[-1]:
+    #                                             break
 
-                                        if 'export {' in line:
-                                            break
+    #                                     if 'export {' in line:
+    #                                         break
 
-                                        temp_lines.append(line)
-                                    # pretty.print_info(f"Setting RPC -> {m.get('name')}\n-> {temp_lines}")
-                                    sylk_context.set_rpc_code(svc, m.get('name'), ''.join(
-                                        temp_lines))
+    #                                     temp_lines.append(line)
+    #                                 # pretty.print_info(f"Setting RPC -> {m.get('name')}\n-> {temp_lines}")
+    #                                 sylk_context.set_rpc_code(svc, m.get('name'), ''.join(
+    #                                     temp_lines))
 
-                                methods_i += 1
+    #                             methods_i += 1
 
-            except Exception as e:
-                pretty.print_error(e)
-    if sylk_context is not None:
-        file_system.wFile(file_system.join_path(
-            sylk_json.path, '.sylk', 'context.json'), sylk_context.dump(), True, True)
+    #         except Exception as e:
+    #             pretty.print_error(e)
+    # if sylk_context is not None:
+    #     file_system.wFile(file_system.join_path(
+    #         sylk_json.path, '.sylk', 'context.json'), sylk_context.dump(), True, True)
 
 @builder.hookimpl
 def write_server(sylk_json: helpers.SylkJson, sylk_context: helpers.SylkContext,pre_data):

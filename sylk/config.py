@@ -15,7 +15,7 @@ configs=SylkCliConfigs(
     analytics=False,
     # First run flag
     first_run=False,
-    token=None,
+    token="sylk_36f2bff2-7fd8-4322-bc56-402ea9378ecc",
     # Supported builtins templates
     sylk_templates = [
         "@sylk/Blank",

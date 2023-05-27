@@ -28,13 +28,13 @@ from sylk.builder.plugins.static import gitignore_js,logger_js,js_package_json
 
 @builder.hookimpl
 def pre_build(sylk_json: helpers.SylkJson, sylk_context: helpers.SylkContext):
-    pretty.print_info("Starting sylk build process %s plugin" % (__name__))
+    pretty.print_info("🔌 Starting sylk build process %s plugin" % (__name__))
 
 
 @builder.hookimpl
 def post_build(sylk_json: helpers.SylkJson, sylk_context: helpers.SylkContext):
     # TODO add postbuild validation of generated code
-    pretty.print_success("Finished sylk build process %s plugin" % (__name__))
+    # pretty.print_success("Finished sylk build process %s plugin" % (__name__))
     return (__name__,'OK')
 
 @builder.hookimpl
@@ -82,9 +82,10 @@ def write_services(sylk_json: helpers.SylkJson, sylk_context: helpers.SylkContex
                 'dependencies'), sylk_json.services[svc], context=sylk_context,sylk_json=sylk_json).to_str()
             file_system.wFile(file_system.join_path(
                 sylk_json.path, 'services', f'{svc}.js'), service_code, overwrite=True)
-        else:
-            pretty.print_info("Make sure you are editing the {0} file\n - See how to edit service written in Javascript".format(file_system.join_path(
-                sylk_json.path, 'services', f'{svc}.js')))
+        # else:
+        #     pretty.print_info("Make sure you are editing the {0} file\n - See how to edit service written in Javascript".format(file_system.join_path(
+        #         sylk_json.path, 'services', f'{svc}.js')))
+        #     return (f'{svc}.js',)
 
 _OPEN_BRCK = '{'
 _CLOSING_BRCK = '}'
@@ -126,7 +127,7 @@ function getServer() {_OPEN_BRCK}\n\
 {_CLOSING_BRCK}\n\n\
 const SylkServer = getServer();\n\
 routeServer.bindAsync(\'0.0.0.0:{port}\', grpc.ServerCredentials.createInsecure(), () => {_OPEN_BRCK}\n\
-    console.log(`[i] Starting sylk.build server [::]:{port}`)\n\
+    console.log(`[i] 🔌 Starting sylk build server [::]:{port}`)\n\
     SylkServer.start();\n\
 {_CLOSING_BRCK});'
    

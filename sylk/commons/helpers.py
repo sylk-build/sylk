@@ -42,6 +42,8 @@ from google.protobuf.timestamp_pb2 import Timestamp
 from platform import platform
 from inquirer import errors as inquirerErrors
 
+log = logging.getLogger('sylk.cli.main')
+
 _WELL_KNOWN_PY_IMPORTS = [
     "from google.protobuf.timestamp_pb2 import Timestamp", "from typing import Iterator"]
 
@@ -545,8 +547,14 @@ class SylkJson():
 
     def get_message(self, full_name):
         pkg_name = full_name.split('.')[1]
-        msgs = self._packages[f'protos/v1/{pkg_name}.proto']['messages']
-        return next((m for m in msgs if m['name'] == full_name.split('.')[-1]), None)
+        msgs = self._packages.get(f'protos/v1/{pkg_name}.proto',None)
+        msgs = msgs['messages'] if msgs is not None else []
+        if len(msgs) > 0:
+            return next((m for m in msgs if m['name'] == full_name.split('.')[-1]), None)
+        else:
+            return {
+                'fields': []
+            }
 
     def get_rpc(self, full_name):
         svc_name = full_name.split('.')[1]
@@ -1892,7 +1900,7 @@ class SylkServiceJs():
 
 
 def parse_code_file(file_content, seperator='@rpc'):
-    logging.debug(f"Parsing code file | seperator : {seperator}")
+    log.debug(f"Parsing code file | seperator : {seperator}")
     # temp_lines = []
     # for lines in :
     #     drop_lines = False

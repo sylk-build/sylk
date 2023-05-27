@@ -37,12 +37,12 @@ from sylk.commons.protos import SylkField_pb2, SylkServer_pb2, SylkClient_pb2, S
 from google.protobuf.descriptor_pb2 import MessageOptions
 @builder.hookimpl
 def pre_build(sylk_json: helpers.SylkJson, sylk_context: helpers.SylkContext):
-    logging.debug("Starting sylk build process %s plugin" % (__name__))
+    logging.debug("🔌 Starting sylk build process %s plugin" % (__name__))
 
 
 @builder.hookimpl
 def post_build(sylk_json: helpers.SylkJson, sylk_context: helpers.SylkContext):
-    logging.debug("Finished sylk build process %s plugin" % (__name__))
+    # logging.debug("Finished sylk build process %s plugin" % (__name__))
     return (__name__,'OK')
 
 

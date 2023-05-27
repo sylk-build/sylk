@@ -18,9 +18,10 @@ from google.protobuf import timestamp_pb2 as google_dot_protobuf_dot_timestamp__
 from . import SylkUser_pb2 as SylkUser__pb2
 from . import SylkClient_pb2 as SylkClient__pb2
 from . import SylkServer_pb2 as SylkServer__pb2
+from google.protobuf import any_pb2 as google_dot_protobuf_dot_any__pb2
 
 
-DESCRIPTOR = _descriptor_pool.Default().AddSerializedFile(b'\n\x11SylkProject.proto\x12\x13sylk.SylkProject.v1\x1a\x1fgoogle/protobuf/timestamp.proto\x1a\x0eSylkUser.proto\x1a\x10SylkClient.proto\x1a\x10SylkServer.proto\"\xde\x01\n\x0bSylkProject\x12\x13\n\x0b\x64\x65scription\x18\x08 \x01(\t\x12\x14\n\x0cjava_package\x18\x06 \x01(\t\x12\x12\n\ngo_package\x18\x05 \x01(\t\x12\x0c\n\x04name\x18\x02 \x01(\t\x12\x0b\n\x03uri\x18\x01 \x01(\t\x12/\n\x07\x63lients\x18\x04 \x03(\x0b\x32\x1e.sylk.SylkClient.v1.SylkClient\x12.\n\x06server\x18\x07 \x01(\x0b\x32\x1e.sylk.SylkServer.v1.SylkServer\x12\x14\n\x0cpackage_name\x18\x03 \x01(\t\"\xa1\x03\n\x12SylkProjectDisplay\x12\r\n\x05owner\x18\x04 \x01(\t\x12.\n\nupdated_at\x18\x03 \x01(\x0b\x32\x1a.google.protobuf.Timestamp\x12\x12\n\nnumMethods\x18\x06 \x01(\x05\x12.\n\ncreated_at\x18\x02 \x01(\x0b\x32\x1a.google.protobuf.Timestamp\x12\x45\n\x07members\x18\x05 \x03(\x0b\x32\x34.sylk.SylkProject.v1.SylkProjectDisplay.MembersEntry\x12\x13\n\x0bnumServices\x18\x07 \x01(\x05\x12\x13\n\x0bnumMessages\x18\t \x01(\x05\x12\x13\n\x0bnumPackages\x18\x08 \x01(\x05\x12\x31\n\x07project\x18\x01 \x01(\x0b\x32 .sylk.SylkProject.v1.SylkProject\x1aO\n\x0cMembersEntry\x12\x0b\n\x03key\x18\x01 \x01(\t\x12.\n\x05value\x18\x02 \x01(\x0e\x32\x1f.sylk.SylkUser.v1.SylkUserRoles:\x02\x38\x01\x62\x06proto3')
+DESCRIPTOR = _descriptor_pool.Default().AddSerializedFile(b'\n\x11SylkProject.proto\x12\x13sylk.SylkProject.v1\x1a\x1fgoogle/protobuf/timestamp.proto\x1a\x0eSylkUser.proto\x1a\x10SylkClient.proto\x1a\x10SylkServer.proto\x1a\x19google/protobuf/any.proto\"\x88\x02\n\x0bSylkProject\x12\x13\n\x0b\x64\x65scription\x18\x08 \x01(\t\x12\x14\n\x0cjava_package\x18\x06 \x01(\t\x12\x12\n\ngo_package\x18\x05 \x01(\t\x12\x0c\n\x04name\x18\x02 \x01(\t\x12\x0b\n\x03uri\x18\x01 \x01(\t\x12/\n\x07\x63lients\x18\x04 \x03(\x0b\x32\x1e.sylk.SylkClient.v1.SylkClient\x12.\n\x06server\x18\x07 \x01(\x0b\x32\x1e.sylk.SylkServer.v1.SylkServer\x12\x14\n\x0cpackage_name\x18\x03 \x01(\t\x12(\n\nextensions\x18\t \x03(\x0b\x32\x14.google.protobuf.Any\"\xa1\x03\n\x12SylkProjectDisplay\x12\r\n\x05owner\x18\x04 \x01(\t\x12.\n\nupdated_at\x18\x03 \x01(\x0b\x32\x1a.google.protobuf.Timestamp\x12\x12\n\nnumMethods\x18\x06 \x01(\x05\x12.\n\ncreated_at\x18\x02 \x01(\x0b\x32\x1a.google.protobuf.Timestamp\x12\x45\n\x07members\x18\x05 \x03(\x0b\x32\x34.sylk.SylkProject.v1.SylkProjectDisplay.MembersEntry\x12\x13\n\x0bnumServices\x18\x07 \x01(\x05\x12\x13\n\x0bnumMessages\x18\t \x01(\x05\x12\x13\n\x0bnumPackages\x18\x08 \x01(\x05\x12\x31\n\x07project\x18\x01 \x01(\x0b\x32 .sylk.SylkProject.v1.SylkProject\x1aO\n\x0cMembersEntry\x12\x0b\n\x03key\x18\x01 \x01(\t\x12.\n\x05value\x18\x02 \x01(\x0e\x32\x1f.sylk.SylkUser.v1.SylkUserRoles:\x02\x38\x01\x62\x06proto3')
 
 
 
@@ -42,8 +43,9 @@ class SylkProject(_message.Message):
 	clients = List[SylkClient__pb2.SylkClient] # type: List[SylkClient__pb2.SylkClient]
 	server = SylkServer__pb2.SylkServer # type: SylkServer__pb2.SylkServer
 	package_name = str # type: str
+	extensions = List[google_dot_protobuf_dot_any__pb2.Any] # type: List[google_dot_protobuf_dot_any__pb2.Any]
 
-	def __init__(self, description=str, java_package=str, go_package=str, name=str, uri=str, clients=List[SylkClient__pb2.SylkClient], server=SylkServer__pb2.SylkServer, package_name=str):
+	def __init__(self, description=str, java_package=str, go_package=str, name=str, uri=str, clients=List[SylkClient__pb2.SylkClient], server=SylkServer__pb2.SylkServer, package_name=str, extensions=List[google_dot_protobuf_dot_any__pb2.Any]):
 		"""
 		
 
@@ -64,6 +66,8 @@ class SylkProject(_message.Message):
 		server : SylkServer__pb2.SylkServer
 			
 		package_name : str
+			
+		extensions : List[google_dot_protobuf_dot_any__pb2.Any]
 			
 		"""
 		pass
@@ -137,10 +141,10 @@ if _descriptor._USE_C_DESCRIPTORS == False:
   DESCRIPTOR._options = None
   _SYLKPROJECTDISPLAY_MEMBERSENTRY._options = None
   _SYLKPROJECTDISPLAY_MEMBERSENTRY._serialized_options = b'8\001'
-  _SYLKPROJECT._serialized_start=128
-  _SYLKPROJECT._serialized_end=350
-  _SYLKPROJECTDISPLAY._serialized_start=353
-  _SYLKPROJECTDISPLAY._serialized_end=770
-  _SYLKPROJECTDISPLAY_MEMBERSENTRY._serialized_start=691
-  _SYLKPROJECTDISPLAY_MEMBERSENTRY._serialized_end=770
+  _SYLKPROJECT._serialized_start=155
+  _SYLKPROJECT._serialized_end=419
+  _SYLKPROJECTDISPLAY._serialized_start=422
+  _SYLKPROJECTDISPLAY._serialized_end=839
+  _SYLKPROJECTDISPLAY_MEMBERSENTRY._serialized_start=760
+  _SYLKPROJECTDISPLAY_MEMBERSENTRY._serialized_end=839
 # @@protoc_insertion_point(module_scope)

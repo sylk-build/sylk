@@ -28,13 +28,13 @@ from sylk.builder.plugins.static import gitignore_py
 
 @builder.hookimpl
 def pre_build(sylk_json: helpers.SylkJson, sylk_context: helpers.SylkContext):
-    pretty.print_info("Starting sylk build process %s plugin" % (__name__))
+    pretty.print_info("🔌 Starting sylk build process %s plugin" % (__name__))
 
 
 @builder.hookimpl
 def post_build(sylk_json: helpers.SylkJson, sylk_context: helpers.SylkContext):
     # TODO add postbuild validation of generated code
-    pretty.print_success("Finished sylk build process %s plugin" % (__name__))
+    # pretty.print_success("Finished sylk build process %s plugin" % (__name__))
     return (__name__,'OK')
 
 
@@ -79,9 +79,9 @@ def write_services(sylk_json: helpers.SylkJson, sylk_context: helpers.SylkContex
                 'dependencies'), sylk_json.services[svc], context=sylk_context,sylk_json=sylk_json).to_str()
             file_system.wFile(file_system.join_path(
                 sylk_json.path, 'services', f'{svc}.py'), service_code, overwrite=True)
-        else:
-            pretty.print_info("Make sure you are editing the {0} file\n - See how to edit service written in python".format(file_system.join_path(
-                sylk_json.path, 'services', f'{svc}.py')))
+        # else:
+        #     pretty.print_info("Make sure you are editing the {0} file\n - See how to edit service written in python".format(file_system.join_path(
+        #         sylk_json.path, 'services', f'{svc}.py')))
 
 @builder.hookimpl
 def compile_protos(sylk_json: helpers.SylkJson, sylk_context: helpers.SylkContext):

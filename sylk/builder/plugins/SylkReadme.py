@@ -26,12 +26,12 @@ import logging
 
 @builder.hookimpl
 def pre_build(sylk_json: helpers.SylkJson, sylk_context: helpers.SylkContext):
-    pretty.print_info("Starting sylk build process %s plugin" % (__name__))
+    pretty.print_info("🔌 Starting sylk build process %s plugin" % (__name__))
 
 
 @builder.hookimpl
 def post_build(sylk_json: helpers.SylkJson, sylk_context: helpers.SylkContext):
-    pretty.print_success("Finished sylk build process %s plugin" % (__name__))
+    # pretty.print_success("Finished sylk build process %s plugin" % (__name__))
     return (__name__,'OK')
 
 
