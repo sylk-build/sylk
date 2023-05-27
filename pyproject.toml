@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "sylk"
-version = "0.1.0"
+version = "0.1.1"
 description = "sylk CLI build, deploy and manage gRPC microservices."
 readme = "README.md"
 authors = [{ name = "Sylk Developers", email = "contact@sylk.build" }]
@@ -33,7 +33,7 @@ documentation = "https://docs.sylk.build"
 
 
 [tool.bumpver]
-current_version = "0.1.0"
+current_version = "0.1.1"
 version_pattern = "MAJOR.MINOR.PATCH"
 commit_message  = "bump version {old_version} -> {new_version}"
 commit          = true
