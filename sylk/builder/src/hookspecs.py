@@ -53,6 +53,10 @@ def write_protos(sylk_json: SylkJson, sylk_context: SylkContext,pre_data):
     """Write proto files"""
 
 @hookspec
+def pre_compile_protos(sylk_json: SylkJson, sylk_context: SylkContext):
+    """Pre build hook for Write clients"""
+
+@hookspec
 def compile_protos(sylk_json: SylkJson, sylk_context: SylkContext,pre_data):
     """compile proto files"""
 

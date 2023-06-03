@@ -1,3 +1,7 @@
 from setuptools import setup, find_packages
 
-setup()
+setup(
+    extras_require={
+        "docs": ["sylk-docs"],
+    }
+)

@@ -224,7 +224,7 @@ go mod tidy\n\
 go test\n\
 statuscode=$?\n\
 echo "Exit code for go.mod tidy and test -> "$statuscode\n\
-[[ "$statuscode" != "0" ]] && {3} echo "Some error occured during init script for Go"; echo "Running init for : github.com/{0}"; go mod init github.com/{0}; {4}\n'.format(project_package,'\n'.join(services_protoc),'\n'.join(packages_protoc),_OPEN_BRCK,_CLOSING_BRCK)
+[[ "$statuscode" != "0" ]] && {3} echo "Some error occured during init script for Go"; echo "Running init for : {0}"; go mod init {0}; {4}\n'.format(project_package,'\n'.join(services_protoc),'\n'.join(packages_protoc),_OPEN_BRCK,_CLOSING_BRCK)
 
 bash_init_script_ts = '#!/bin/bash\n\n\
 echo "[sylk.build] init.sh starting protoc compiler"\n\

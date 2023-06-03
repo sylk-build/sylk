@@ -105,4 +105,4 @@ Open ```./docs/build/html/index.html``` in a browser.
 
 - Bump the version with `bumpver update --patch/minor/major`
 - Build `python -m build`
-- Upload to pip `twine upload dist/webezyio-x.y.z-py3-none-any.whl`
+- Upload to pip `twine upload dist/sylk-x.y.z-py3-none-any.whl`

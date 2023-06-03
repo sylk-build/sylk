@@ -224,10 +224,16 @@ class SylkBuilder:
         results = list(itertools.chain(*results))
         return results
 
-    def CompileProtos(self):
+    def PreCompileProtos(self):
+        """Executing the :func:`sylk.builder.src.hookspecs.pre_compile_protos` hook"""
+        results = self._pm.hook.pre_compile_protos(
+            sylk_json=self._sylk_json, sylk_context=self._sylk_context)
+        return results
+
+    def CompileProtos(self,pre_compile_porotos_data):
         """Executing the :func:`sylk.builder.src.hookspecs.compile_protos` hook"""
         results = self._pm.hook.compile_protos(
-            sylk_json=self._sylk_json, sylk_context=self._sylk_context,pre_data=None)
+            sylk_json=self._sylk_json, sylk_context=self._sylk_context,pre_data=pre_compile_porotos_data)
         results = list(itertools.chain(*results))
         return results
 
@@ -370,7 +376,8 @@ class SylkBuilder:
         server = self.BuildServer(pre_server)
         post_server = self.PostBuildServer()
 
-        compile = self.CompileProtos()
+        pre_compile = self.PreCompileProtos()
+        compile = self.CompileProtos(pre_compile)
         readme = self.WriteReadme()
         protoclass = self.OverrideGeneratedClasses()
 

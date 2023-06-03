@@ -15,13 +15,13 @@ classifiers = [
     "Programming Language :: Python :: 3",
 ]
 keywords = ["grpc", "micro-services", "cli", "framework"]
-dependencies = ["pluggy>=0.3,<1.0","inquirer","prettytable","protobuf<=4.21.6","grpcio==1.47.0","grpcio-tools==1.47.0"]
+dependencies = ["pluggy>=0.3,<1.0","inquirer","prettytable","protobuf<=4.23.2","grpcio==1.54.2","grpcio-tools==1.54.2"]
 requires-python = ">=3.7"
 
 [project.optional-dependencies]
-build = ["build", "twine"]
-dev   = ["bumpver"]
 docs  = ["sylk-docs"]
+dev   = ["bumpver"]
+build = ["build", "twine"]
 
 [project.scripts]
 sylk = "sylk.cli.__main__:main"

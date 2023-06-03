@@ -18,6 +18,7 @@
 # LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION
 # OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION
 # WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+import pkg_resources
 
 from datetime import datetime
 from importlib import reload
@@ -37,7 +38,7 @@ from sylk.cli import theme,prompter
 from sylk.commons import client_wrapper, helpers,file_system,errors,resources, parser, config as prj_conf, protos
 from sylk.commons.pretty import print_info, print_note, print_version, print_success, print_warning, print_error
 from sylk.commons.protos import SylkField_pb2
-from grpc_tools import protoc,command
+from grpc_tools import protoc,command,_protoc_compiler
 from sylk.cli.commands import call, \
     extend, \
     migrate, \
@@ -139,7 +140,15 @@ sylk_g_e_q = [
 
 DEFAULT_PORT = 44880
 
+def run_protoc(command_arguments):
+    command_arguments = [argument.encode() for argument in command_arguments]
+    print(command_arguments)
+    return _protoc_compiler.run_main(command_arguments)
+
 def main(args=None):
+    well_known_protos = pkg_resources.resource_filename('grpc_tools', '_proto')
+    sylk_protos = pkg_resources.resource_filename('sylk', '_proto')
+    run_protoc(sys.argv+['-I{} -I{}'.format(well_known_protos,sylk_protos)])
     # Print sylk 'Logo'
     print(theme.logo_ascii_art_color)
     # If first run of CLI ask for analytic usage

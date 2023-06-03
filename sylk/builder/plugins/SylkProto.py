@@ -19,11 +19,14 @@
 # OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION
 # WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 
+import inspect
 import logging
+import sys
 import sylk.builder as builder
 from sylk.commons import helpers, file_system
 from sylk.commons.pretty import print_error, print_info
-
+import pkg_resources
+from grpc_tools import _protoc_compiler
 log = logging.getLogger('sylk.cli.main')
 
 @builder.hookimpl
@@ -40,6 +43,38 @@ def post_build(sylk_json: helpers.SylkJson, sylk_context: helpers.SylkContext):
     # log.debug("Finished sylk build process %s plugin" % (__name__))
     return (__name__,'OK')
 
+def run_protoc(command_arguments):
+    command_arguments = [argument.encode() for argument in command_arguments]
+    print(command_arguments)
+    return _protoc_compiler.run_main(command_arguments)
+
+@builder.hookimpl
+def compile_protos(sylk_json: helpers.SylkJson, sylk_context: helpers.SylkContext,pre_data):
+    well_known_protos = pkg_resources.resource_filename('grpc_tools', '_proto')
+    sylk_protos = pkg_resources.resource_filename('sylk', '_proto')
+    commands = []
+    if pre_data:
+        _hook_name = inspect.stack()[0][3]
+        for mini_hooks in pre_data:
+            for hook in mini_hooks:
+                if __name__ == hook.split(':')[0]:
+                    if hook.split(':')[2] is not None and _hook_name == hook.split(':')[1].replace('()',''):
+                        
+                        if 'include_dirs' in hook.split(':')[2]:
+                            if mini_hooks[hook] is not None and len(mini_hooks[hook]) > 0:
+                                print_error(mini_hooks[hook])
+
+                        if 'commands' in hook.split(':')[2]:
+                            if mini_hooks[hook] is not None and len(mini_hooks[hook]) > 0:
+                                print_error(mini_hooks[hook])
+                                commands = commands + mini_hooks[hook]
+
+    # print(sylk_protos)
+    proto_files = []
+    for pkg in sylk_json.packages:
+        proto_files.append(''+pkg.split('/')[-1])
+# ['-I{} -I{} -I{}'.format(sylk_json.path+'/protos',well_known_protos,sylk_protos)]
+    run_protoc(commands +['-I{}'.format(well_known_protos),'-I{}'.format(sylk_json.path+'/protos')]+ proto_files)
 
 @builder.hookimpl
 def write_protos(sylk_json: helpers.SylkJson):

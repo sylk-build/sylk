@@ -84,16 +84,29 @@ def write_services(sylk_json: helpers.SylkJson, sylk_context: helpers.SylkContex
         #         sylk_json.path, 'services', f'{svc}.py')))
 
 @builder.hookimpl
+def pre_compile_protos(sylk_json: helpers.SylkJson, sylk_context: helpers.SylkContext):
+    pretty.print_info("Running pre compile protos")
+    return {
+        'sylk.builder.plugins.SylkProto:compile_protos():commands':[
+            # '--proto_path=./',
+            '--python_out=./protos',
+            '--pyi_out=./protos',
+            '--grpc_python_out=./protos'
+        ],
+        'sylk.builder.plugins.SylkProto:compile_protos():include_dirs':[],
+    }
+
+@builder.hookimpl
 def compile_protos(sylk_json: helpers.SylkJson, sylk_context: helpers.SylkContext):
     # Running ./bin/init.sh script for compiling protos
     logging.info("Running ./bin/init.sh script for 'protoc' compiler")
     subprocess.run(['bash', file_system.join_path(
         sylk_json.path, 'bin', 'init.sh')])
     # Moving .py files to ./services/protos dir
-    for file in file_system.walkFiles(file_system.join_path(sylk_json.path, 'protos')):
-        if '.py' in file:
-            file_system.mv(file_system.join_path(sylk_json.path, 'protos', file),
-                           file_system.join_path(sylk_json.path, 'services', 'protos', file))
+    # for file in file_system.walkFiles(file_system.join_path(sylk_json.path, 'protos')):
+    #     if '.py' in file:
+    #         file_system.mv(file_system.join_path(sylk_json.path, 'protos', file),
+    #                        file_system.join_path(sylk_json.path, 'services', 'protos', file))
 
 
 

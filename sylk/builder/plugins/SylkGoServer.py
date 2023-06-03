@@ -117,7 +117,7 @@ def compile_protos(sylk_json: helpers.SylkJson, sylk_context: helpers.SylkContex
         for p in sylk_json.packages:
             packages_protoc.append(sylk_json.packages[p].get('name'))
     file_system.wFile(file_system.join_path(
-        sylk_json.path, 'bin', 'init-go.sh'), bash_init_script_go(sylk_json.project.get('packageName'),services_protoc,packages_protoc),True)
+        sylk_json.path, 'bin', 'init-go.sh'), bash_init_script_go(sylk_json.project.get('goPackage'),services_protoc,packages_protoc),True)
     # Running ./bin/init-go.sh script for compiling protos
     logging.info("Running ./bin/init-go.sh script for 'protoc' compiler")
     subprocess.run(['bash', file_system.join_path(

@@ -53,7 +53,7 @@ class CommandMap(Enum):
 class SylkArchitect():
 
     def __init__(self,path,domain='domain',project_name='project',save=None) -> None:
-        logging.info("🔌 Starting sylk build architect process")
+        logging.debug("Starting sylk build architect process")
         if 'sylk.json' not in path:
             raise SylkProtoError('sylk.json file path is not valid','Make sure you pass in your architect class the right path to your sylk.json file')
         self._path = path
@@ -187,7 +187,7 @@ class SylkArchitect():
 
 
     def Save(self):
-        logging.info("Saving sylk.build architect process")
+        logging.debug("Saving sylk.build architect process")
 
         self._sylk.save()
 

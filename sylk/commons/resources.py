@@ -156,10 +156,10 @@ def generate_project(path, name, server_langauge='python', clients=[], package_n
             elif c.language == SylkClient_pb2.go if hasattr(c,'language') else c['language'] == 'go':
                 temp_c_lang = SylkClient_pb2.go
                 if json:
-                    go_package_input = prompter.QText(name='go_package',message='Enter a prefix to support Go package',default='github.com')
+                    go_package_input = prompter.QText(name='go_package',message='Enter a prefix to support Go package',default='github.com/{}'.format(package_name))
                     go_package = prompter.ask_user_question(questions=[go_package_input])
                 if go_package is not None:
-                    go_package = '{}/{}'.format(go_package['go_package'],package_name)
+                    go_package = go_package['go_package']
                 else:
                     go_package = 'github.com/{}'.format(package_name)
             # elif c['language'] == 'webpack':
