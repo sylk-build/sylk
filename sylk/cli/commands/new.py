@@ -35,10 +35,9 @@ from sylk.cli.commands.cloud import SylkCloud
 import os
 import inquirer
 from inquirer import errors
-from sylk.commons.protos import SylkClient_pb2, SylkServer_pb2
+from sylk.commons.protos.sylk.SylkClient.v1 import SylkClient_pb2
+from sylk.commons.protos.sylk.SylkServer.v1 import SylkServer_pb2
 from google.protobuf.json_format import MessageToDict
-import json
-from sylk.commons.protos.SylkServer_pb2 import SylkServer, SylkServerLanguages
 
 _TEMPLATES = _BUILTINS_TEMPLATES
 
@@ -84,7 +83,7 @@ def create_new_project(project_name:str,path:str=None,host:str=None,port:int=Non
         project.project.uri = result_path
         project_path = join_path(
                     result_path,'sylk.json')
-        if project.project.server.language == SylkServerLanguages.go and project.project.go_package == '':
+        if project.project.server.language == SylkServer_pb2.SylkServerLanguages.go and project.project.go_package == '':
             go_package_input = prompter.QText(name='go_package',message='Enter a prefix to support Go package',default='github.com/{}'.format(project.project.package_name))
             go_package = prompter.ask_user_question(questions=[go_package_input])
             if go_package is not None:
@@ -101,8 +100,8 @@ def create_new_project(project_name:str,path:str=None,host:str=None,port:int=Non
             path=project_path, domain=domain_name, project_name=project_name)
         ARCHITECT.AddProject(project_name,project.project.server.language,project.project.clients)
         # ARCHITECT._sylk = project
-        ARCHITECT.SetSylkVersion()
         ARCHITECT.SetConfig({'host': host, 'port': int(port) })
+        ARCHITECT.SetSylkVersion()
         ARCHITECT.Save()
 
         print_success(
@@ -175,7 +174,7 @@ def create_new_project(project_name:str,path:str=None,host:str=None,port:int=Non
                 if type(results[k]) == str:
                     server_langugae = results[k]
                 else:
-                    server_langugae = SylkServerLanguages.Name(results[k])
+                    server_langugae = SylkServer_pb2.SylkServerLanguages.Name(results[k])
                 print_info(f'Server language: {server_langugae}')
             if k == 'clients':
                 for c in results[k]:

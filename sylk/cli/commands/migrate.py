@@ -25,7 +25,8 @@ from sylk.builder.src.main import SylkBuilder
 from sylk.commons import file_system as _fs, pretty as  _pretty
 import sys
 
-from sylk.commons.protos import SylkServer_pb2, SylkClient_pb2
+from sylk.commons.protos.sylk.SylkServer.v1 import SylkServer_pb2
+from sylk.commons.protos.sylk.SylkClient.v1 import SylkClient_pb2
 
 def migrate_project(protos_directory:str,output_path:str,format:Literal['json','python']='json',server_language=SylkServer_pb2.SylkServerLanguages.Name(SylkServer_pb2.python),clients=[SylkClient_pb2.SylkClientLanguages.Name(SylkClient_pb2.python)]):
     if format == 'python':

@@ -57,9 +57,8 @@ def run(args):
         if file_system.is_file_executable(plug_path):
             print_info(f"🔌 Running plugin: {p}")
 
-            if len(args.protos) == 0:
-                sylk = SylkArchitect('./sylk.json')
-                print(sylk)
+            # if len(args.protos) == 0:
+                # sylk = SylkArchitect('./sylk.json')
 
             protoc_params = ['protoc'] + args.protos + plugs
             process = subprocess.Popen(protoc_params,

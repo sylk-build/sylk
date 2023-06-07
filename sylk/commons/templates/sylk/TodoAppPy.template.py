@@ -26,7 +26,9 @@ from sylk.commons import helpers, file_system
 
 # Sylk.build proto modules also helps us here to construct our services
 # gRPC used to create another gRPC ! :)
-from sylk.commons.protos import SylkServer_pb2, SylkClient_pb2, SylkCommons_pb2
+from sylk.commons.protos.sylk.SylkServer.v1 import SylkServer_pb2
+from sylk.commons.protos.sylk.SylkClient.v1 import SylkClient_pb2
+from sylk.commons.protos.sylk.SylkCommons.v1 import SylkCommons_pb2
 
 # Default system imports
 import os

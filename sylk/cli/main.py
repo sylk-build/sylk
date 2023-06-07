@@ -18,27 +18,21 @@
 # LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION
 # OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION
 # WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
-import pkg_resources
-
 from datetime import datetime
 from importlib import reload
-import importlib
 import logging
 import argparse
 import os
 from platform import platform
 import subprocess
-import sys
-import inquirer
 from inquirer import errors
 import re
 from sylk import __version__, config
 from sylk.architect import SylkArchitect
 from sylk.cli import theme,prompter
-from sylk.commons import client_wrapper, helpers,file_system,errors,resources, parser, config as prj_conf, protos
+from sylk.commons import helpers,file_system,errors,resources, parser, config as prj_conf, protos
 from sylk.commons.pretty import print_info, print_note, print_version, print_success, print_warning, print_error
-from sylk.commons.protos import SylkField_pb2
-from grpc_tools import protoc,command,_protoc_compiler
+from sylk.commons.protos.sylk.SylkField.v1 import SylkField_pb2
 from sylk.cli.commands import call, \
     extend, \
     migrate, \
@@ -140,15 +134,8 @@ sylk_g_e_q = [
 
 DEFAULT_PORT = 44880
 
-def run_protoc(command_arguments):
-    command_arguments = [argument.encode() for argument in command_arguments]
-    print(command_arguments)
-    return _protoc_compiler.run_main(command_arguments)
 
 def main(args=None):
-    well_known_protos = pkg_resources.resource_filename('grpc_tools', '_proto')
-    sylk_protos = pkg_resources.resource_filename('sylk', '_proto')
-    run_protoc(sys.argv+['-I{} -I{}'.format(well_known_protos,sylk_protos)])
     # Print sylk 'Logo'
     print(theme.logo_ascii_art_color)
     # If first run of CLI ask for analytic usage
@@ -193,9 +180,8 @@ def main(args=None):
     parser_cloud = subparsers.add_parser('registry', help='Interact with sylk\'s cloud API')
     parser_cloud.add_argument('project_id', help='Set you sylk cli to default organization via personal access token')
     group_cloud = parser_cloud.add_argument_group('Projects')
-    group_cloud.add_argument('action', help='Pull / Push a sylk project',default='pull',choices=['pull','push'])
+    group_cloud.add_argument('action', help='Pull / Push / Build a sylk project',default='pull',choices=['pull','push','build'])
     # group_cloud.add_argument('push', help='Set you sylk cli to default organization via personal access token')
-
 
 
     """New command"""
@@ -427,9 +413,11 @@ def main(args=None):
 
             """Cloud commands"""
             if hasattr(args, 'project_id'):
-                if args.action == 'pull':
-                    sylkCloud = cloud.SylkCloud(token=sylk_project_config.get('token'),SylkJson=SYLK_JSON)
-                    sylkCloud.pull_project(overwrite=True)
+                sylkCloud = cloud.SylkCloud(token=sylk_project_config.get('token'),SylkJson=SYLK_JSON)
+                if args.action == 'build':
+                    sylkCloud.buildProject()
+                elif args.action == 'pull':
+                    sylkCloud.pull_project(project_id=args.project_id,overwrite=True)
                 else:
                     print_error('Pushing local project to registry is not supported yet.')            
                     exit(1)
@@ -674,9 +662,10 @@ def parse_name_to_resource(full_name,sylk_json: helpers.SylkJson):
     if len(full_name.split('.')) > 4:
         log.debug("Searching for fields / enum values")
         # Field / Enum Value
+        domain = full_name.split('.')[0]
         pkg_name = full_name.split('.')[1]
         pkg_v = full_name.split('.')[2]
-        pkg_path = f'protos/{pkg_v}/{pkg_name}.proto'
+        pkg_path = f'protos/{domain}/{pkg_name}/{pkg_v}/{pkg_name}.proto'
         if sylk_json.packages[pkg_path].get('messages') is not None:
             msg_name = '.'.join(full_name.split('.')[:-1])
             search_msg = next((m for m in sylk_json.packages[pkg_path].get('messages') if m.get('fullName') == msg_name),None)
@@ -688,10 +677,10 @@ def parse_name_to_resource(full_name,sylk_json: helpers.SylkJson):
     elif len(full_name.split('.')) == 4:
         #  Message / Enum 
         log.debug("Searching for Messages / enum")
-
+        domain = full_name.split('.')[0]
         pkg_name = full_name.split('.')[1]
         pkg_v = full_name.split('.')[2]
-        pkg_path = f'protos/{pkg_v}/{pkg_name}.proto'
+        pkg_path = f'protos/{domain}/{pkg_name}/{pkg_v}/{pkg_name}.proto'
         if sylk_json.packages.get(pkg_path) is None:
 
             if sylk_json.services.get(pkg_name).get('methods') is not None and resource is None:
@@ -718,9 +707,10 @@ def parse_name_to_resource(full_name,sylk_json: helpers.SylkJson):
     elif len(full_name.split('.')) == 3:
         # Package
         log.debug("Searching for Package")
+        domain = full_name.split('.')[0]
         pkg_name = full_name.split('.')[1]
         pkg_v = full_name.split('.')[2]
-        pkg_path = f'protos/{pkg_v}/{pkg_name}.proto'
+        pkg_path = f'protos/{domain}/{pkg_name}/{pkg_v}/{pkg_name}.proto'
         if sylk_json.packages.get(pkg_path) is not None:
            resource = sylk_json.packages.get(pkg_path)
     elif len(full_name.split('.')) == 1:
@@ -854,7 +844,7 @@ def template_commands(args,sylk_json:helpers.SylkJson=None,architect=None):
                 else:
                     if 'sylk.json' in args.path:
                         prj_configs = prj_conf.parse_sylk_config(sylk_json.path,proto=True)
-                        print(prj_configs)
+                        # print(prj_configs)
                         SYLK_JSON = file_system.rFile(args.path, json=True)
                         SYLK_JSON = helpers.SylkJson(sylk_json=SYLK_JSON)
                         filename = SYLK_JSON.project.get('packageName') if args.template_name is None else args.template_name

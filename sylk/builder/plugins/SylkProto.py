@@ -21,6 +21,7 @@
 
 import inspect
 import logging
+import subprocess
 import sys
 import sylk.builder as builder
 from sylk.commons import helpers, file_system
@@ -45,7 +46,6 @@ def post_build(sylk_json: helpers.SylkJson, sylk_context: helpers.SylkContext):
 
 def run_protoc(command_arguments):
     command_arguments = [argument.encode() for argument in command_arguments]
-    print(command_arguments)
     return _protoc_compiler.run_main(command_arguments)
 
 @builder.hookimpl
@@ -53,6 +53,7 @@ def compile_protos(sylk_json: helpers.SylkJson, sylk_context: helpers.SylkContex
     well_known_protos = pkg_resources.resource_filename('grpc_tools', '_proto')
     sylk_protos = pkg_resources.resource_filename('sylk', '_proto')
     commands = []
+    include_dirs = ['-I{}'.format(well_known_protos),'-I{}'.format(sylk_json.path+'/protos')]
     if pre_data:
         _hook_name = inspect.stack()[0][3]
         for mini_hooks in pre_data:
@@ -62,8 +63,8 @@ def compile_protos(sylk_json: helpers.SylkJson, sylk_context: helpers.SylkContex
                         
                         if 'include_dirs' in hook.split(':')[2]:
                             if mini_hooks[hook] is not None and len(mini_hooks[hook]) > 0:
-                                print_error(mini_hooks[hook])
-
+                                for d in mini_hooks[hook]:
+                                    include_dirs.append('-I{}'.format(d))
                         if 'commands' in hook.split(':')[2]:
                             if mini_hooks[hook] is not None and len(mini_hooks[hook]) > 0:
                                 print_error(mini_hooks[hook])
@@ -72,10 +73,32 @@ def compile_protos(sylk_json: helpers.SylkJson, sylk_context: helpers.SylkContex
     # print(sylk_protos)
     proto_files = []
     for pkg in sylk_json.packages:
-        proto_files.append(''+pkg.split('/')[-1])
-# ['-I{} -I{} -I{}'.format(sylk_json.path+'/protos',well_known_protos,sylk_protos)]
-    run_protoc(commands +['-I{}'.format(well_known_protos),'-I{}'.format(sylk_json.path+'/protos')]+ proto_files)
+        proto_files.append('/'.join(pkg.split('/')[1:]))
+    
+    for svc in sylk_json.services:
+        proto_files.append('/'.join(svc.split('/')[1:]))
 
+
+    if sylk_json.is_language("python"):
+        run_protoc(commands+ include_dirs + proto_files)
+    else:
+        protoc_params = ['protoc']+ commands +include_dirs+ proto_files
+        process = subprocess.Popen(protoc_params,
+                    stdout=subprocess.PIPE, 
+                    stderr=subprocess.PIPE)
+        _, stderr = process.communicate()
+        if stderr:
+            print_info(stderr.decode('utf-8'))
+
+    if sylk_json.is_language("go"):
+        protoc_params = ['protoc']+ [c for c in list(map(lambda f: f if '--go' in f or '-I' in f or '--proto-path' in f else None,commands)) if c is not None] +include_dirs+ proto_files
+        process = subprocess.Popen(protoc_params,
+                    stdout=subprocess.PIPE, 
+                    stderr=subprocess.PIPE)
+        _, stderr = process.communicate()
+        if stderr:
+            print_info(stderr.decode('utf-8'))
+        
 @builder.hookimpl
 def write_protos(sylk_json: helpers.SylkJson):
     if sylk_json.services is None:
@@ -91,12 +114,12 @@ def write_protos(sylk_json: helpers.SylkJson):
             print_error(f"Cannot build service [{svc}] proto file with 0 methods!")
             exit(1)
 
-        svc_def = helpers.SylkProto(svc, sylk_json.services[svc].get(
+        svc_def = helpers.SylkProto(svc.split('/')[-1].split('.')[0], sylk_json.services[svc].get(
             'dependencies'), sylk_json.services[svc], description=sylk_json.services[svc].get('description'),extensions=sylk_json.services[svc].get('extensions'),sylk_json=sylk_json)
         
         log.debug(f"Writing proto file for service: {svc}")
         file_system.wFile(file_system.join_path(
-            sylk_json.path, 'protos', f'{svc}.proto'), svc_def.__str__(), True)
+            sylk_json.path, svc), svc_def.__str__(), True,False,True)
 
     for pkg in sylk_json.packages:
         pkg_name = sylk_json.packages[pkg].get('name')
@@ -114,4 +137,4 @@ def write_protos(sylk_json: helpers.SylkJson):
                                   sylk_json=sylk_json)
         log.debug(f"Writing proto file for package: {pkg_name}")
         file_system.wFile(file_system.join_path(
-            sylk_json.path, 'protos', f'{pkg_name}.proto'), pkg_def.__str__(), True)
+            sylk_json.path, pkg), pkg_def.__str__(), True,False,True)

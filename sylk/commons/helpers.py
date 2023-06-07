@@ -33,7 +33,7 @@ from sylk.commons import errors, pretty
 from sylk.commons.resources import generate_package, generate_service
 from sylk.commons.errors import SylkCoderError, SylkValidationError
 from sylk.commons.file_system import check_if_file_exists, join_path
-from sylk.commons.protos import Sylk as SylkCore
+from sylk.commons.protos.sylk.Sylk.v1 import Sylk_pb2 as SylkCore
 from itertools import groupby
 from google.protobuf.struct_pb2 import Value
 from google.protobuf.json_format import ParseDict, MessageToDict,MessageToJson
@@ -41,6 +41,8 @@ from google.protobuf import text_format
 from google.protobuf.timestamp_pb2 import Timestamp
 from platform import platform
 from inquirer import errors as inquirerErrors
+
+import concurrent.futures
 
 log = logging.getLogger('sylk.cli.main')
 
@@ -510,35 +512,43 @@ class SylkJson():
         self._path = self._sylk_json.get('project').get('uri')
         self._sylk_version = self._sylk_json.get('sylkVersion')
 
-    def get_service(self, name, json=True,sylk_json=None):
+    def get_service(self, name, json=True,sylk_json=None,version:str='v1'):
         if json:
             try:
-                return self._services[name]
+                return self._services[f'protos/{self.domain}/{name}/{version}/{name}.proto']
             except Exception:
                 return None
         else:
-            depend = self._services[name].get('dependencies')
-            methods = self._services[name].get('methods')
-            extensions = self._services[name].get('extensions')
-            return generate_service(self.path,self.domain,name,self.get_server_language(),depend if depend is not None else [],self._services[name].get('description'),methods if methods is not None else [],extensions=extensions,sylk_json=sylk_json)
+            depend = self._services[f'protos/{self.domain}/{name}/{version}/{name}.proto'].get('dependencies')
+            methods = self._services[f'protos/{self.domain}/{name}/{version}/{name}.proto'].get('methods')
+            extensions = self._services[f'protos/{self.domain}/{name}/{version}/{name}.proto'].get('extensions')
+            return generate_service(self.path,self.domain,name,self.get_server_language(),depend if depend is not None else [],self._services[f'protos/{self.domain}/{name}/{version}/{name}.proto'].get('description'),methods if methods is not None else [],extensions=extensions,sylk_json=sylk_json)
 
 
-    def get_package(self, name,json=True):
-        if json:
-            if self._packages.get(f'protos/v1/{name}.proto') is None:
-                raise SylkValidationError('Package',"Sylk Package {} not found, if you trying to get import a package into Service try to run 'sylk package <some.package.v1> {}'".format(f'protos/v1/{name}.proto',name))
-            else:
-                return self._packages[f'protos/v1/{name}.proto']
+    def get_path(self, domain, name, version: str = 'v1'):
+        temp_path = f'protos/{domain}/{name}/{version}/{name}.proto'
+        if self._packages.get(temp_path) is not None or self._services.get(temp_path) is not None:
+            return temp_path
         else:
-            depend = self._packages[f'protos/v1/{name}.proto'].get('dependencies')
-            msgs = self._packages[f'protos/v1/{name}.proto'].get('messages')
-            enums = self._packages[f'protos/v1/{name}.proto'].get('enums')
+            raise SylkValidationError('Resource',"Sylk Resource Path {} not found.".format(f'protos/{domain}/{name}/{version}/{name}.proto',name))
+
+    def get_package(self, name,json=True,version:str='v1'):
+        if json:
+            if self._packages.get(f'protos/{self.domain}/{name}/{version}/{name}.proto') is None:
+                raise SylkValidationError('Package',"Sylk Package {} not found, if you trying to get import a package into Service try to run 'sylk package <some.package.v1> {}'".format(f'protos/{self.domain}/{name}/{version}/{name}.proto',name))
+            else:
+                return self._packages[f'protos/{self.domain}/{name}/{version}/{name}.proto']
+        else:
+            depend = self._packages[f'protos/{self.domain}/{name}/{version}/{name}.proto'].get('dependencies')
+            msgs = self._packages[f'protos/{self.domain}/{name}/{version}/{name}.proto'].get('messages')
+            enums = self._packages[f'protos/{self.domain}/{name}/{version}/{name}.proto'].get('enums')
             return generate_package(self.path,self.domain,name,depend if depend is not None else [],msgs if msgs is not None else [],enums if enums is not None else [],sylk_json=self)
 
 
     def get_enum(self, full_name):
+        version = full_name.split('.')[2]
         pkg_name = full_name.split('.')[1]
-        enums = self._packages[f'protos/v1/{pkg_name}.proto'].get('enums')
+        enums = self._packages[f'protos/{self.domain}/{pkg_name}/{version}/{pkg_name}.proto'].get('enums')
         if enums is not None:
             return next((e for e in enums if e['name'] == full_name.split('.')[-1]), None)
         else:
@@ -547,7 +557,8 @@ class SylkJson():
 
     def get_message(self, full_name):
         pkg_name = full_name.split('.')[1]
-        msgs = self._packages.get(f'protos/v1/{pkg_name}.proto',None)
+        version = full_name.split('.')[0]
+        msgs = self._packages.get(f'protos/{self.domain}/{pkg_name}/{version}/{pkg_name}.proto',None)
         msgs = msgs['messages'] if msgs is not None else []
         if len(msgs) > 0:
             return next((m for m in msgs if m['name'] == full_name.split('.')[-1]), None)
@@ -556,9 +567,10 @@ class SylkJson():
                 'fields': []
             }
 
-    def get_rpc(self, full_name):
+    def get_rpc(self, full_name,version:str='v1'):
         svc_name = full_name.split('.')[1]
-        rpcs = self._services[svc_name].get('methods')
+        svc_path = f'protos/{self.domain}/{svc_name}/{version}/{svc_name}.proto'
+        rpcs = self._services[svc_path].get('methods')
         if rpcs is None:
             return rpcs
         else:
@@ -677,6 +689,16 @@ class SylkJson():
             
         return list_pkgs
 
+    def is_language(self, language: str ):
+        if self.project.get('server').get('language') == language:
+            return True
+        else:
+            for c in list(map(lambda c: c.get('language'), self.project.get('clients'))):
+                if c == language:
+                    return True
+        
+        return False
+        
     @property
     def domain(self):
         """str: Project domain."""
@@ -725,8 +747,16 @@ class SylkProto():
 
     def write_imports(self):
         temp_imports = []
+        if self._service is not None:
+            domain = self._service.get('fullName').split('.')[0]
+            name = self._service.get('fullName').split('.')[1]
+            ver = self._service.get('fullName').split('.')[2]
+        if self._package is not None:
+            domain = self._package.split('.')[0]
+            name = self._package.split('.')[1]
+            ver = self._package.split('.')[2]
         if self._sylk_json.project.get('goPackage') is not None:
-                temp_imports.append('\n// Go package name\noption go_package = "{}{}";\n'.format(self._sylk_json.project.get('goPackage'),'/services/protos/{}'.format(self._name)))
+                temp_imports.append('\n// Go package name\noption go_package = "{}{}";\n'.format(self._sylk_json.project.get('goPackage'),'/services/protos/{0}/{1}/{2}'.format(domain,name,ver)))
         if self._imports is not None:
                 
             for imp in self._imports:
@@ -738,10 +768,11 @@ class SylkProto():
                         imp = f"{imp.replace('.','/')}.proto"
                         temp_imports.append(f'import "{imp.lower()}";')
                 else:
-                    imp = imp.split('.')[1]
+                    imp_file = imp.split('.')[1] + '.proto'
+                    imp_path = imp.replace('.','/')
                     try:
-                        self._sylk_json.get_package(imp) 
-                        temp_imports.append(f'import "{imp}.proto";')
+                        # self._sylk_json.get_package(imp) 
+                        temp_imports.append(f'import "{imp_path}/{imp_file}";')
                     except SylkValidationError as e:
                         
                         pretty.print_warning(e)
@@ -979,7 +1010,8 @@ class SylkClientPy():
     def init_stubs(self):
         stubs = []
         for svc in self._services:
-            stubs.append(f'self.{svc}Stub = {svc}Service.{svc}Stub(channel)')
+            svc_name = svc.split('/')[-1].split('.')[0]
+            stubs.append(f'self.{svc_name}Stub = {svc_name}Service.{svc_name}Stub(channel)')
 
         return '\n\t\t'.join(stubs)
 
@@ -1003,11 +1035,13 @@ class SylkClientPy():
                 if 'google.protobuf.' in dep:
                     wellknown_message = dep.split('.')[-1]
                     imports.append(f'from google.protobuf import {wellknown_message.lower()}_pb2')
-
-            imports.append(f'from . import {svc}_pb2_grpc as {svc}Service')
+            svc_name = svc.split('/')[-1].split('.')[0]
+            svc_path = '.'.join(svc.split('/')[:-1])
+            imports.append(f'from .{svc_path} import {svc_name}_pb2_grpc as {svc_name}Service')
         for pkg in self._packages:
-            pkg = pkg.split('/')[-1].split('.')[0]
-            imports.append(f'from . import {pkg}_pb2 as {pkg}')
+            pkg_name = pkg.split('/')[-1].split('.')[0]
+            pkg_path = '.'.join(pkg.split('/')[:-1])
+            imports.append(f'from .{pkg_path} import {pkg_name}_pb2 as {pkg_name}')
 
         # Pre data parsing
         if self._pre_data is not None:
@@ -1034,7 +1068,7 @@ class SylkClientPy():
                     rpc_out_type_pkg = rpc['outputType'].split('.')[1]
                     rpc_out_type = rpc['outputType'].split('.')[-1]
                     if 'protobuf' in rpc_out_type_pkg:
-                        rpc_in_type = f'{rpc_out_type.lower()}_pb2.{rpc_out_type}'
+                        rpc_out_type = f'{rpc_out_type.lower()}_pb2.{rpc_out_type}'
                     else:
                         rpc_out_type = f'{rpc_out_type_pkg}.{rpc_out_type}'
                     in_open_type = 'Iterator[' if rpc.get(
@@ -1045,10 +1079,11 @@ class SylkClientPy():
                         'serverStreaming') is not None and rpc.get('serverStreaming') == True else ''
                     out_close_type = ']' if rpc.get('serverStreaming') is not None and rpc.get(
                         'serverStreaming') == True else ''
+                    svc_name = svc.split('/')[-1].split('.')[0]
                     rpcs.append(
-                        f'\n\tdef {rpc_name}_WithCall(self, request: {in_open_type}{rpc_in_type}{in_close_type}, metadata: Tuple[Tuple[str,str]] = _METADATA) -> Tuple[{out_open_type}{rpc_out_type}{out_close_type}, Any]:\n\t\t"""sylk - {description} Returns: RPC output and a call object"""\n\n\t\treturn self.{svc}Stub.{rpc_name}.with_call(request,metadata=metadata)')
+                        f'\n\tdef {rpc_name}_WithCall(self, request: {in_open_type}{rpc_in_type}{in_close_type}, metadata: Tuple[Tuple[str,str]] = _METADATA) -> Tuple[{out_open_type}{rpc_out_type}{out_close_type}, Any]:\n\t\t"""sylk - {description} Returns: RPC output and a call object"""\n\n\t\treturn self.{svc_name}Stub.{rpc_name}.with_call(request,metadata=metadata)')
                     rpcs.append(
-                        f'\n\tdef {rpc_name}(self, request: {in_open_type}{rpc_in_type}{in_close_type}, metadata: Tuple[Tuple[str,str]] = _METADATA) -> {out_open_type}{rpc_out_type}{out_close_type}:\n\t\t"""sylk - {description}"""\n\n\t\treturn self.{svc}Stub.{rpc_name}(request,metadata=metadata)')
+                        f'\n\tdef {rpc_name}(self, request: {in_open_type}{rpc_in_type}{in_close_type}, metadata: Tuple[Tuple[str,str]] = _METADATA) -> {out_open_type}{rpc_out_type}{out_close_type}:\n\t\t"""sylk - {description}"""\n\n\t\treturn self.{svc_name}Stub.{rpc_name}(request,metadata=metadata)')
 
             rpcs = '\n\n\t'.join(rpcs)
         return ''.join(rpcs)
@@ -1064,15 +1099,20 @@ class SylkServicePy():
         self._project_package = project_package
         self._context = context
         self._sylk_json = sylk_json
+        self._service_name = self._name.split('/')[-1].split('.')[0]
+        self._service_path = '.'.join(self._name.split('/')[:-1])
 
     def write_imports(self):
         if self._imports is not None:
             list_d = list(map(lambda i: i, _WELL_KNOWN_PY_IMPORTS))
-            list_d.append(f'import {self._name}_pb2_grpc')
+            list_d.append(f'from {self._service_path} import {self._service_name}_pb2_grpc')
             for d in self._imports:
+                domain = d.split('.')[0]
                 name = d.split('.')[1]
+                ver = d.split('.')[2]
+                path = '.'.join(self._sylk_json.get_path(domain,name,ver).split('/')[:-1])
                 d_name = '{0}_pb2'.format(name)
-                list_d.append(f'import {d_name}')
+                list_d.append(f'from {path} import {d_name}')
 
             list_d = '\n'.join(list_d)
             return f'{list_d}'
@@ -1135,7 +1175,7 @@ class SylkServicePy():
             rpcs.append(
                 f'\t# @rpc @@sylk - DO NOT REMOVE\n\tdef {rpc_name}(self, request: {open_in_type}{rpc_in_pkg}_pb2.{rpc_in_name}{closing_in_type}, context) -> {open_out_type}{rpc_out_pkg}_pb2.{rpc_out_name}{close_out_type}:\n{code}')
         rpcs = ''.join(rpcs)
-        return f'class {self._name}({self._name}_pb2_grpc.{self._name}Servicer):\n\n{rpcs}'
+        return f'class {self._service_name}({self._service_name}_pb2_grpc.{self._service_name}Servicer):\n\n{rpcs}'
 
     def to_str(self):
         return self.__str__()
@@ -1153,16 +1193,18 @@ class SylkServiceTs():
         self._project_package = project_package
         self._context = context
         self._sylk_json = sylk_json
+        self._import_name = self._name.split('/')[-1].split('.')[0]
+        self._import_path = '/'.join(self._name.split('/')[:-1]) + '/' + self._import_name
 
     def write_imports(self):
         if self._imports is not None:
             list_d = list(map(lambda i: i, _WELL_KNOWN_TS_IMPORTS))
-
-            list_d.append(f'import {_OPEN_BRCK} {self._name}Server, {self._name}Service {_CLOSING_BRCK} from \'./protos/{self._name}\';')
+            list_d.append(f'import {_OPEN_BRCK} {self._import_name}Server, {self._import_name}Service {_CLOSING_BRCK} from \'./{self._import_path}\';')
             for d in self._imports:
                 name = d.split('.')[1]
                 d_name = '{0}'.format(name)
-                list_d.append(f'import * as {d_name} from \'./protos/{d_name}\';')
+                pkg = '/'.join(self._sylk_json.get_path(d.split('.')[0],d.split('.')[1],d.split('.')[2]).split('/')[:-1])
+                list_d.append(f'import * as {d_name} from \'./{pkg}/{d_name}\';')
 
             list_d = '\n'.join(list_d)
             return f'{list_d}'
@@ -1209,7 +1251,7 @@ class SylkServiceTs():
             rpcs.append(
                 f'\t// @rpc @@sylk - DO NOT REMOVE\n\tpublic {temp_name}: {handleType}<{rpc_in_pkg}.{rpc_in_name}, {rpc_out_pkg}.{rpc_out_name}> = (\n\t\t{args}\n\t) => {_OPEN_BRCK}\n{code}\n\t{_CLOSING_BRCK}\n')
         rpcs = ''.join(rpcs)
-        return f'\nclass {self._name} implements {self._name}Server, ApiType<UntypedHandleCall> {_OPEN_BRCK}\n\t[method: string]: any;\n\n{rpcs}\n\n{_CLOSING_BRCK}\n\nexport {_OPEN_BRCK}\n\t{self._name},\n\t{self._name}Service\n{_CLOSING_BRCK};'
+        return f'\nclass {self._import_name} implements {self._import_name}Server, ApiType<UntypedHandleCall> {_OPEN_BRCK}\n\t[method: string]: any;\n\n{rpcs}\n\n{_CLOSING_BRCK}\n\nexport {_OPEN_BRCK}\n\t{self._import_name},\n\t{self._import_name}Service\n{_CLOSING_BRCK};'
 
     def to_str(self):
         return self.__str__()
@@ -1240,7 +1282,8 @@ class SylkClientTs():
             pkgs_list.append(pkg)
         pkgs_list = ',\n\t'.join(pkgs_list)
         for key in self._services:
-            clients_list.append(key+'Client')
+            svc_name = key.split('/')[-1].split('.')[0]
+            clients_list.append(f'{svc_name}Client')
         
         # Pre data parsing
         if self._pre_data is not None:
@@ -1277,21 +1320,23 @@ class SylkClientTs():
                 temp_stubs = self._pre_data.get('stubs')
 
         for svc in self._services:
+            svc_name = svc.split('/')[-1].split('.')[0]
             if svc in temp_stubs:
                 stub = temp_stubs[svc]
                 stub_target = stub.get('target') if stub.get('target') is not None else '${_OPEN_BRCK}this.host{_CLOSING_BRCK}:${_OPEN_BRCK}this.port{_CLOSING_BRCK}'
                 stub_creds = stub.get('creds') if stub.get('creds') is not None else 'credentials.createInsecure()'
                 stub_opts =  stub.get('opts') if stub.get('opts') is not None else '_DEFAULT_OPTION'
-                stubs.append(f'this.{svc}_client = new {svc}Client(`{stub_target}`, {stub_creds}, {stub_opts});')
+                stubs.append(f'this.{svc_name}_client = new {svc_name}Client(`{stub_target}`, {stub_creds}, {stub_opts});')
             else:
-                stubs.append(f'this.{svc}_client = new {svc}Client(`${_OPEN_BRCK}this.host{_CLOSING_BRCK}:${_OPEN_BRCK}this.port{_CLOSING_BRCK}`, credentials.createInsecure(),_DEFAULT_OPTION);')
+                stubs.append(f'this.{svc_name}_client = new {svc_name}Client(`${_OPEN_BRCK}this.host{_CLOSING_BRCK}:${_OPEN_BRCK}this.port{_CLOSING_BRCK}`, credentials.createInsecure(),_DEFAULT_OPTION);')
 
         return '\n\t\t'.join(stubs)
 
     def args_stubs(self):
         stubs = []
         for svc in self._services:
-            stubs.append(f'private readonly {svc}_client: {svc}Client;')
+            svc_name = svc.split('/')[-1].split('.')[0]
+            stubs.append(f'private readonly {svc_name}_client: {svc_name}Client;')
 
         return '\n\t'.join(stubs)
 
@@ -1315,10 +1360,13 @@ class SylkClientTs():
                 if 'google.protobuf.' in dep:
                     wellknown_message = dep.split('.')[-1]
                     imports.append(f'import {_OPEN_BRCK} {wellknown_message} {_CLOSING_BRCK} from \'./protos/google/protobuf/{wellknown_message.lower()}\';')
-            imports.append(f'import {_OPEN_BRCK} {svc}Client {_CLOSING_BRCK} from \'./protos/{svc}\';')
+            svc_path = svc.split('.')[0]
+            svc_name = svc.split('/')[-1].split('.')[0]
+            imports.append(f'import {_OPEN_BRCK} {svc_name}Client {_CLOSING_BRCK} from \'./{svc_path}\';')
         for pkg in self._packages:
-            pkg = pkg.split('/')[-1].split('.')[0]
-            imports.append(f'import * as {pkg} from \'./protos/{pkg}\';')
+            pkg_name = pkg.split('/')[-1].split('.')[0]
+            pkg_path = pkg.split('.')[0]
+            imports.append(f'import * as {pkg_name} from \'./{pkg_path}\';')
         
         # Pre data parsing
         if self._pre_data is not None:
@@ -1333,6 +1381,7 @@ class SylkClientTs():
         if self._services is not None:
             rpcs = []
             for svc in self._services:
+                svc_name = svc.split('/')[-1].split('.')[0]
                 for rpc in self._services[svc]['methods']:
                     rpc_name = rpc['name']
                     rpc_in_type_pkg = rpc['inputType'].split('.')[1]
@@ -1356,21 +1405,21 @@ class SylkClientTs():
                     return_type_overload = 'ClientUnaryCall' if rpc_output_type == False and rpc_input_type == False else f'ClientDuplexStream<{rpc_in_type}, {rpc_out_type}>' if rpc_output_type == True and rpc_input_type == True else f'ClientReadableStream<{rpc_out_type}>' if rpc_output_type == True and rpc_input_type == False else f'ClientWritableStream<{rpc_in_type}>' if rpc_output_type == False and rpc_input_type == True else 'any'
                     return_type = f'Promise<{rpc_out_type}>' if rpc_output_type == False else f'Observable<{rpc_out_type}>'
                     temp_rpc_name = rpc_name[0].lower() + rpc_name[1:]
-                    rpc_impl = f'if (callback === undefined) {_OPEN_BRCK}\n\t\t\treturn promisify<{rpc_in_type}, Metadata, {rpc_out_type}>(this.{svc}_client.{temp_rpc_name}.bind(this.{svc}_client))({rpc_in_type}.fromJSON(request), metadata);\n\t\t{_CLOSING_BRCK} else {_OPEN_BRCK}\n\t\t return this.{svc}_client.{temp_rpc_name}({rpc_in_type}.fromJSON(request), metadata, callback);\n\t\t{_CLOSING_BRCK}' if rpc_output_type == False and rpc_input_type == False else f'return this.{svc}_client.{temp_rpc_name}(metadata);' if rpc_output_type == True and rpc_input_type == True  else f'if (callback === undefined) {_OPEN_BRCK}\n\t\t\tcallback = (_error:_service_error | null , _response:{rpc_out_type}) => {_OPEN_BRCK}if (_error) throw _error; return _response{_CLOSING_BRCK}\n\t\t{_CLOSING_BRCK}\n\t\treturn this.{svc}_client.{temp_rpc_name}(metadata, callback);' if rpc_output_type == False and rpc_input_type == True else f'return new Observable(subscriber => {_OPEN_BRCK}\n\t\tconst stream = this.{svc}_client.{temp_rpc_name}({rpc_in_type}.fromJSON(request), metadata);\n\t\t\tstream.on(\'data\', (res: {rpc_out_type}) => {_OPEN_BRCK}\n\t\t\t\tsubscriber.next(res)\n\t\t\t{_CLOSING_BRCK}).on(\'end\', () => {_OPEN_BRCK}\n\t\t\t\tsubscriber.complete()\n\t\t\t{_CLOSING_BRCK}).on(\'error\', (err: any) => {_OPEN_BRCK}\n\t\t\t\tsubscriber.error(err)\n\t\t\t\tsubscriber.complete()\n\t\t\t{_CLOSING_BRCK});\n\t\t{_CLOSING_BRCK})'
+                    rpc_impl = f'if (callback === undefined) {_OPEN_BRCK}\n\t\t\treturn promisify<{rpc_in_type}, Metadata, {rpc_out_type}>(this.{svc_name}_client.{temp_rpc_name}.bind(this.{svc_name}_client))({rpc_in_type}.fromJSON(request), metadata);\n\t\t{_CLOSING_BRCK} else {_OPEN_BRCK}\n\t\t return this.{svc_name}_client.{temp_rpc_name}({rpc_in_type}.fromJSON(request), metadata, callback);\n\t\t{_CLOSING_BRCK}' if rpc_output_type == False and rpc_input_type == False else f'return this.{svc_name}_client.{temp_rpc_name}(metadata);' if rpc_output_type == True and rpc_input_type == True  else f'if (callback === undefined) {_OPEN_BRCK}\n\t\t\tcallback = (_error:_service_error | null , _response:{rpc_out_type}) => {_OPEN_BRCK}if (_error) throw _error; return _response{_CLOSING_BRCK}\n\t\t{_CLOSING_BRCK}\n\t\treturn this.{svc_name}_client.{temp_rpc_name}(metadata, callback);' if rpc_output_type == False and rpc_input_type == True else f'return new Observable(subscriber => {_OPEN_BRCK}\n\t\tconst stream = this.{svc_name}_client.{temp_rpc_name}({rpc_in_type}.fromJSON(request), metadata);\n\t\t\tstream.on(\'data\', (res: {rpc_out_type}) => {_OPEN_BRCK}\n\t\t\t\tsubscriber.next(res)\n\t\t\t{_CLOSING_BRCK}).on(\'end\', () => {_OPEN_BRCK}\n\t\t\t\tsubscriber.complete()\n\t\t\t{_CLOSING_BRCK}).on(\'error\', (err: any) => {_OPEN_BRCK}\n\t\t\t\tsubscriber.error(err)\n\t\t\t\tsubscriber.complete()\n\t\t\t{_CLOSING_BRCK});\n\t\t{_CLOSING_BRCK})'
                     # Client streaming
                     if rpc_output_type == False and rpc_input_type == True:
-                        description = f'/**\n\t* @method {svc}.{rpc_name}\n\t* @description {rpc_description}\n\t* @kind {rpc_type}\n\t* @param metadata Metadata\n\t*/'
+                        description = f'/**\n\t* @method {svc_name}.{rpc_name}\n\t* @description {rpc_description}\n\t* @kind {rpc_type}\n\t* @param metadata Metadata\n\t*/'
                         rpcs.append(
                             f'\n\t{description}\n\tpublic {rpc_name}(metadata?: Metadata): {return_type};\n\tpublic {rpc_name}(metadata: Metadata, callback: (error: _service_error | null, response: {rpc_out_type}) => void): {return_type_overload};\n\tpublic {rpc_name}(metadata: Metadata = this.metadata, callback?: (error: _service_error | null, response: {rpc_out_type}) => void): {return_type_overload} | {return_type} {_OPEN_BRCK}\n\t\t{rpc_impl}\n\t{_CLOSING_BRCK}')
                     # Bidi stream
                     elif rpc_output_type == True and rpc_input_type == True:
-                        description = f'/**\n\t* @method {svc}.{rpc_name}\n\t* @description {rpc_description}\n\t* @kind {rpc_type}\n\t* @param request {rpc_in_type}\n\t* @param metadata Metadata\n\t*/'
+                        description = f'/**\n\t* @method {svc_name}.{rpc_name}\n\t* @description {rpc_description}\n\t* @kind {rpc_type}\n\t* @param request {rpc_in_type}\n\t* @param metadata Metadata\n\t*/'
                         rpcs.append(
                             f'\n\t{description}\n\tpublic {rpc_name}(metadata: Metadata = this.metadata): {return_type_overload} {_OPEN_BRCK}\n\t\t{rpc_impl}\n\t{_CLOSING_BRCK}')
                     # Unary
                     else:
-                        description_0 = f'/**\n\t* @method {svc}.{rpc_name}\n\t* @description {rpc_description}\n\t* @kind {rpc_type}\n\t* @param request {rpc_in_type}\n\t* @param metadata Metadata\n\t* @returns {return_type}\n\t*/'
-                        description_1 = f'/**\n\t* @method {svc}.{rpc_name}\n\t* @description {rpc_description}\n\t* @kind {rpc_type}\n\t* @param request {rpc_in_type}\n\t* @param metadata Metadata\n\t* @param callback A callback function to be excuted once the server responds with {rpc_out_type}\n\t* @returns {return_type_overload}\n\t*/'
+                        description_0 = f'/**\n\t* @method {svc_name}.{rpc_name}\n\t* @description {rpc_description}\n\t* @kind {rpc_type}\n\t* @param request {rpc_in_type}\n\t* @param metadata Metadata\n\t* @returns {return_type}\n\t*/'
+                        description_1 = f'/**\n\t* @method {svc_name}.{rpc_name}\n\t* @description {rpc_description}\n\t* @kind {rpc_type}\n\t* @param request {rpc_in_type}\n\t* @param metadata Metadata\n\t* @param callback A callback function to be excuted once the server responds with {rpc_out_type}\n\t* @returns {return_type_overload}\n\t*/'
                         
                         rpcs.append(
                             f'\n\t{description_0}\n\tpublic {rpc_name}(request: {rpc_in_type}, metadata?: Metadata): {return_type};\n\t{description_1}\n\tpublic {rpc_name}(request: {rpc_in_type}, metadata: Metadata, callback: (error: _service_error | null, response: {rpc_out_type}) => void): {return_type_overload};\n\tpublic {rpc_name}(request: {rpc_in_type}, metadata: Metadata = this.metadata, callback?: (error: _service_error | null, response: {rpc_out_type}) => void): {return_type_overload} | {return_type} {_OPEN_BRCK}\n\t\t{rpc_impl}\n\t{_CLOSING_BRCK}')
@@ -1591,9 +1640,30 @@ class SylkClientGo:
         list_of_services = ['// Importing services']
         list_of_packages = ['// Importing packages']
         for s in self._services:
-            list_of_services.append('"{}/services/protos/{}"'.format(self._sylk_json.project.get('goPackage'),self._services[s].get('name')))
+            svc_domain = self._services[s].get('fullName').split('.')[0]
+            svc_name = self._services[s].get('fullName').split('.')[1]
+            svc_ver = self._services[s].get('fullName').split('.')[2]
+            list_of_services.append('{2} "{0}/services/protos/{1}/{2}/{3}"'.format(self._sylk_json.project.get('goPackage'),svc_domain,svc_name,svc_ver))
+            if self._services[s].get('dependencies') is not None:
+                for dep in self._services[s].get('dependencies'):
+                    if 'google.protobuf' in dep:
+                        dep_name = dep.split('.')[-1].lower()
+                        list_of_services.append(f'{dep_name}pb "google.golang.org/protobuf/types/known/{dep_name}pb"')
+            	
         for p in self._packages:
-            list_of_packages.append('"{}/services/protos/{}"'.format(self._sylk_json.project.get('goPackage'),self._packages[p].get('name')))
+            pkg_domain = self._packages[p].get('package').split('.')[0]
+            pkg_name = self._packages[p].get('package').split('.')[1]
+            pkg_ver = self._packages[p].get('package').split('.')[2]
+            list_of_packages.append('{2} "{0}/services/protos/{1}/{2}/{3}"'.format(self._sylk_json.project.get('goPackage'),pkg_domain,pkg_name,pkg_ver))
+            if self._packages[p].get('dependencies') is not None:
+                for dep in self._packages[p].get('dependencies'):
+                    if 'google.protobuf' in dep:
+                        dep_name = dep.split('.')[-1].lower()
+                        list_of_packages.append(f'{dep_name}pb "google.golang.org/protobuf/types/known/{dep_name}pb"')
+                    
+
+
+
 
         _sylk_conn_builder = '\tsylkChannel "{}/clients/go/utils"'.format(self._sylk_json.project.get('goPackage'))
 
@@ -1631,9 +1701,10 @@ class SylkClientGo:
                           'ctx context.Context // Global context',
                           'conn *grpc.ClientConn // A client connection object']
         for s in self._services:
-            temp_svc = s[0].upper() + s[1:]
-            temp_lower_svc = s.lower()
-            client_options.append(f'{temp_lower_svc} {s}.{temp_svc}Client')
+            temp_svc = s.split('/')[-1].split('.')[0][0].upper() + s.split('/')[-1].split('.')[0][1:]
+            temp_lower_svc = s.split('/')[-1].split('.')[0].lower()
+            svc_name = s.split('/')[-1].split('.')[0]
+            client_options.append(f'{temp_lower_svc} {svc_name}.{temp_svc}Client')
         return '\n\n// \'{0}\' represents the project services facing client side\ntype {0} struct {1}\n\t{2}\n{3}\n\n'.format(self._sylk_json.project.get('packageName'),_OPEN_BRCK,'\n\t'.join(client_options),_CLOSING_BRCK)
     
     def write_new(self):
@@ -1646,9 +1717,10 @@ class SylkClientGo:
             _list_of_client_opts_none_types.append(i.split()[0])
 
         for s in self._services:
-            temp_service = s[0].upper() + s[1:]
-            _list_of_services_clients.append('{0}Client := {1}.New{2}Client(conn)'.format(s.lower(),s,temp_service))
-            _temp_svc_list.append('{0}Client'.format(s.lower()))
+            svc_name = s.split('/')[-1].split('.')[0]
+            temp_service = svc_name[0].upper() + svc_name[1:]
+            _list_of_services_clients.append('{0}Client := {1}.New{2}Client(conn)'.format(svc_name.lower(),svc_name,temp_service))
+            _temp_svc_list.append('{0}Client'.format(svc_name.lower()))
         
         _new_client_init = ['\n\n\tif len(dialOpts) == 0 {\n\t\tdialOpts = defaultDialOpts\n\t}',
                             '\n\n\tif host == "" {}\n\t\thost = defaultHost\n\t{}'.format(_OPEN_BRCK,_CLOSING_BRCK),
@@ -1673,26 +1745,33 @@ class SylkClientGo:
         list_of_rpcs = []
         for s in self._services:
             svc = self._services[s]
+            svc_name = s.split('/')[-1].split('.')[0]
             for r in svc.get('methods'):
                 rpc_msg_in_pkg = r.get('inputType').split('.')[1]
                 rpc_msg_input_type = r.get('inputType').split('.')[-1][0].upper() + r.get('inputType').split('.')[-1][1:]
+                if 'google.protobuf' in r.get('inputType'):
+                    well_known = r.get('inputType').split('.')[-1].lower()
+                    rpc_msg_in_pkg = f'{well_known}pb'
                 rpc_msg_out_pkg = r.get('outputType').split('.')[1]
                 rpc_msg_output_type = r.get('outputType').split('.')[-1][0].upper() + r.get('outputType').split('.')[-1][1:]
+                if  'google.protobuf' in r.get('outputType'):
+                    well_known = r.get('outputType').split('.')[-1].lower()
+                    rpc_msg_out_pkg = f'{well_known}pb'
                 rpc_client_stream = r.get('clientStreaming') if r.get('clientStreaming') is not None else False
                 rpc_server_stream = r.get('serverStreaming') if r.get('serverStreaming') is not None else False
                 rpc_name = r.get('name')[0].upper() + r.get('name')[1:]
                 # Unary
                 if rpc_server_stream == False and rpc_client_stream == False:
-                    list_of_rpcs.append('\n\n// [sylk.build] - {10}.{1}\n// Description: {9}\n// Read: https://www.sylk.build/docs/go/unary-call\nfunc (c *{0}) {1}(message *{2}.{3}) (*{7}.{8}, metadata.MD, metadata.MD) {4}\n\tlog.Printf("Calling {1} %v", message)\n\n\tctx, cancel := context.WithTimeout(c.ctx, 10*time.Second)\n\n\tdefer cancel()\n\n\tvar header, trailer metadata.MD\n\n\tresponse, err := c.{5}.{1}(ctx, message, grpc.Header(&header), grpc.Trailer(&trailer))\n\n\tif err != nil {4}\n\t\tlog.Fatalf("Client call {1} failed: %v", err)\n\t{6}\n\n\treturn response, header, trailer\n{6}'.format(self._project_package,rpc_name,rpc_msg_in_pkg,rpc_msg_input_type,_OPEN_BRCK,s.lower(),_CLOSING_BRCK,rpc_msg_out_pkg,rpc_msg_output_type,r.get('description'),s))
+                    list_of_rpcs.append('\n\n// [sylk.build] - {10}.{1}\n// Description: {9}\n// Read: https://www.sylk.build/docs/go/unary-call\nfunc (c *{0}) {1}(message *{2}.{3}) (*{7}.{8}, metadata.MD, metadata.MD) {4}\n\tlog.Printf("Calling {1} %v", message)\n\n\tctx, cancel := context.WithTimeout(c.ctx, 10*time.Second)\n\n\tdefer cancel()\n\n\tvar header, trailer metadata.MD\n\n\tresponse, err := c.{5}.{1}(ctx, message, grpc.Header(&header), grpc.Trailer(&trailer))\n\n\tif err != nil {4}\n\t\tlog.Fatalf("Client call {1} failed: %v", err)\n\t{6}\n\n\treturn response, header, trailer\n{6}'.format(self._project_package,rpc_name,rpc_msg_in_pkg,rpc_msg_input_type,_OPEN_BRCK,svc_name.lower(),_CLOSING_BRCK,rpc_msg_out_pkg,rpc_msg_output_type,r.get('description'),s))
                 # Client stream
                 elif rpc_client_stream == True and rpc_server_stream == False:
-                    list_of_rpcs.append('\n\n// [sylk.build] - {10}.{1}\n// Description: {9}\n// Read: https://www.sylk.build/docs/go/client-stream\nfunc (c *{0}) {1}(messages []*{2}.{3}) *{7}.{8} {4}\n\tlog.Printf("Calling {1} %v", messages)\n\n\tctx, cancel := context.WithTimeout(c.ctx, 10*time.Second)\n\n\tdefer cancel()\n\n\tstream, err := c.{5}.{1}(ctx)\n\n\tif err != nil {4}\n\t\tlog.Fatalf("Client call {1} failed: %v", err)\n\t{6}\n\n\tfor _, message := range messages {4}\n\t\tif err := stream.Send(message); err != nil {4}\n\t\t\tlog.Fatalf("Client sending message %v stream failed: %v", message, err)\n\t\t{6}\n\t{6}\n\tresponse, err := stream.CloseAndRecv()\n\tif err != nil {4}\n\t\tlog.Fatalf("Client stream failed on getting response: %v", err)\n\t{6}\n\n\treturn response\n{6}'.format(self._project_package,rpc_name,rpc_msg_in_pkg,rpc_msg_input_type,_OPEN_BRCK,s.lower(),_CLOSING_BRCK,rpc_msg_out_pkg,rpc_msg_output_type,r.get('description'),s))
+                    list_of_rpcs.append('\n\n// [sylk.build] - {10}.{1}\n// Description: {9}\n// Read: https://www.sylk.build/docs/go/client-stream\nfunc (c *{0}) {1}(messages []*{2}.{3}) *{7}.{8} {4}\n\tlog.Printf("Calling {1} %v", messages)\n\n\tctx, cancel := context.WithTimeout(c.ctx, 10*time.Second)\n\n\tdefer cancel()\n\n\tstream, err := c.{5}.{1}(ctx)\n\n\tif err != nil {4}\n\t\tlog.Fatalf("Client call {1} failed: %v", err)\n\t{6}\n\n\tfor _, message := range messages {4}\n\t\tif err := stream.Send(message); err != nil {4}\n\t\t\tlog.Fatalf("Client sending message %v stream failed: %v", message, err)\n\t\t{6}\n\t{6}\n\tresponse, err := stream.CloseAndRecv()\n\tif err != nil {4}\n\t\tlog.Fatalf("Client stream failed on getting response: %v", err)\n\t{6}\n\n\treturn response\n{6}'.format(self._project_package,rpc_name,rpc_msg_in_pkg,rpc_msg_input_type,_OPEN_BRCK,svc_name.lower(),_CLOSING_BRCK,rpc_msg_out_pkg,rpc_msg_output_type,r.get('description'),s))
                 # Server stream
                 elif rpc_client_stream == False and rpc_server_stream == True:
-                    list_of_rpcs.append('\n\n// sylk.build - {10}.{1}\n// Description: {9}\n// Read: https://www.sylk.build/docs/go/server-stream\nfunc (c *{0}) {1}(message *{2}.{3}) []*{7}.{8} {4}\n\tlog.Printf("Calling {1} %v", message)\n\n\tctx, cancel := context.WithTimeout(c.ctx, 10*time.Second)\n\n\tdefer cancel()\n\n\tstream, err := c.{5}.{1}(ctx, message)\n\n\tif err != nil {4}\n\t\tlog.Fatalf("Client call {1} failed: %v", err)\n\t{6}\n\n\tvar listResponses []*{7}.{8}\n\n\twaitc := make(chan struct{4}{6})\n\n\tgo func() {4}\n\t\tfor {4}\n\t\t\t{8}, err := stream.Recv()\n\t\t\tif err == io.EOF {4}\n\t\t\t\tclose(waitc)\n\t\t\t\tbreak\n\t\t\t{6}\n\t\t\tif err != nil {4}\n\t\t\t\tlog.Fatalf("Client call {1} stream message failed: %v", err)\n\t\t\t{6}\n\t\t\tlistResponses = append(listResponses, {8})\n\t\t{6}\n\t{6}()\n\t<-waitc\n\treturn listResponses\n{6}'.format(self._project_package,rpc_name,rpc_msg_in_pkg,rpc_msg_input_type,_OPEN_BRCK,s.lower(),_CLOSING_BRCK,rpc_msg_out_pkg,rpc_msg_output_type,r.get('description'),s))
+                    list_of_rpcs.append('\n\n// sylk.build - {10}.{1}\n// Description: {9}\n// Read: https://www.sylk.build/docs/go/server-stream\nfunc (c *{0}) {1}(message *{2}.{3}) []*{7}.{8} {4}\n\tlog.Printf("Calling {1} %v", message)\n\n\tctx, cancel := context.WithTimeout(c.ctx, 10*time.Second)\n\n\tdefer cancel()\n\n\tstream, err := c.{5}.{1}(ctx, message)\n\n\tif err != nil {4}\n\t\tlog.Fatalf("Client call {1} failed: %v", err)\n\t{6}\n\n\tvar listResponses []*{7}.{8}\n\n\twaitc := make(chan struct{4}{6})\n\n\tgo func() {4}\n\t\tfor {4}\n\t\t\t{8}, err := stream.Recv()\n\t\t\tif err == io.EOF {4}\n\t\t\t\tclose(waitc)\n\t\t\t\tbreak\n\t\t\t{6}\n\t\t\tif err != nil {4}\n\t\t\t\tlog.Fatalf("Client call {1} stream message failed: %v", err)\n\t\t\t{6}\n\t\t\tlistResponses = append(listResponses, {8})\n\t\t{6}\n\t{6}()\n\t<-waitc\n\treturn listResponses\n{6}'.format(self._project_package,rpc_name,rpc_msg_in_pkg,rpc_msg_input_type,_OPEN_BRCK,svc_name.lower(),_CLOSING_BRCK,rpc_msg_out_pkg,rpc_msg_output_type,r.get('description'),s))
                 # BidiStream
                 elif rpc_client_stream and rpc_server_stream:
-                    list_of_rpcs.append('\n\n// sylk.build - {10}.{1}\n// Description: {9}\n// Read: https://www.sylk.build/docs/go/bidi-stream\nfunc (c *{0}) {1}(messages []*{2}.{3}) []*{7}.{8} {4}\n\tlog.Printf("Calling {1} %v", message)\n\n\tctx, cancel := context.WithTimeout(c.ctx, 10*time.Second)\n\n\tdefer cancel()\n\n\tstream, err := c.{5}.{1}(ctx)\n\n\tif err != nil {4}\n\t\tlog.Fatalf("Client call {1} failed: %v", err)\n\t{6}\n\n\tvar listResponses []*{7}.{8}\n\n\twaitc := make(chan struct{4}{6})\n\n\tgo func() {4}\n\t\tfor {4}\n\t\t\t{8}, err := stream.Recv()\n\t\t\tif err == io.EOF {4}\n\t\t\t\tclose(waitc)\n\t\t\t\tbreak\n\t\t\t{6}\n\t\t\tif err != nil {4}\n\t\t\t\tlog.Fatalf("Client call {1} stream message failed: %v", err)\n\t\t\t{6}\n\t\t\tlistResponses = append(listResponses, {8})\n\t\t{6}\n\t{6}()\n\tfor _, message := range messages {4}\n\t\tif err := stream.Send(message); err != nil {4}\n\t\t\tlog.Fatalf("Client.{1} stream.Send(%v) failed: %v", message, err)\n\t\t{6}\n\t{6}\n\tstream.CloseSend()\n\t<-waitc\n\treturn listResponses\n{6}'.format(self._project_package,rpc_name,rpc_msg_in_pkg,rpc_msg_input_type,_OPEN_BRCK,s.lower(),_CLOSING_BRCK,rpc_msg_out_pkg,rpc_msg_output_type,r.get('description'),s))
+                    list_of_rpcs.append('\n\n// sylk.build - {10}.{1}\n// Description: {9}\n// Read: https://www.sylk.build/docs/go/bidi-stream\nfunc (c *{0}) {1}(messages []*{2}.{3}) []*{7}.{8} {4}\n\tlog.Printf("Calling {1} %v", message)\n\n\tctx, cancel := context.WithTimeout(c.ctx, 10*time.Second)\n\n\tdefer cancel()\n\n\tstream, err := c.{5}.{1}(ctx)\n\n\tif err != nil {4}\n\t\tlog.Fatalf("Client call {1} failed: %v", err)\n\t{6}\n\n\tvar listResponses []*{7}.{8}\n\n\twaitc := make(chan struct{4}{6})\n\n\tgo func() {4}\n\t\tfor {4}\n\t\t\t{8}, err := stream.Recv()\n\t\t\tif err == io.EOF {4}\n\t\t\t\tclose(waitc)\n\t\t\t\tbreak\n\t\t\t{6}\n\t\t\tif err != nil {4}\n\t\t\t\tlog.Fatalf("Client call {1} stream message failed: %v", err)\n\t\t\t{6}\n\t\t\tlistResponses = append(listResponses, {8})\n\t\t{6}\n\t{6}()\n\tfor _, message := range messages {4}\n\t\tif err := stream.Send(message); err != nil {4}\n\t\t\tlog.Fatalf("Client.{1} stream.Send(%v) failed: %v", message, err)\n\t\t{6}\n\t{6}\n\tstream.CloseSend()\n\t<-waitc\n\treturn listResponses\n{6}'.format(self._project_package,rpc_name,rpc_msg_in_pkg,rpc_msg_input_type,_OPEN_BRCK,svc_name.lower(),_CLOSING_BRCK,rpc_msg_out_pkg,rpc_msg_output_type,r.get('description'),s))
 
 
         return '\n\n'.join(list_of_rpcs)
@@ -2188,3 +2267,47 @@ class Graph:
         stack.remove(None)
         return stack
  
+def read_to_parse_protos(file_paths):
+    results = {}
+    with concurrent.futures.ThreadPoolExecutor() as executor:
+        # Submit file reading tasks to the thread pool
+        file_reading_tasks = {executor.submit(file_system.read_file, file_path): file_path for file_path in file_paths}
+
+        # Retrieve the results as they complete
+        for future in concurrent.futures.as_completed(file_reading_tasks):
+            file_path = file_reading_tasks[future]  # Get the file path associated with the future
+            try:
+                file_contents = future.result()
+                results[file_path] = file_contents  # Store the file contents in the dictionary
+            except Exception as e:
+                print(f'An error occurred while reading {file_path}: {e}')
+
+    return results
+
+def is_semver_less(semver1, semver2):
+    if semver1 is None:
+        return True
+    
+    def parse_semver(semver):
+        major, minor, patch = map(int, semver.split('.'))
+        return major, minor, patch
+
+    major1, minor1, patch1 = parse_semver(semver1)
+    major2, minor2, patch2 = parse_semver(semver2)
+
+    if major1 < major2:
+        return True
+    elif major1 > major2:
+        return False
+
+    if minor1 < minor2:
+        return True
+    elif minor1 > minor2:
+        return False
+
+    if patch1 < patch2:
+        return True
+    elif patch1 > patch2:
+        return False
+
+    return False

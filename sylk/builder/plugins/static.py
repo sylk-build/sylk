@@ -268,6 +268,18 @@ const PROTO_DIR = path.join(__dirname, "../protos");\n\
 const MODEL_DIR = path.join(__dirname, "../services/protos");\n\
 const PROTOC_PATH = path.join(__dirname, "../node_modules/grpc-tools/bin/protoc");\n\
 const PLUGIN_PATH = path.join(__dirname, "../node_modules/.bin/protoc-gen-ts_proto");\n\n\
+const pkgJson = require("../sylk.json");\n\
+let protos = [];\n\n\
+for (const pkg in pkgJson.packages) {\n\
+  if (Object.hasOwnProperty.call(pkgJson.packages, pkg)) {\n\
+    protos.push(`${pkg.split("/").slice(1).join("/")}`)\n\
+  }\n\
+}\n\
+for (const svc in pkgJson.services) {\n\
+  if (Object.hasOwnProperty.call(pkgJson.services, svc)) {\n\
+    protos.push(`${svc.split("/").slice(1).join("/")}`)\n\
+  }\n\
+}\n\
 rimraf.sync(`${MODEL_DIR}/*.ts`, {\n\
   glob: { ignore: `${MODEL_DIR}/tsconfig.json` },\n\
 });\n\n\
@@ -276,7 +288,7 @@ const protoConfig = [\n\
   // https://github.com/stephenh/ts-proto/blob/main/README.markdown\n\
   "--ts_proto_opt=outputServices=grpc-js,env=node,useOptionals=messages,exportCommonSymbols=false,esModuleInterop=true",\n\n\
   `--ts_proto_out=${MODEL_DIR}`,\n\
-  `--proto_path ${PROTO_DIR} ${PROTO_DIR}/*.proto`,\n\
+  `--proto_path ${PROTO_DIR} ${protos.join(' ')}`,\n\
 ];\n\n\
 // https://github.com/stephenh/ts-proto#usage\n\
 execSync(`${PROTOC_PATH} ${protoConfig.join(" ")}`);\n\
@@ -622,7 +634,7 @@ func init() {\n\
 	ErrorLogger = log.New(log.Writer(), "ERROR: ", log.Ldate|log.Ltime|log.Lshortfile)\n\
 }'
 
-sylk_go_utils_channel = 'package sylk.buildChannel\n\n\
+sylk_go_utils_channel = 'package buildChannel\n\n\
 import (\n\
 	"context"\n\
 	"crypto/tls"\n\

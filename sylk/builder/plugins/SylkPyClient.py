@@ -43,6 +43,8 @@ def init_project_structure(sylk_json: helpers.SylkJson, sylk_context: helpers.Sy
     directories = [
         # Clients
         file_system.join_path(sylk_json.path, 'clients', 'python'),
+        file_system.join_path(sylk_json.path, 'clients', 'python', 'protos'),
+
         # Protos
         file_system.join_path(sylk_json.path, 'services', 'protos')]
 
@@ -68,20 +70,67 @@ def init_project_structure(sylk_json: helpers.SylkJson, sylk_context: helpers.Sy
     return [directories, files]
 
 @builder.hookimpl
+def pre_compile_protos(sylk_json: helpers.SylkJson, sylk_context: helpers.SylkContext):
+    if sylk_json.get_server_language() != 'python':
+        pretty.print_info("Running pre compile protos")
+        return {
+            'sylk.builder.plugins.SylkProto:compile_protos():commands':[
+                '--proto_path=protos/',
+                '--python_out=./services/protos',
+                '--pyi_out=./services/protos',
+                '--grpc_python_out=./services/protos',
+                '--python_out=./clients/python/protos',
+                '--pyi_out=./clients/python/protos',
+                '--grpc_python_out=./clients/python/protos',
+                '-I./protos/'
+            ],
+            'sylk.builder.plugins.SylkProto:compile_protos():include_dirs':[],
+        }
+
+@builder.hookimpl
 def compile_protos(sylk_json: helpers.SylkJson, sylk_context: helpers.SylkContext):
     # Running ./bin/init.sh script for compiling protos
-    if sylk_json.project.get('server').get('language') != 'python':
-        pretty.print_info("Running ./bin/init-py.sh script for 'protoc' compiler")
-        proc = subprocess.run(['bash', file_system.join_path(
-            sylk_json.path, 'bin', 'init-py.sh')])
-        if proc.returncode != 0:
-            pretty.print_error("ERROR occured during building process some more info on specific error can be found above")
-            exit(proc.returncode)
-    # Moving .py files to ./services/protos dir
-    for file in file_system.walkFiles(file_system.join_path(sylk_json.path, 'protos')):
-        if '.py' in file:
-            file_system.mv(file_system.join_path(sylk_json.path, 'protos', file),
-                           file_system.join_path(sylk_json.path, 'services', 'protos', file))
+    for pkg in sylk_json.packages:
+        # pkg_path = '/'.join(pkg.split('/')[:-1])
+        target_file = '/'.join(pkg.split('/')[:-1])
+        temp_path = []
+        for d in target_file.split('/'):
+            temp_path.append(d)
+            if file_system.check_if_dir_exists(file_system.join_path(sylk_json.path, 'clients','python', '/'.join(temp_path))) == False:
+                file_system.mkdir(file_system.join_path(sylk_json.path, 'clients','python', '/'.join(temp_path)))
+            if file_system.check_if_file_exists(file_system.join_path(sylk_json.path, 'clients','python', '/'.join(temp_path),'__init__.py')) == False:
+                file_system.wFile(file_system.join_path(sylk_json.path, 'clients','python', '/'.join(temp_path),'__init__.py'),'')
+                    # print(file_system.join_path(sylk_json.path, 'services', '/'.join(temp_path),'__init__.py'))
+                # file_system.mv(file_system.join_path(sylk_json.path, pkg_path, file),
+                #             file_system.join_path(sylk_json.path, 'services',  target_file, file))
+
+    for svc in sylk_json.services:
+        # svc_path = '/'.join(svc.split('/')[:-1])
+        target_file = '/'.join(svc.split('/')[:-1])
+        temp_path = []
+        for d in target_file.split('/'):
+            temp_path.append(d)
+            if file_system.check_if_dir_exists(file_system.join_path(sylk_json.path, 'clients', 'python', '/'.join(temp_path))) == False:
+                file_system.mkdir(file_system.join_path(sylk_json.path, 'clients','python', '/'.join(temp_path)))
+            if file_system.check_if_file_exists(file_system.join_path(sylk_json.path, 'clients','python', '/'.join(temp_path),'__init__.py')) == False:
+                file_system.wFile(file_system.join_path(sylk_json.path, 'clients', 'python','/'.join(temp_path),'__init__.py'),'')
+                # print(file_system.join_path(sylk_json.path, 'services', '/'.join(temp_path),'__init__.py'))
+                # file_system.mv(file_system.join_path(sylk_json.path, svc_path, file),
+                #             file_system.join_path(sylk_json.path, 'services',  target_file, file))
+
+
+    # if sylk_json.project.get('server').get('language') != 'python':
+    #     pretty.print_info("Running ./bin/init-py.sh script for 'protoc' compiler")
+    #     proc = subprocess.run(['bash', file_system.join_path(
+    #         sylk_json.path, 'bin', 'init-py.sh')])
+    #     if proc.returncode != 0:
+    #         pretty.print_error("ERROR occured during building process some more info on specific error can be found above")
+    #         exit(proc.returncode)
+    # # Moving .py files to ./services/protos dir
+    # for file in file_system.walkFiles(file_system.join_path(sylk_json.path, 'protos')):
+    #     if '.py' in file:
+    #         file_system.mv(file_system.join_path(sylk_json.path, 'protos', file),
+    #                        file_system.join_path(sylk_json.path, 'services', 'protos', file))
 
 
 @builder.hookimpl

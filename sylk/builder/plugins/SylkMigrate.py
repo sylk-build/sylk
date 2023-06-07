@@ -33,7 +33,13 @@ from sylk.cli.theme import SylkTheme
 from sylk.commons import helpers, file_system, resources, errors,protos as sylk_protos
 from sylk.commons.pretty import print_error, print_info, print_note, print_success, print_warning
 from google.protobuf.struct_pb2 import Value,ListValue,Struct
-from sylk.commons.protos import SylkField_pb2, SylkServer_pb2, SylkClient_pb2, SylkProject_pb2, SylkService_pb2
+
+from sylk.commons.protos.sylk.SylkField.v1 import SylkField_pb2
+from sylk.commons.protos.sylk.SylkServer.v1 import SylkServer_pb2
+from sylk.commons.protos.sylk.SylkClient.v1 import SylkClient_pb2
+from sylk.commons.protos.sylk.SylkService.v1 import SylkService_pb2
+from sylk.commons.protos.sylk.SylkProject.v1 import SylkProject_pb2
+
 from google.protobuf.descriptor_pb2 import MessageOptions
 @builder.hookimpl
 def pre_build(sylk_json: helpers.SylkJson, sylk_context: helpers.SylkContext):

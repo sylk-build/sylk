@@ -58,18 +58,18 @@ def init_project_structure(sylk_json: helpers.SylkJson, sylk_context: helpers.Sy
     # Bin files
     services_protoc = []
     packages_protoc = []
-    if sylk_json.services is not None:
-        for s in sylk_json.services:
-            services_protoc.append(s)
-            if file_system.check_if_dir_exists(file_system.join_path(sylk_json.path, 'services', 'protos', s)) == False:
-                file_system.mkdir(file_system.join_path(sylk_json.path, 'services', 'protos',s))
-            if file_system.check_if_dir_exists(file_system.join_path(sylk_json.path, 'services', s)) == False:
-                file_system.mkdir(file_system.join_path(sylk_json.path, 'services',s))
-    if sylk_json.packages is not None:
-        for p in sylk_json.packages:
-            packages_protoc.append(sylk_json.packages[p].get('name'))
-            if file_system.check_if_dir_exists(file_system.join_path(sylk_json.path, 'services', 'protos', sylk_json.packages[p].get('name'))) == False:
-                file_system.mkdir(file_system.join_path(sylk_json.path, 'services', 'protos', sylk_json.packages[p].get('name')))
+    # if sylk_json.services is not None:
+    #     for s in sylk_json.services:
+    #         services_protoc.append(s)
+    #         if file_system.check_if_dir_exists(file_system.join_path(sylk_json.path, 'services', 'protos', s)) == False:
+    #             file_system.mkdir(file_system.join_path(sylk_json.path, 'services', 'protos',s))
+    #         if file_system.check_if_dir_exists(file_system.join_path(sylk_json.path, 'services', s)) == False:
+    #             file_system.mkdir(file_system.join_path(sylk_json.path, 'services',s))
+    # # if sylk_json.packages is not None:
+    #     for p in sylk_json.packages:
+    #         packages_protoc.append(sylk_json.packages[p].get('name'))
+    #         if file_system.check_if_dir_exists(file_system.join_path(sylk_json.path, 'services', 'protos', sylk_json.packages[p].get('name'))) == False:
+    #             file_system.mkdir(file_system.join_path(sylk_json.path, 'services', 'protos', sylk_json.packages[p].get('name')))
 
     # Bin files
     # file_system.wFile(file_system.join_path(
@@ -105,6 +105,22 @@ def write_services(sylk_json: helpers.SylkJson, sylk_context: helpers.SylkContex
         # else:
         #     pretty.print_info("Make sure you are editing the {0} file\n - See how to edit service written in Go".format(file_system.join_path(
         #         sylk_json.path, 'services',svc, f'{svc}.go')))
+# mkdir $DST_DIR"/{0}"\nprotoc -I=$SRC_DIR --go_out=$DST_DIR --go_opt=paths=source_relative --go-grpc_out=$DST_DIR"/{0}"  --go-grpc_opt=paths=source_relative protos/{0}.proto
+
+@builder.hookimpl
+def pre_compile_protos(sylk_json: helpers.SylkJson, sylk_context: helpers.SylkContext):
+    pretty.print_info("Running pre compile protos")
+    return {
+        'sylk.builder.plugins.SylkProto:compile_protos():commands':[
+            '--go_out=./services/protos',
+            '--go_opt=paths=source_relative',
+            '--go-grpc_out=./services/protos',
+            '--go-grpc_opt=paths=source_relative',
+            '-I./protos/'
+        ],
+        'sylk.builder.plugins.SylkProto:compile_protos():include_dirs':[],
+    }
+
 
 @builder.hookimpl
 def compile_protos(sylk_json: helpers.SylkJson, sylk_context: helpers.SylkContext):
@@ -120,8 +136,8 @@ def compile_protos(sylk_json: helpers.SylkJson, sylk_context: helpers.SylkContex
         sylk_json.path, 'bin', 'init-go.sh'), bash_init_script_go(sylk_json.project.get('goPackage'),services_protoc,packages_protoc),True)
     # Running ./bin/init-go.sh script for compiling protos
     logging.info("Running ./bin/init-go.sh script for 'protoc' compiler")
-    subprocess.run(['bash', file_system.join_path(
-        sylk_json.path, 'bin', 'init-go.sh')])
+    # subprocess.run(['bash', file_system.join_path(
+        # sylk_json.path, 'bin', 'init-go.sh')])
 
 
 _OPEN_BRCK = '{'

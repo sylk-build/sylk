@@ -26,7 +26,7 @@ from typing import overload
 from sylk import config
 from sylk.commons import file_system as _fs,helpers as _helpers,pretty as _pretty,config as _config
 from sylk.commons.pretty import print_error, print_info, print_note, print_warning
-from sylk.commons.protos import SylkConfigs
+from sylk.commons.protos.sylk.SylkConfigs.v1 import SylkConfigs_pb2 as SylkConfigs
 from google.protobuf.json_format import MessageToDict,ParseDict
 
 log = logging.getLogger('sylk.cli.main')

@@ -32,8 +32,9 @@ def pre_build(sylk_json:helpers.SylkJson, sylk_context: helpers.SylkContext):
     directories = [
         # Clients
         file_system.join_path(sylk_json.path,'clients'),
-        file_system.join_path(sylk_json.path,'services'),
+        file_system.join_path(sylk_json.path,'services','protos', sylk_json.domain),
         file_system.join_path(sylk_json.path,'protos'),
+        file_system.join_path(sylk_json.path,'protos', sylk_json.domain),
         file_system.join_path(sylk_json.path,'bin'),
         file_system.join_path(sylk_json.path,'.sylk'),
         file_system.join_path(sylk_json.path,'server'),
@@ -51,7 +52,7 @@ def post_build(sylk_json:helpers.SylkJson, sylk_context: helpers.SylkContext):
     if results != []:
         pretty.print_info('Sylk finished build for:')
         for p in results:
-            print(f'\t- {p[0]}')
+            pretty.print_note(f'\t- {p[0]}')
 
 @builder.hookimpl(hookwrapper=True)
 def pre_build_server(sylk_json:helpers.SylkJson, sylk_context: helpers.SylkContext):

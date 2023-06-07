@@ -28,7 +28,7 @@ from sylk.commons.helpers import SylkJson,MessageToDict
 from sylk.commons.pretty import print_info,print_warning,print_error,print_note,print_success
 import zlib
 
-from sylk.commons.protos.SylkConfigs_pb2 import SylkCliConfigs, SylkProjectConfigs
+from sylk.commons.protos.sylk.SylkConfigs.v1.SylkConfigs_pb2 import SylkCliConfigs, SylkProjectConfigs
 
 _OPEN_BRCK = '{'
 _CLOSING_BRCK = '}'
@@ -90,7 +90,9 @@ from sylk.commons import helpers, file_system
 
 # Sylk.build proto modules also helps us here to construct our services
 # gRPC used to create another gRPC ! :)
-from sylk.commons.protos import SylkServer_pb2, SylkClient_pb2, SylkCommons_pb2
+from sylk.commons.protos.sylk.SylkServer.v1 import SylkServer_pb2
+from sylk.commons.protos.sylk.SylkClient.v1 import SylkClient_pb2
+from sylk.commons.protos.sylk.SylkCommons.v1 import SylkCommons_pb2
 
 # Default system imports
 import os

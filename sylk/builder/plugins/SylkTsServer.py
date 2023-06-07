@@ -83,12 +83,13 @@ def init_project_structure(sylk_json: helpers.SylkJson, sylk_context: helpers.Sy
 @builder.hookimpl
 def write_services(sylk_json: helpers.SylkJson, sylk_context: helpers.SylkContext):
     for svc in sylk_json.services:
+        svc_name = svc.split('/')[-1].split('.')[0]
         if file_system.check_if_file_exists(file_system.join_path(
-            sylk_json.path, 'services', f'{svc}.ts')) == False:
+            sylk_json.path, 'services', f'{svc_name}.ts')) == False:
             service_code = helpers.SylkServiceTs(sylk_json.project.get('packageName'), svc, sylk_json.services[svc].get(
                 'dependencies'), sylk_json.services[svc], context=sylk_context,sylk_json=sylk_json).to_str()
             file_system.wFile(file_system.join_path(
-                sylk_json.path, 'services', f'{svc}.ts'), service_code, overwrite=True)
+                sylk_json.path, 'services', f'{svc_name}.ts'), service_code, overwrite=True)
         # else:
         #     pretty.print_info("Make sure you are editing the {0} file\n - See how to edit service written in Typescript".format(file_system.join_path(
         #         sylk_json.path, 'services', f'{svc}.ts')))
@@ -303,16 +304,17 @@ def write_server(sylk_json: helpers.SylkJson, sylk_context: helpers.SylkContext,
                     
     
     for svc in sylk_json.services:
-        imports.append(f'import {_OPEN_BRCK} {svc}, {svc}Service {_CLOSING_BRCK} from \'./services/{svc}\';')
+        svc_name = svc.split('/')[-1].split('.')[0]
+        imports.append(f'import {_OPEN_BRCK} {svc_name}, {svc_name}Service {_CLOSING_BRCK} from \'./services/{svc_name}\';')
         injects = []
-        if svc in injects_service:
-            injects.append(injects_service[svc])
+        if svc_name in injects_service:
+            injects.append(injects_service[svc_name])
         
         injects = ', '.join(injects)
-        services_init_impl.append(f'const {svc}Impl = new {svc}({injects})')
+        services_init_impl.append(f'const {svc_name}Impl = new {svc_name}({injects})')
 
         services_bindings.append(
-            f'server.addService({svc}Service, {svc}Impl);')
+            f'server.addService({svc_name}Service, {svc_name}Impl);')
     services_bindings = '\n\t'.join(services_bindings)
     services_init_impl = '\n\t'.join(services_init_impl)
     imports = '\n'.join(imports)

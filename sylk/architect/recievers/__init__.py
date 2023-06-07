@@ -63,12 +63,15 @@ class Builder:
     def add_resource(self,sylkJson,*args,**kwargs):
         request = args[0][0][0]
         for k in request:
-            log.debug(f"Adding resource : {k}")
+            # log.debug(f"Adding resource : {k}")
             if sylkJson.get(k) is None:
                 sylkJson[k] = request[k]
+
             else:
-                if k == 'domain':
+                # Primitives
+                if k in ['domain','sylkVersion']:
                     sylkJson[k] = request[k]
+                # Composites
                 else:
                     for j in request[k]:
                         sylkJson[k][j] = request[k][j]
@@ -83,7 +86,7 @@ class Builder:
             if type == 'descriptors':
                 if kind == resources.ResourceKinds.message.value:
                     fullname = resource.get('fullName')
-                    pkgname = 'protos/{0}/{1}.proto'.format(fullname.split('.')[2],fullname.split('.')[1])
+                    pkgname = 'protos/{0}/{1}/{2}/{1}.proto'.format(fullname.split('.')[0],fullname.split('.')[1],fullname.split('.')[2])
                     package = sylkJson.get('packages').get(pkgname)
                     if package is not None:
 
@@ -115,7 +118,7 @@ class Builder:
                     pass
                 elif kind == resources.ResourceKinds.enum.value:
                     fullname = resource.get('fullName')
-                    pkgname = 'protos/{0}/{1}.proto'.format(fullname.split('.')[2],fullname.split('.')[1])
+                    pkgname = 'protos/{0}/{1}/{2}/{1}.proto'.format(fullname.split('.')[0],fullname.split('.')[1],fullname.split('.')[1])
                     package = sylkJson.get('packages').get(pkgname)
                     if package is not None:
                         index = 0
@@ -130,7 +133,7 @@ class Builder:
                     pass
             elif type == 'packages':
                 fullname = resource.get('package')
-                pkgname = 'protos/{0}/{1}.proto'.format(fullname.split('.')[2],fullname.split('.')[1])
+                pkgname = 'protos/{0}/{1}/{2}/{1}.proto'.format(fullname.split('.')[0],fullname.split('.')[1],fullname.split('.')[2])
                 package = sylkJson.get('packages').get(pkgname)
                 if package is not None:
                     sylkJson['packages'][pkgname] = resource
@@ -146,7 +149,7 @@ class Builder:
         if len(full_name.split('.')) == 4:
 
             if sylkJson.get('packages') is not None:
-                pkg_name = 'protos/{0}/{1}.proto'.format(full_name.split('.')[2],full_name.split('.')[1])
+                pkg_name = 'protos/{0}/{1}/{2}/{1}.proto'.format(full_name.split('.')[0],full_name.split('.')[1],full_name.split('.')[2])
                 if pkg_name in sylkJson.get('packages'):
 
                     # Handling deletion of message
@@ -175,7 +178,7 @@ class Builder:
         elif len(full_name.split('.')) == 6:
             # Handling removal of oneof fields
             if sylkJson.get('packages') is not None:
-                pkg_name = 'protos/{0}/{1}.proto'.format(full_name.split('.')[2],full_name.split('.')[1])
+                pkg_name = 'protos/{0}/{1}/{2}/{1}.proto'.format(full_name.split('.')[0],full_name.split('.')[1],full_name.split('.')[2])
                 if pkg_name in sylkJson.get('packages'):
                     if sylkJson['packages'][pkg_name].get('messages') is not None:
                         index_msgs = 0
@@ -195,7 +198,7 @@ class Builder:
         else:
             # Removing fields or enum values
             if sylkJson.get('packages') is not None:
-                pkg_name = 'protos/{0}/{1}.proto'.format(full_name.split('.')[2],full_name.split('.')[1])
+                pkg_name = 'protos/{0}/{1}/{2}/{1}.proto'.format(full_name.split('.')[0],full_name.split('.')[1],full_name.split('.')[2])
                 
                 if pkg_name in sylkJson.get('packages'):
 

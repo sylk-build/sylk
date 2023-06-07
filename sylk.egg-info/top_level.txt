@@ -1,4 +1,6 @@
+_proto
 assets
+bin
 dist
 docs
 sylk

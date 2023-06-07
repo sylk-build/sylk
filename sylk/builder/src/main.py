@@ -187,7 +187,7 @@ class SylkBuilder:
             context = old_context
             file_system.wFile(path, context, json=True, overwrite=True)
             self._sylk_context = helpers.SylkContext(context)
-            print(self._sylk_context)
+            # print(self._sylk_context)
 
         except Exception:
             log.warning(

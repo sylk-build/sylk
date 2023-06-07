@@ -25,17 +25,21 @@ import os
 import json as JSON
 import shutil
 from distutils.dir_util import copy_tree
+
 log = logging.getLogger('sylk.cli.main')
 
+
+def read_file(file_path):
+    with open(file_path, 'r') as file:
+        return file.read()
 
 def mv(old_path, new_path):
     if check_if_file_exists(old_path):
         os.rename(old_path, new_path)
 
-
 def mkdir(path):
     if check_if_dir_exists(path) == False:
-        os.mkdir(path)
+        os.makedirs(path)
     else:
         log.debug("Directory is already exists ! {0}"
                       .format(path))
@@ -43,7 +47,6 @@ def mkdir(path):
 def cpDir(dir_path,target_path):
     if check_if_dir_exists(dir_path):
         copy_tree(dir_path, target_path)
-
 
 def removeFile(path):
     os.remove(path)
@@ -55,10 +58,8 @@ def walkFiles(path):
     for p in os.walk(path):
         return p[2]
 
-
 def copyFile(file, new_file):
     shutil.copy2(file, new_file)
-
 
 def wFile(path, content, overwrite=False, json=False,force=False):
     if check_if_file_exists(path) == True:
@@ -99,7 +100,6 @@ def wFile(path, content, overwrite=False, json=False,force=False):
                 file.write(content)
                 file.close()
 
-
 def rFile(path, json=False):
     log.debug(f"Reading file -> {path}")
     if check_if_file_exists(path) == True:
@@ -116,22 +116,17 @@ def rFile(path, json=False):
     else:
         raise Exception("File path is not valid ! {0}".format(path))
 
-
 def check_if_dir_exists(dir_path):
     return os.path.isdir(dir_path)
-
 
 def check_if_file_exists(file_path):
     return Path(file_path).exists()
 
-
 def join_path(*paths):
     return os.path.join(*paths)
 
-
 def get_current_location():
     return os.getcwd()
-
 
 def is_file_executable(file_path):
     return os.access(file_path, os.X_OK)

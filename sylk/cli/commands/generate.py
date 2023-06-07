@@ -26,9 +26,9 @@ from sylk.architect import SylkArchitect
 from sylk.cli.theme import SylkTheme
 from sylk.commons.helpers import SylkJson, SylkField, SylkEnumValue,_WellKnowns
 from sylk.commons.pretty import print_info, print_warning, print_error, print_note, print_success, bcolors
-from sylk.commons.protos.SylkField_pb2 import SylkFieldLabels, SylkFieldTypes
+from sylk.commons.protos.sylk.SylkField.v1.SylkField_pb2 import SylkFieldLabels, SylkFieldTypes
 from sylk.commons.errors import SylkProtoError
-from sylk.commons.protos.SylkCommons_pb2 import FieldOptions,MessageOptions,MethodOptions,ServiceOptions,SylkExtensions
+from sylk.commons.protos.sylk.SylkCommons.v1.SylkCommons_pb2 import FieldOptions,MessageOptions,MethodOptions,ServiceOptions,SylkExtensions
 
 import inquirer
 from inquirer import errors
@@ -462,8 +462,7 @@ def rpc(results, sylk_json: SylkJson, architect: SylkArchitect, expand=None, par
             f'RPC [{rpc}] is already defined under "{svc}" service')
         exit(1)
 
-    dependencies = sylk_json.services[svc.split(
-        '.')[1]].get('dependencies')
+    dependencies = sylk_json.services['protos/{0}/{1}/{2}/{1}.proto'.format(svc.split('.')[0],svc.split('.')[1],svc.split('.')[2])].get('dependencies')
 
     if dependencies is None:
         svc_name = svc.split('.')[1]

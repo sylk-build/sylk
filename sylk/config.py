@@ -1,4 +1,4 @@
-from sylk.commons.protos.SylkConfigs_pb2 import SylkCliConfigs
+from sylk.commons.protos.sylk.SylkConfigs.v1.SylkConfigs_pb2 import SylkCliConfigs
 """
                ____  
    _______  __/ / /__

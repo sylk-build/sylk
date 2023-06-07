@@ -24,10 +24,10 @@ from typing import List
 from prettytable import PrettyTable
 from sylk.commons.pretty import print_info,print_warning,print_error,print_note,print_success
 from sylk.commons.helpers import Graph, SylkJson
-from sylk.commons.protos.SylkApi_pb2 import GetProjectResponse
-from sylk.commons.protos.SylkClient_pb2 import SylkClientLanguages
-from sylk.commons.protos.SylkProject_pb2 import SylkProject, SylkProjectDisplay
-from sylk.commons.protos.SylkServer_pb2 import SylkServerLanguages
+from sylk.commons.protos.sylk.SylkApi.v1.SylkApi_pb2 import GetProjectResponse
+from sylk.commons.protos.sylk.SylkClient.v1.SylkClient_pb2 import SylkClientLanguages
+from sylk.commons.protos.sylk.SylkProject.v1.SylkProject_pb2 import SylkProject, SylkProjectDisplay
+from sylk.commons.protos.sylk.SylkServer.v1.SylkServer_pb2 import SylkServerLanguages
 # from sylk.commons.protos import SylkCommons_pb2
 
 def display_resource(resource_name,sylk_json:SylkJson,count,level=None,nested=False):
@@ -49,12 +49,14 @@ def display_resource(resource_name,sylk_json:SylkJson,count,level=None,nested=Fa
         count += 1
         print_success(spacer+'Package: {}'.format(resource_name))
         if 'google.protobuf.' not in resource_name:
+            domain = pkg_name = resource_name.split('.')[0]
             pkg_name = resource_name.split('.')[1]
             pkg_ver = resource_name.split('.')[2]
             count_pkgs_dep = 0
-            for d in sylk_json.packages[f'protos/{pkg_ver}/{pkg_name}.proto'].get('dependencies'):
+            pkg_path = f'protos/{domain}/{pkg_name}/{pkg_ver}/{pkg_name}.proto'
+            for d in sylk_json.packages[pkg_path].get('dependencies'):
                 count_pkgs_dep +=1
-                display_resource(d,sylk_json,count,level=count,nested=nested if nested ==True else len(sylk_json.packages[f'protos/{pkg_ver}/{pkg_name}.proto'].get('dependencies'))>count_pkgs_dep )
+                display_resource(d,sylk_json,count,level=count,nested=nested if nested ==True else len(sylk_json.packages[pkg_path].get('dependencies'))>count_pkgs_dep )
 
 
 def list_templates(configs,sylk_json:SylkJson):
@@ -97,14 +99,16 @@ def list_dependencies(resource,sylk_json:SylkJson):
                     for d in sylk_json.services[dep].get('dependencies'):
                         print('    ||\t     |\n    ||\t     Package -- {}'.format(d))
                         if 'google.protobuf.' not in d:
+                            deep_pkg_domain = d.split('.')[0]
                             deep_pkg = d.split('.')[1]
                             deep_pkg_version = d.split('.')[2]
-                            pkg_proto_path = f'protos/{deep_pkg_version}/{deep_pkg}.proto'
-                            for deep_dep in sylk_json.packages[pkg_proto_path].get('dependencies'):
-                                if 'google.protobuf.' not in deep_dep:
-                                    print('    ||\t\t     |\n    ||\t             Package -- {}'.format(deep_dep))
-                                else: 
-                                    print('    ||\t\t     |\n    ||\t             Package -- {}'.format(deep_dep))
+                            pkg_proto_path = f'protos/{deep_pkg_domain}/{deep_pkg}/{deep_pkg_version}/{deep_pkg}.proto'
+                            if sylk_json.packages[pkg_proto_path].get('dependencies'):
+                                for deep_dep in sylk_json.packages[pkg_proto_path].get('dependencies'):
+                                    if 'google.protobuf.' not in deep_dep:
+                                        print('    ||\t\t     |\n    ||\t             Package -- {}'.format(deep_dep))
+                                    else: 
+                                        print('    ||\t\t     |\n    ||\t             Package -- {}'.format(deep_dep))
 
                             # for deep_dep in sylk_json.packages[f'protos/{deep_pkg_version}/{deep_pkg}.proto'].get('dependencies'):
                         else:
@@ -112,7 +116,7 @@ def list_dependencies(resource,sylk_json:SylkJson):
         elif resource is None or resource == 'package':
             print()
             print_note('| Package: {}'.format(dep))
-            pkg_name = 'protos/{}/{}.proto'.format(dep.split('.')[-1],dep.split('.')[1])
+            pkg_name = 'protos/{0}/{1}/{2}/{1}.proto'.format(dep.split('.')[0],dep.split('.')[1],dep.split('.')[2])
             if sylk_json.packages[pkg_name].get('dependencies'):
                 for d in sylk_json.packages[pkg_name].get('dependencies'):
                     print('    ||\t     |\n    ||\t      -- {}'.format(d))

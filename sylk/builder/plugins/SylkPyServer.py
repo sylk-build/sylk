@@ -73,12 +73,13 @@ def init_project_structure(sylk_json: helpers.SylkJson, sylk_context: helpers.Sy
 @builder.hookimpl
 def write_services(sylk_json: helpers.SylkJson, sylk_context: helpers.SylkContext):
     for svc in sylk_json.services:
+        service_name = sylk_json.services[svc].get('name')
         if file_system.check_if_file_exists(file_system.join_path(
-            sylk_json.path, 'services', f'{svc}.py')) == False:
+            sylk_json.path, 'services', f'{service_name}.py')) == False:
             service_code = helpers.SylkServicePy(sylk_json.project.get('packageName'), svc, sylk_json.services[svc].get(
                 'dependencies'), sylk_json.services[svc], context=sylk_context,sylk_json=sylk_json).to_str()
             file_system.wFile(file_system.join_path(
-                sylk_json.path, 'services', f'{svc}.py'), service_code, overwrite=True)
+                sylk_json.path, 'services', f'{service_name}.py'), service_code, overwrite=True)
         # else:
         #     pretty.print_info("Make sure you are editing the {0} file\n - See how to edit service written in python".format(file_system.join_path(
         #         sylk_json.path, 'services', f'{svc}.py')))
@@ -88,10 +89,14 @@ def pre_compile_protos(sylk_json: helpers.SylkJson, sylk_context: helpers.SylkCo
     pretty.print_info("Running pre compile protos")
     return {
         'sylk.builder.plugins.SylkProto:compile_protos():commands':[
-            # '--proto_path=./',
-            '--python_out=./protos',
-            '--pyi_out=./protos',
-            '--grpc_python_out=./protos'
+            '--proto_path=protos/',
+            '--python_out=./services/protos',
+            '--pyi_out=./services/protos',
+            '--grpc_python_out=./services/protos',
+            '--python_out=./clients/python/protos',
+            '--pyi_out=./clients/python/protos',
+            '--grpc_python_out=./clients/python/protos',
+            '-I./protos/'
         ],
         'sylk.builder.plugins.SylkProto:compile_protos():include_dirs':[],
     }
@@ -99,14 +104,37 @@ def pre_compile_protos(sylk_json: helpers.SylkJson, sylk_context: helpers.SylkCo
 @builder.hookimpl
 def compile_protos(sylk_json: helpers.SylkJson, sylk_context: helpers.SylkContext):
     # Running ./bin/init.sh script for compiling protos
-    logging.info("Running ./bin/init.sh script for 'protoc' compiler")
-    subprocess.run(['bash', file_system.join_path(
-        sylk_json.path, 'bin', 'init.sh')])
+    # logging.info("Running ./bin/init.sh script for 'protoc' compiler")
+    # subprocess.run(['bash', file_system.join_path(
+    #     sylk_json.path, 'bin', 'init.sh')])
     # Moving .py files to ./services/protos dir
-    # for file in file_system.walkFiles(file_system.join_path(sylk_json.path, 'protos')):
-    #     if '.py' in file:
-    #         file_system.mv(file_system.join_path(sylk_json.path, 'protos', file),
-    #                        file_system.join_path(sylk_json.path, 'services', 'protos', file))
+    for pkg in sylk_json.packages:
+        # pkg_path = '/'.join(pkg.split('/')[:-1])
+        target_file = '/'.join(pkg.split('/')[:-1])
+        temp_path = []
+        for d in target_file.split('/'):
+            temp_path.append(d)
+            if file_system.check_if_dir_exists(file_system.join_path(sylk_json.path, 'services', '/'.join(temp_path))) == False:
+                file_system.mkdir(file_system.join_path(sylk_json.path, 'services', '/'.join(temp_path)))
+            if file_system.check_if_file_exists(file_system.join_path(sylk_json.path, 'services', '/'.join(temp_path),'__init__.py')) == False:
+                file_system.wFile(file_system.join_path(sylk_json.path, 'services', '/'.join(temp_path),'__init__.py'),'')
+                    # print(file_system.join_path(sylk_json.path, 'services', '/'.join(temp_path),'__init__.py'))
+                # file_system.mv(file_system.join_path(sylk_json.path, pkg_path, file),
+                #             file_system.join_path(sylk_json.path, 'services',  target_file, file))
+
+    for svc in sylk_json.services:
+        # svc_path = '/'.join(svc.split('/')[:-1])
+        target_file = '/'.join(svc.split('/')[:-1])
+        temp_path = []
+        for d in target_file.split('/'):
+            temp_path.append(d)
+            if file_system.check_if_dir_exists(file_system.join_path(sylk_json.path, 'services', '/'.join(temp_path))) == False:
+                file_system.mkdir(file_system.join_path(sylk_json.path, 'services', '/'.join(temp_path)))
+            if file_system.check_if_file_exists(file_system.join_path(sylk_json.path, 'services', '/'.join(temp_path),'__init__.py')) == False:
+                file_system.wFile(file_system.join_path(sylk_json.path, 'services', '/'.join(temp_path),'__init__.py'),'')
+                # print(file_system.join_path(sylk_json.path, 'services', '/'.join(temp_path),'__init__.py'))
+                # file_system.mv(file_system.join_path(sylk_json.path, svc_path, file),
+                #             file_system.join_path(sylk_json.path, 'services',  target_file, file))
 
 
 
@@ -121,10 +149,12 @@ def write_server(sylk_json: helpers.SylkJson, sylk_context: helpers.SylkContext,
         services_bindings = []
         svcs = []
         for svc in sylk_json.services:
-            svcs.append(svc)
-            imports.append(f'import {svc}_pb2_grpc')
+            svc_name = sylk_json.services[svc].get('name')
+            svc_path = '.'.join(svc.split('/')[:-1])
+            svcs.append(svc_name)
+            imports.append(f'from {svc_path} import {svc_name}_pb2_grpc')
             services_bindings.append(
-                f'{svc}_pb2_grpc.add_{svc}Servicer_to_server({svc}.{svc}(),server)')
+                f'{svc_name}_pb2_grpc.add_{svc_name}Servicer_to_server({svc_name}.{svc_name}(),server)')
         svcs = ', '.join(svcs)
         imports.append(f'import {svcs}')
         services_bindings = '\n\t'.join(services_bindings)
@@ -206,7 +236,7 @@ def rebuild_context(sylk_json: helpers.SylkJson, sylk_context: helpers.SylkConte
                                 methods_i += 1
 
             except Exception as e:
-                print(e)
+                pretty.print_error(e)
                 logging.debug(e)
     if sylk_context is not None:
         file_system.wFile(file_system.join_path(
@@ -215,87 +245,87 @@ def rebuild_context(sylk_json: helpers.SylkJson, sylk_context: helpers.SylkConte
 
 @builder.hookimpl
 def override_generated_classes(sylk_json: helpers.SylkJson, sylk_context: helpers.SylkContext):
-    
-    for f in file_system.walkFiles(file_system.join_path(sylk_json.path, 'services', 'protos')):
-        name = f.split('_pb2')
-        if '_grpc' not in name:
-            file_content = file_system.rFile(
-                file_system.join_path(sylk_json.path, 'services', 'protos', f))
-            file_content.insert(
-                5, '\nfrom typing import overload, Iterator, List, Dict\n')
-            if len(name) > 1:
-                name = name[0]
+    pass
+    # for f in file_system.walkFiles(file_system.join_path(sylk_json.path, 'services', 'protos')):
+    #     name = f.split('_pb2')
+    #     if '_grpc' not in name:
+    #         file_content = file_system.rFile(
+    #             file_system.join_path(sylk_json.path, 'services', 'protos', f))
+    #         file_content.insert(
+    #             5, '\nfrom typing import overload, Iterator, List, Dict\n')
+    #         if len(name) > 1:
+    #             name = name[0]
 
-                # svc_proto = next((svc for svc in sylk_json.services if svc == name),None)
-                pkg_proto = next((pkg for pkg in sylk_json.packages if pkg.split(
-                    '/')[-1].split('.')[0] == name), None)
-                if pkg_proto is not None:
-                    pkg_proto_name = pkg_proto.split('/')[-1].split('.')[0]
+    #             # svc_proto = next((svc for svc in sylk_json.services if svc == name),None)
+    #             pkg_proto = next((pkg for pkg in sylk_json.packages if pkg.split(
+    #                 '/')[-1].split('.')[0] == name), None)
+    #             if pkg_proto is not None:
+    #                 pkg_proto_name = pkg_proto.split('/')[-1].split('.')[0]
 
-                    for m in sylk_json.packages[pkg_proto].get('messages'):
-                        index = 0
-                        for l in file_content:
-                            message_description = m.get('description') if m.get('description') is not None else ''
-                            message_name = m['name']
-                            if f'{message_name} = _reflection' in l[:len(message_name)+15]:
-                                temp_fields = []
-                                init_fields = []
-                                docstring_fields = []
-                                for field in m['fields']:
-                                    key_type = field.get('keyType').split('_')[-1].lower() if field.get('keyType') is not None and field.get('keyType') != -1 else None
-                                    value_type = field.get('valueType').split('_')[-1].lower() if field.get('valueType') is not None and field.get('valueType') != -1 else None
-                                    fName = field['name']
-                                    fDescription = field.get('description') if field.get('description') is not None else ''
+    #                 for m in sylk_json.packages[pkg_proto].get('messages'):
+    #                     index = 0
+    #                     for l in file_content:
+    #                         message_description = m.get('description') if m.get('description') is not None else ''
+    #                         message_name = m['name']
+    #                         if f'{message_name} = _reflection' in l[:len(message_name)+15]:
+    #                             temp_fields = []
+    #                             init_fields = []
+    #                             docstring_fields = []
+    #                             for field in m['fields']:
+    #                                 key_type = field.get('keyType').split('_')[-1].lower() if field.get('keyType') is not None and field.get('keyType') != -1 else None
+    #                                 value_type = field.get('valueType').split('_')[-1].lower() if field.get('valueType') is not None and field.get('valueType') != -1 else None
+    #                                 fName = field['name']
+    #                                 fDescription = field.get('description') if field.get('description') is not None else ''
 
-                                    fType = parse_proto_type_to_py(field['fieldType'].split(
-                                        '_')[-1].lower(), field['label'].split('_')[-1].lower(), field.get('messageType'), field.get('enumType'),current_pkg=pkg_proto_name,key_type=key_type,value_type=value_type)
-                                    if field['fieldType'].split(
-                                        '_')[-1].lower() == 'enum':
-                                        temp_fields.append(
-                                            f'{fName} = {fType} # type: int')
-                                    elif field['fieldType'].split(
-                                        '_')[-1].lower() == 'oneof':
-                                        for f_oneof in field.get('oneofFields'):
-                                            fOneofName = f_oneof['name']
-                                            fOneofType = parse_proto_type_to_py(f_oneof['fieldType'].split(
-                                                '_')[-1].lower(), 'optional', f_oneof.get('messageType'), f_oneof.get('enumType'),current_pkg=pkg_proto_name)
-                                            if f_oneof['fieldType'].split(
-                                                '_')[-1].lower() == 'enum':
-                                                temp_fields.append(
-                                                    f'{fOneofName} = {fOneofType} # type: int')
-                                            else:
-                                                temp_fields.append(
-                                                    f'{fOneofName} = {fOneofType} # type: {fOneofType}')
-                                    else:
-                                        temp_fields.append(
-                                            f'{fName} = {fType} # type: {fType}')
+    #                                 fType = parse_proto_type_to_py(field['fieldType'].split(
+    #                                     '_')[-1].lower(), field['label'].split('_')[-1].lower(), field.get('messageType'), field.get('enumType'),current_pkg=pkg_proto_name,key_type=key_type,value_type=value_type)
+    #                                 if field['fieldType'].split(
+    #                                     '_')[-1].lower() == 'enum':
+    #                                     temp_fields.append(
+    #                                         f'{fName} = {fType} # type: int')
+    #                                 elif field['fieldType'].split(
+    #                                     '_')[-1].lower() == 'oneof':
+    #                                     for f_oneof in field.get('oneofFields'):
+    #                                         fOneofName = f_oneof['name']
+    #                                         fOneofType = parse_proto_type_to_py(f_oneof['fieldType'].split(
+    #                                             '_')[-1].lower(), 'optional', f_oneof.get('messageType'), f_oneof.get('enumType'),current_pkg=pkg_proto_name)
+    #                                         if f_oneof['fieldType'].split(
+    #                                             '_')[-1].lower() == 'enum':
+    #                                             temp_fields.append(
+    #                                                 f'{fOneofName} = {fOneofType} # type: int')
+    #                                         else:
+    #                                             temp_fields.append(
+    #                                                 f'{fOneofName} = {fOneofType} # type: {fOneofType}')
+    #                                 else:
+    #                                     temp_fields.append(
+    #                                         f'{fName} = {fType} # type: {fType}')
                                     
-                                    if field.get('fieldType') != 'TYPE_ONEOF':
-                                        init_fields.append(f'{fName}={fType}')
-                                    else:
-                                        for f_oneof in field.get('oneofFields'):
-                                            fOneofName = f_oneof['name']
-                                            fOneofType = parse_proto_type_to_py(f_oneof['fieldType'].split(
-                                                '_')[-1].lower(), 'optional', f_oneof.get('messageType'), f_oneof.get('enumType'),current_pkg=pkg_proto_name)
-                                            init_fields.append(f'{fOneofName}={fOneofType}')
-                                    docstring_fields.append(f'{fName} : {fType}\n\t\t\t{fDescription}')
+    #                                 if field.get('fieldType') != 'TYPE_ONEOF':
+    #                                     init_fields.append(f'{fName}={fType}')
+    #                                 else:
+    #                                     for f_oneof in field.get('oneofFields'):
+    #                                         fOneofName = f_oneof['name']
+    #                                         fOneofType = parse_proto_type_to_py(f_oneof['fieldType'].split(
+    #                                             '_')[-1].lower(), 'optional', f_oneof.get('messageType'), f_oneof.get('enumType'),current_pkg=pkg_proto_name)
+    #                                         init_fields.append(f'{fOneofName}={fOneofType}')
+    #                                 docstring_fields.append(f'{fName} : {fType}\n\t\t\t{fDescription}')
 
-                                # for field in m['fields']:
-                                #     fName = field['name']
-                                #     fType = parse_proto_type_to_py(field['fieldType'].split(
-                                #         '_')[-1].lower(), field['label'].split('_')[-1].lower(), field.get('messageType'), field.get('enumType'))
-                                #     temp_fields.append(
-                                #         f'{fName} = {fType} # type: {fType}')
-                                #     init_fields.append(f'{fName}={fType}')
-                                temp_fields = '\n\t'.join(temp_fields)
-                                init_fields = ', '.join(init_fields)
-                                docstring = '{0}\n\n\t\tAttributes:\n\t\t----------\n\t\t{1}'.format(message_description,'\n\t\t'.join(docstring_fields))
-                                file_content.insert(
-                                    index, f'\n@overload\nclass {message_name}(_message.Message):\n\t"""sylk.build generated message [{sylk_json.domain}.{pkg_proto_name}.v1.{message_name}]\n\tA class respresent a {message_name} type\n\t{message_description}\n\t"""\n\t{temp_fields}\n\n\tdef __init__(self, {init_fields}):\n\t\t"""\n\t\t{docstring}\n\t\t"""\n\t\tpass\n')
-                                break
-                            index += 1
-                    file_system.wFile(file_system.join_path(
-                        sylk_json.path, 'services', 'protos', f), ''.join(file_content), True)
+    #                             # for field in m['fields']:
+    #                             #     fName = field['name']
+    #                             #     fType = parse_proto_type_to_py(field['fieldType'].split(
+    #                             #         '_')[-1].lower(), field['label'].split('_')[-1].lower(), field.get('messageType'), field.get('enumType'))
+    #                             #     temp_fields.append(
+    #                             #         f'{fName} = {fType} # type: {fType}')
+    #                             #     init_fields.append(f'{fName}={fType}')
+    #                             temp_fields = '\n\t'.join(temp_fields)
+    #                             init_fields = ', '.join(init_fields)
+    #                             docstring = '{0}\n\n\t\tAttributes:\n\t\t----------\n\t\t{1}'.format(message_description,'\n\t\t'.join(docstring_fields))
+    #                             file_content.insert(
+    #                                 index, f'\n@overload\nclass {message_name}(_message.Message):\n\t"""sylk.build generated message [{sylk_json.domain}.{pkg_proto_name}.v1.{message_name}]\n\tA class respresent a {message_name} type\n\t{message_description}\n\t"""\n\t{temp_fields}\n\n\tdef __init__(self, {init_fields}):\n\t\t"""\n\t\t{docstring}\n\t\t"""\n\t\tpass\n')
+    #                             break
+    #                         index += 1
+    #                 file_system.wFile(file_system.join_path(
+    #                     sylk_json.path, 'services', 'protos', f), ''.join(file_content), True)
 
 
 def parse_proto_type_to_py(type, label, messageType=None, enumType=None,current_pkg=None,key_type=None,value_type=None):

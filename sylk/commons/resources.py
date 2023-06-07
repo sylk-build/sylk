@@ -19,6 +19,7 @@
 # OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION
 # WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 
+import imp
 import logging
 import os
 import sys
@@ -38,18 +39,19 @@ from sylk.cli import prompter
 from sylk.commons import errors
 from sylk.commons.pretty import print_error, print_info, print_note, print_warning
 
-from sylk.commons.protos import  Sylk_pb2,SylkOrganization_pb2, \
-    SylkProject_pb2, \
-    SylkService_pb2, \
-    SylkPackage_pb2, \
-    SylkConfigs_pb2, \
-    SylkEnum_pb2, \
-    SylkServer_pb2, \
-    SylkClient_pb2, \
-    SylkMethod_pb2, \
-    SylkMessage_pb2, \
-    SylkField_pb2, \
-    SylkCommons_pb2
+from sylk.commons.protos.sylk.Sylk.v1 import  Sylk_pb2
+from sylk.commons.protos.sylk.SylkOrganization.v1 import SylkOrganization_pb2
+from sylk.commons.protos.sylk.SylkProject.v1 import SylkProject_pb2
+from sylk.commons.protos.sylk.SylkService.v1 import SylkService_pb2
+from sylk.commons.protos.sylk.SylkPackage.v1 import SylkPackage_pb2
+from sylk.commons.protos.sylk.SylkConfigs.v1 import SylkConfigs_pb2
+from sylk.commons.protos.sylk.SylkEnum.v1 import SylkEnum_pb2
+from sylk.commons.protos.sylk.SylkServer.v1 import SylkServer_pb2
+from sylk.commons.protos.sylk.SylkClient.v1 import SylkClient_pb2
+from sylk.commons.protos.sylk.SylkMethod.v1 import SylkMethod_pb2
+from sylk.commons.protos.sylk.SylkMessage.v1 import SylkMessage_pb2
+from sylk.commons.protos.sylk.SylkField.v1 import SylkField_pb2
+from sylk.commons.protos.sylk.SylkCommons.v1 import SylkCommons_pb2
 
 class ResourceTypes(Enum):
     project = 'projects'
@@ -210,7 +212,7 @@ def generate_service(path, domain, name, service_language, dependencies, descrip
                 print_warning("Adding depndency {}".format(depend_name))
                 dependencies.append(depend_name)
             if sylk_json is not None:
-                pkg_path = 'protos/{}/{}.proto'.format(ext.split('.')[2],ext.split('.')[1])
+                pkg_path = 'protos/{0}/{1}/{2}/{1}.proto'.format(ext.split('.')[0],ext.split('.')[1],ext.split('.')[2])
                 if  sylk_json.get('packages'):
                     ext_package = sylk_json.get('packages').get(pkg_path)
                     ext_msg = next((m for m in ext_package.get('messages') if m.get('fullName') == '.'.join(ext.split('.')[:-1])),None)
@@ -257,7 +259,7 @@ def generate_package(path, domain, name, dependencies=[],messages=[],enums=[],de
                 print_warning("Adding depndency {}".format(depend_name))
                 dependencies.append(depend_name)
             if sylk_json is not None:
-                pkg_path = 'protos/{}/{}.proto'.format(ext.split('.')[2],ext.split('.')[1])
+                pkg_path = 'protos/{0}/{1}/{2}/{1}.proto'.format(ext.split('.')[0],ext.split('.')[1],ext.split('.')[2])
                 if  sylk_json.get('packages'):
                     ext_package = sylk_json.get('packages').get(pkg_path)
                     ext_msg = next((m for m in ext_package.get('messages') if m.get('fullName') == '.'.join(ext.split('.')[:-1])),None)
@@ -339,7 +341,7 @@ def generate_message(path, domain, package, name, fields=[], option=0, descripti
                         package.dependencies.append(depend_name)
 
                     if sylk_json is not None:
-                        pkg_path = 'protos/{}/{}.proto'.format(ext.split('.')[2],ext.split('.')[1])
+                        pkg_path = 'protos/{0}/{1}/{2}/{1}.proto'.format(ext.split('.')[0],ext.split('.')[1],ext.split('.')[2])
                         if  sylk_json.get('packages'):
                             ext_package = sylk_json.get('packages').get(pkg_path)
                             ext_msg = next((m for m in ext_package.get('messages') if m.get('fullName') == '.'.join(ext.split('.')[:-1])),None)
@@ -380,7 +382,7 @@ def generate_message(path, domain, package, name, fields=[], option=0, descripti
                 print_warning("Adding dependency {}".format(depend_name))
                 package.dependencies.append(depend_name)
             if sylk_json is not None:
-                pkg_path = 'protos/{}/{}.proto'.format(ext.split('.')[2],ext.split('.')[1])
+                pkg_path = 'protos/{0}/{1}/{2}/{1}.proto'.format(ext.split('.')[0],ext.split('.')[1],ext.split('.')[2])
                 if  sylk_json.get('packages'):
                     ext_package = sylk_json.get('packages').get(pkg_path)
                     ext_msg = next((m for m in ext_package.get('messages') if m.get('fullName') == '.'.join(ext.split('.')[:-1])),None)
@@ -664,7 +666,7 @@ def parse_proto_extension(field_opt_type,field_opt_label,description,value,field
                 list_values_temp.append(field_opt_value)
             elif 'MESSAGE' in field_opt_type:
                 struct_temp = Struct()
-                ext_package_path = 'protos/{}/{}.proto'.format(description.get('fullName').split('.')[2],description.get('fullName').split('.')[1])
+                ext_package_path = 'protos/{0}/{1}/{2}/{1}.proto'.format(description.get('fullName').split('.')[0],description.get('fullName').split('.')[1],description.get('fullName').split('.')[2])
                 message_type = next((m for m in sylk_json.get('packages').get(ext_package_path).get('messages') if m.get('fullName') == '.'.join(description.get('fullName').split('.')[:-1])),None)
                 for field_ext_temp in message_type.get('fields'):
                     if field_ext_temp.get('fieldType') == 'TYPE_MESSAGE' or field_ext_temp.get('fieldType') == 'TYPE_MAP' or field_ext_temp.get('fieldType') == 'TYPE_ENUM':
@@ -672,7 +674,7 @@ def parse_proto_extension(field_opt_type,field_opt_label,description,value,field
                     struct_temp.update({field_ext_temp.get('name'):getattr(field_opt_value,field_ext_temp.get('name'))})
                 list_values_temp.append(Value(struct_value=struct_temp))
             elif 'ENUM' in field_opt_type:
-                ext_package_path = 'protos/{}/{}.proto'.format(description.get('fullName').split('.')[2],description.get('fullName').split('.')[1])
+                ext_package_path = 'protos/{0}/{1}/{2}/{1}.proto'.format(description.get('fullName').split('.')[0],description.get('fullName').split('.')[1],description.get('fullName').split('.')[2])
                 enum_type = next((e for e in sylk_json.get('packages').get(ext_package_path).get('enums') if e.get('fullName') == '.'.join(description.get('fullName').split('.')[:-1])),None)
                 enum_value = next((ev for ev in enum_type.get('values') if ev.get('number') == field_opt_value),None)
                 # if hasattr(field_opt_value,'string_value') == False:
@@ -698,7 +700,7 @@ def parse_proto_extension(field_opt_type,field_opt_label,description,value,field
         elif 'MESSAGE' in field_opt_type:
 
                 struct_temp = Struct()
-                ext_package_path = 'protos/{}/{}.proto'.format(description.get('messageType').split('.')[2],description.get('messageType').split('.')[1])
+                ext_package_path = 'protos/{0}/{1}/{2}/{1}.proto'.format(description.get('messageType').split('.')[0],description.get('messageType').split('.')[1],description.get('messageType').split('.')[2])
 
                 message_type = next((m for m in sylk_json.get('packages').get(ext_package_path).get('messages') if m.get('fullName') == description.get('messageType')),None)
                 temp_dict = {}
@@ -732,7 +734,7 @@ def parse_proto_extension(field_opt_type,field_opt_label,description,value,field
                 struct_temp.update(temp_dict)
                 field_extensions[description.get('fullName')] = Value(struct_value=struct_temp)
         elif 'ENUM' in field_opt_type:
-            ext_package_path = 'protos/{}/{}.proto'.format(description.get('fullName').split('.')[2],description.get('fullName').split('.')[1])
+            ext_package_path = 'protos/{0}/{1}/{2}/{1}.proto'.format(description.get('fullName').split('.')[0],description.get('fullName').split('.')[1],description.get('fullName').split('.')[2])
             enum_type = next((e for e in sylk_json.get('packages').get(ext_package_path).get('enums') if e.get('fullName') == '.'.join(description.get('fullName').split('.')[:-1])),None)
             enum_value = next((ev for ev in enum_type.get('values') if ev.get('number') == field_opt_value),None)
             field_extensions[description.get('fullName')] = Value(string_value=enum_value.get('name'))

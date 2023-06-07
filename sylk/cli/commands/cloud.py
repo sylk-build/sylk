@@ -21,20 +21,21 @@
 
 from importlib import import_module,util
 from pathlib import Path
-from sylk.builder.src.main import SylkBuilder
 from sylk.cli import prompter
-from sylk.cli.theme import SylkTheme
-from sylk.commons import client_wrapper , helpers as _helpers, file_system as _fs, pretty as _pretty
+from sylk import __version__
+
+from sylk.commons import helpers as _helpers, file_system as _fs, pretty as _pretty
 from sylk.commons.protos import sylkcore
 import ast
-from sylk.commons.helpers import Graph, MessageToDict,MessageToJson
+from sylk.commons.helpers import Graph, MessageToDict,MessageToJson, is_semver_less, read_to_parse_protos
 
-from sylk.commons.protos.SylkApi_pb2 import GetAccessTokenRequest, GetOrganizationRequest, GetProjectRequest, ListPackagesRequest, ListProjectsRequest, ListServicesRequest
-from sylk.commons.protos.SylkConfigs_pb2 import SylkCliConfigs, SylkProjectConfigs
-from sylk.commons.protos.SylkOrganization_pb2 import SylkOrganization
-from sylk.commons.protos.Sylk_pb2 import SylkJson
-# import astor
+from sylk.commons.protos.sylk.SylkApi.v1.SylkApi_pb2 import GetAccessTokenRequest, GetProjectRequest, ListPackagesRequest, ListProjectsRequest, ListServicesRequest
+from sylk.commons.protos.sylk.SylkConfigs.v1.SylkConfigs_pb2 import SylkProjectConfigs
+from sylk.commons.protos.sylk.SylkOrganization.v1.SylkOrganization_pb2 import SylkOrganization
+from sylk.commons.protos.sylk.Sylk.v1.Sylk_pb2 import SylkJson
 from datetime import datetime
+
+from sylk.tools.sylkprotoc import sylkprotoc, API as protocAPI
 
 def validation_sylk_token(answers, current):
     if current[:5] != 'sylk_':
@@ -130,7 +131,9 @@ class SylkCloud:
             )
 
             for p in pkgs:
-                packages[f'protos/v1/{p.result.package.name}.proto'] = p.result.package
+                domain = p.result.package.package.split('.')[0]
+                p_ver = p.result.package.package.split('.')[-1]
+                packages[f'protos/{domain}/{p.result.package.name}/{p_ver}/{p.result.package.name}.proto'] = p.result.package
 
             svcs = self._sylk_cloud.ListServices(
                 ListServicesRequest(
@@ -140,13 +143,16 @@ class SylkCloud:
             )
 
             for s in svcs:
-                services[s.result.service.name] = s.result.service
+                domain = s.result.service.full_name.split('.')[0]
+                s_ver = s.result.service.full_name.split('.')[2]
+                services[f'protos/{domain}/{s.result.service.name}/{s_ver}/{s.result.service.name}.proto'] = s.result.service
 
             sylk_org = SylkOrganization(
                 domain="sylk",
                 orgId=org_id
             )
             project.result.project.uri = _fs.get_current_location()
+
             sylk = SylkJson(
                 organization=sylk_org,
                 project=project.result.project,
@@ -155,7 +161,8 @@ class SylkCloud:
                 configs=SylkProjectConfigs(
                     host='localhost',
                     port=48800
-                )
+                ),
+                sylk_version=__version__.__version__
             )
 
             resources = []
@@ -171,13 +178,9 @@ class SylkCloud:
                 except KeyError as e:
                     _pretty.print_warning("Error while sorting the dependencies graph of package messages\n\t- If this error appeared right after making rename of message then ignore it...\n\t- Else please issue a bug report !")
                 
-            # for svc in sylk.services:
-                # resources.append(sylk.services[svc])
-            # resourcesSorted = Graph(resources,True).topologicalSort()
-            # print(resourcesSorted)
+            
             if overwrite:
                 _fs.wFile('sylk.json',sylkDict,True,True)
-            # _pretty.print_info(sylk,True,'Project')
             return sylk
         except Exception as e:
             _pretty.print_error(e.details(),True,f'Error occured during pulling project {projectId}')
@@ -196,3 +199,30 @@ class SylkCloud:
 
     def listProjects(self):
         return self._sylk_cloud.ListProjects(ListProjectsRequest(org_id=self._org_id),(('sylk-build-token',self._token),))
+
+    def buildProject(self):
+        
+        if is_semver_less(self.sylkJson.sylk_version,"0.2.0"):
+            _pretty.print_error("current project built with {} sylk cli version, build remote project is supported only for sylk-cli-version>=0.2.*".format(self.sylkJson.sylk_version)) 
+            exit(1)
+            
+        _pretty.print_info("connecting to sylk-protoc...")
+        _sylk_protoc = sylkprotoc()
+        protos_files = []
+        for p in self.sylkJson.packages:
+            protos_files.append('./'+p)
+        for s in self.sylkJson.services:
+            protos_files.append('./'+s)
+        protos = read_to_parse_protos(protos_files)
+        files = []
+        # Process the results
+        for file_path, file_contents in protos.items():
+            _pretty.print_info(f'generating Code File -> {file_path}')
+            file_name = '/'.join(file_path.split('/')[2:])
+            files.append(protocAPI.GenerateFilesRequest(code=file_contents,file=file_name))
+
+        _sylk_protoc.CodeGenerate(iter(files))
+        code = _sylk_protoc.Compile(protocAPI.CompileRequest(files=protos))
+        for c in code:
+            _pretty.print_info('writing compiled proto file: {}'.format(c.path))
+            _fs.wFile('services/protos/'+c.path,c.content,True,True)
