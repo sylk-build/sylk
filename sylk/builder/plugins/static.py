@@ -208,10 +208,10 @@ _CLOSING_BRCK = '}'
 def bash_init_script_go(project_package, services, packages):
     services_protoc = []
     packages_protoc = []
-    for s in services:
-        services_protoc.append('mkdir $DST_DIR"/{0}"\nprotoc -I=$SRC_DIR --go_out=$DST_DIR --go_opt=paths=source_relative --go-grpc_out=$DST_DIR"/{0}"  --go-grpc_opt=paths=source_relative protos/{0}.proto'.format(s))
-    for p in packages:
-        packages_protoc.append('mkdir $DST_DIR"/{0}"\nprotoc -I=$SRC_DIR --go_out=$DST_DIR --go_opt=paths=source_relative --go-grpc_out=$DST_DIR"/{0}"  --go-grpc_opt=paths=source_relative protos/{0}.proto'.format(p))
+    # for s in services:
+    #     services_protoc.append('mkdir $DST_DIR"/{0}"\nprotoc -I=$SRC_DIR --go_out=$DST_DIR --go_opt=paths=source_relative --go-grpc_out=$DST_DIR"/{0}"  --go-grpc_opt=paths=source_relative protos/{0}.proto'.format(s))
+    # for p in packages:
+    #     packages_protoc.append('mkdir $DST_DIR"/{0}"\nprotoc -I=$SRC_DIR --go_out=$DST_DIR --go_opt=paths=source_relative --go-grpc_out=$DST_DIR"/{0}"  --go-grpc_opt=paths=source_relative protos/{0}.proto'.format(p))
     return '#!/bin/bash\n\n\
 echo "[sylk.build] init.sh starting protoc compiler for Go"\n\
 go get -u google.golang.org/protobuf\n\
@@ -288,7 +288,7 @@ const protoConfig = [\n\
   // https://github.com/stephenh/ts-proto/blob/main/README.markdown\n\
   "--ts_proto_opt=outputServices=grpc-js,env=node,useOptionals=messages,exportCommonSymbols=false,esModuleInterop=true",\n\n\
   `--ts_proto_out=${MODEL_DIR}`,\n\
-  `--proto_path ${PROTO_DIR} ${protos.join(' ')}`,\n\
+  `--proto_path ${PROTO_DIR} ${protos.join(" ")}`,\n\
 ];\n\n\
 // https://github.com/stephenh/ts-proto#usage\n\
 execSync(`${PROTOC_PATH} ${protoConfig.join(" ")}`);\n\
@@ -446,6 +446,7 @@ package_json_webpack = '{\n\
     "@grpc/proto-loader": "~0.5.4",\n\
     "async": "~3.2.3",\n\
     "google-protobuf": "~3.14.0",\n\
+    "grpc-tools": "^1.11.2",\n\
     "grpc-web": "~1.4.2",\n\
     "lodash": "~4.17.0",\n\
     "webpack": "~4.43.0",\n\
@@ -534,20 +535,21 @@ clients_ts_configs = '{\n\
     ]\n\
 }'
 
-protos_ts_config = '{\n\
+def protos_ts_config(domain):
+    return f'{_OPEN_BRCK}\n\
     "extends": "../../tsconfig.json",\n\
-    "compilerOptions": {\n\
+    "compilerOptions": {_OPEN_BRCK}\n\
         "composite": true,\n\
         "outDir": "../../server/services/protos",\n\
         "noImplicitReturns": false\n\
-    },\n\
+    {_CLOSING_BRCK},\n\
     "include": [\n\
-        "*","google/**/*"\n\
+        "{domain}/**/*","google/**/*"\n\
     ],\n\
     "exclude": [\n\
         "node_modules"\n\
     ]\n\
-}'
+{_CLOSING_BRCK}'
 
 
 main_ts_config_client_only = '{\n\
@@ -591,20 +593,21 @@ main_ts_config_client_only = '{\n\
     ]\n\
 }'
 
-protos_ts_config_client_only = '{\n\
+def protos_ts_config_client_only(domain):
+    return f'{_OPEN_BRCK}\n\
     "extends": "../../tsconfig.json",\n\
-    "compilerOptions": {\n\
+    "compilerOptions": {_OPEN_BRCK}\n\
         "composite": true,\n\
         "outDir": "../../clients/typescript/protos",\n\
         "noImplicitReturns": false\n\
-    },\n\
+    {_CLOSING_BRCK},\n\
     "include": [\n\
-        "*","google/**/*"\n\
+        "{domain}/**/*","google/**/*"\n\
     ],\n\
     "exclude": [\n\
         "node_modules"\n\
     ]\n\
-}'
+{_CLOSING_BRCK}'
 
 bash_run_server_script_go = '#!/bin/bash\n\n\
 if [[ $1 == "debug" ]]\n\

@@ -61,6 +61,10 @@ _EXTENSIONS_TYPE = Literal["FileOptions", "MessageOptions", "FieldOptions","Serv
 _OPEN_BRCK = '{'
 _CLOSING_BRCK = '}'
 
+def to_camel_case(string):
+    words = re.findall(r'[A-Z]?[a-z0-9]+|[A-Z]+(?![a-z])', string)
+    return words[0].lower() + ''.join(word.title() for word in words[1:])
+
 
 def check_if_under_project():
     return check_if_file_exists(join_path(os.getcwd(),'sylk.json'))
@@ -747,32 +751,23 @@ class SylkProto():
 
     def write_imports(self):
         temp_imports = []
-        if self._service is not None:
-            domain = self._service.get('fullName').split('.')[0]
-            name = self._service.get('fullName').split('.')[1]
-            ver = self._service.get('fullName').split('.')[2]
-        if self._package is not None:
-            domain = self._package.split('.')[0]
-            name = self._package.split('.')[1]
-            ver = self._package.split('.')[2]
-        if self._sylk_json.project.get('goPackage') is not None:
-                temp_imports.append('\n// Go package name\noption go_package = "{}{}";\n'.format(self._sylk_json.project.get('goPackage'),'/services/protos/{0}/{1}/{2}'.format(domain,name,ver)))
+       
         if self._imports is not None:
                 
             for imp in self._imports:
                 if 'google.protobuf.' in imp:
                     if 'FieldMask' in imp:
                         imp = f"google/protobuf/field_mask.proto"
-                        temp_imports.append(f'import "{imp.lower()}";')
+                        temp_imports.append(f'\nimport "{imp.lower()}";')
                     else:
                         imp = f"{imp.replace('.','/')}.proto"
-                        temp_imports.append(f'import "{imp.lower()}";')
+                        temp_imports.append(f'\nimport "{imp.lower()}";')
                 else:
                     imp_file = imp.split('.')[1] + '.proto'
                     imp_path = imp.replace('.','/')
                     try:
                         # self._sylk_json.get_package(imp) 
-                        temp_imports.append(f'import "{imp_path}/{imp_file}";')
+                        temp_imports.append(f'\nimport "{imp_path}/{imp_file}";')
                     except SylkValidationError as e:
                         
                         pretty.print_warning(e)
@@ -782,10 +777,10 @@ class SylkProto():
                 'extensionType') is not None), None)
             if options is not None and 'google.protobuf.Descriptor' not in self._imports :
                 temp_imports.append(
-                    'import "google/protobuf/descriptor.proto";')
-            return '\n'.join(temp_imports)
+                    '\nimport "google/protobuf/descriptor.proto";')
+            return ''.join(temp_imports)
         else:
-            return '\n'.join(temp_imports)
+            return ''.join(temp_imports)
 
     def write_package(self):
         if self._package is not None:
@@ -798,9 +793,9 @@ class SylkProto():
                     extensions_package = parse_extension_to_proto('FileOptions',extension_type,ext_key,ext_value,self._sylk_json)
                     temp_extensions.append(extensions_package)
                 joined_extensions = '\n'.join(temp_extensions)
-                return f'package {self._package};\n\n// Sylk.build Package Extensions\n{joined_extensions}'
+                return f'\n\npackage {self._package};\n\n// Sylk.build Package Extensions\n{joined_extensions}'
             else:
-                return f'package {self._package};'
+                return f'\n\npackage {self._package};'
         else:
             return ''
 
@@ -927,27 +922,27 @@ class SylkProto():
                 if ext_type == 'FieldOptions':
                     fields = '\n\t\t'.join(fields)
                     msgs.append(
-                        f'// [{msgFullName}] - {m_desc}\nmessage {msg_name} {_OPEN_BRCK}\n\textend google.protobuf.FieldOptions {_OPEN_BRCK}\n\t\t{fields}\n\t{_CLOSING_BRCK}\n{_CLOSING_BRCK}\n')
+                        f'\n// [{msgFullName}] - {m_desc}\nmessage {msg_name} {_OPEN_BRCK}\n\textend google.protobuf.FieldOptions {_OPEN_BRCK}\n\t\t{fields}\n\t{_CLOSING_BRCK}\n{_CLOSING_BRCK}\n')
                 elif ext_type == 'MessageOptions':
                     fields = '\n\t\t'.join(fields)
                     msgs.append(
-                        f'// [{msgFullName}] - {m_desc}\nmessage {msg_name} {_OPEN_BRCK}\n\textend google.protobuf.MessageOptions {_OPEN_BRCK}\n\t\t{fields}\n\t{_CLOSING_BRCK}\n{_CLOSING_BRCK}\n')
+                        f'\n// [{msgFullName}] - {m_desc}\nmessage {msg_name} {_OPEN_BRCK}\n\textend google.protobuf.MessageOptions {_OPEN_BRCK}\n\t\t{fields}\n\t{_CLOSING_BRCK}\n{_CLOSING_BRCK}\n')
                 elif ext_type == 'FileOptions':
                     fields = '\n\t\t'.join(fields)
                     msgs.append(
-                        f'// [{msgFullName}] - {m_desc}\nmessage {msg_name} {_OPEN_BRCK}\n\textend google.protobuf.FileOptions {_OPEN_BRCK}\n\t\t{fields}\n\t{_CLOSING_BRCK}\n{_CLOSING_BRCK}\n')
+                        f'\n// [{msgFullName}] - {m_desc}\nmessage {msg_name} {_OPEN_BRCK}\n\textend google.protobuf.FileOptions {_OPEN_BRCK}\n\t\t{fields}\n\t{_CLOSING_BRCK}\n{_CLOSING_BRCK}\n')
                 elif ext_type == 'ServiceOptions':
                     fields = '\n\t\t'.join(fields)
                     msgs.append(
-                        f'// [{msgFullName}] - {m_desc}\nmessage {msg_name} {_OPEN_BRCK}\n\textend google.protobuf.ServiceOptions {_OPEN_BRCK}\n\t\t{fields}\n\t{_CLOSING_BRCK}\n{_CLOSING_BRCK}\n')
+                        f'\n// [{msgFullName}] - {m_desc}\nmessage {msg_name} {_OPEN_BRCK}\n\textend google.protobuf.ServiceOptions {_OPEN_BRCK}\n\t\t{fields}\n\t{_CLOSING_BRCK}\n{_CLOSING_BRCK}\n')
                 elif ext_type == 'MethodOptions':
                     fields = '\n\t\t'.join(fields)
                     msgs.append(
-                        f'// [{msgFullName}] - {m_desc}\nmessage {msg_name} {_OPEN_BRCK}\n\textend google.protobuf.MethodOptions {_OPEN_BRCK}\n\t\t{fields}\n\t{_CLOSING_BRCK}\n{_CLOSING_BRCK}\n')
+                        f'\n// [{msgFullName}] - {m_desc}\nmessage {msg_name} {_OPEN_BRCK}\n\textend google.protobuf.MethodOptions {_OPEN_BRCK}\n\t\t{fields}\n\t{_CLOSING_BRCK}\n{_CLOSING_BRCK}\n')
                 else:
                     fields = '\n\t'.join(fields)
                     msgs.append(
-                        f'// [{msgFullName}] - {m_desc}\nmessage {msg_name} {_OPEN_BRCK}\n\t{fields}\n{_CLOSING_BRCK}\n')
+                        f'\n// [{msgFullName}] - {m_desc}\nmessage {msg_name} {_OPEN_BRCK}\n\t{fields}\n{_CLOSING_BRCK}\n')
 
             msgs = '\n'.join(msgs)
             return msgs
@@ -980,7 +975,19 @@ class SylkProto():
         return self.__str__()
 
     def __str__(self):
-        return f'// sylk.build Generated proto DO NOT EDIT\nsyntax = "proto3";\n\n{self.write_imports()}\n{self.write_package()}\n\n{self.write_service()}\n\n{self.write_messages()}\n{self.write_enums()}'
+        options = []
+        if self._sylk_json.project.get('goPackage') is not None:
+            if self._service is not None:
+                domain = self._service.get('fullName').split('.')[0]
+                name = self._service.get('fullName').split('.')[1]
+                ver = self._service.get('fullName').split('.')[2]
+            if self._package is not None:
+                domain = self._package.split('.')[0]
+                name = self._package.split('.')[1]
+                ver = self._package.split('.')[2]
+            options.append('// Go package name\noption go_package = "{}{}";\n'.format(self._sylk_json.project.get('goPackage'),'/services/protos/{0}/{1}/{2}'.format(domain,name,ver)))
+        options = '\n'.join(options)
+        return f'// sylk.build Generated proto DO NOT EDIT\nsyntax = "proto3";{self.write_package()}{self.write_imports()}\n\n{options}{self.write_service()}{self.write_messages()}{self.write_enums()}'
 
 
 class SylkClientPy():
@@ -1405,6 +1412,7 @@ class SylkClientTs():
                     return_type_overload = 'ClientUnaryCall' if rpc_output_type == False and rpc_input_type == False else f'ClientDuplexStream<{rpc_in_type}, {rpc_out_type}>' if rpc_output_type == True and rpc_input_type == True else f'ClientReadableStream<{rpc_out_type}>' if rpc_output_type == True and rpc_input_type == False else f'ClientWritableStream<{rpc_in_type}>' if rpc_output_type == False and rpc_input_type == True else 'any'
                     return_type = f'Promise<{rpc_out_type}>' if rpc_output_type == False else f'Observable<{rpc_out_type}>'
                     temp_rpc_name = rpc_name[0].lower() + rpc_name[1:]
+                    temp_rpc_name = to_camel_case(temp_rpc_name)
                     rpc_impl = f'if (callback === undefined) {_OPEN_BRCK}\n\t\t\treturn promisify<{rpc_in_type}, Metadata, {rpc_out_type}>(this.{svc_name}_client.{temp_rpc_name}.bind(this.{svc_name}_client))({rpc_in_type}.fromJSON(request), metadata);\n\t\t{_CLOSING_BRCK} else {_OPEN_BRCK}\n\t\t return this.{svc_name}_client.{temp_rpc_name}({rpc_in_type}.fromJSON(request), metadata, callback);\n\t\t{_CLOSING_BRCK}' if rpc_output_type == False and rpc_input_type == False else f'return this.{svc_name}_client.{temp_rpc_name}(metadata);' if rpc_output_type == True and rpc_input_type == True  else f'if (callback === undefined) {_OPEN_BRCK}\n\t\t\tcallback = (_error:_service_error | null , _response:{rpc_out_type}) => {_OPEN_BRCK}if (_error) throw _error; return _response{_CLOSING_BRCK}\n\t\t{_CLOSING_BRCK}\n\t\treturn this.{svc_name}_client.{temp_rpc_name}(metadata, callback);' if rpc_output_type == False and rpc_input_type == True else f'return new Observable(subscriber => {_OPEN_BRCK}\n\t\tconst stream = this.{svc_name}_client.{temp_rpc_name}({rpc_in_type}.fromJSON(request), metadata);\n\t\t\tstream.on(\'data\', (res: {rpc_out_type}) => {_OPEN_BRCK}\n\t\t\t\tsubscriber.next(res)\n\t\t\t{_CLOSING_BRCK}).on(\'end\', () => {_OPEN_BRCK}\n\t\t\t\tsubscriber.complete()\n\t\t\t{_CLOSING_BRCK}).on(\'error\', (err: any) => {_OPEN_BRCK}\n\t\t\t\tsubscriber.error(err)\n\t\t\t\tsubscriber.complete()\n\t\t\t{_CLOSING_BRCK});\n\t\t{_CLOSING_BRCK})'
                     # Client streaming
                     if rpc_output_type == False and rpc_input_type == True:
@@ -1793,7 +1801,9 @@ class SylkServiceGo():
             go_package_name = self._sylk_json.project.get('goPackage')
             # list_d.append('codes "google.golang.org/grpc/codes"')
             # list_d.append('status "google.golang.org/grpc/status"')
-            list_d.append(f'{self._name}Servicer "{go_package_name}/services/protos/{self._name}"')
+            name = self._name.split('/')[-1].split('.')[0]
+            path = '/'.join(self._name.split('/')[:-1])
+            list_d.append(f'{name}Servicer "{go_package_name}/services/{path}"')
             list_d.append(f'"{go_package_name}/services/utils"')
 
             for d in self._imports:
@@ -1804,7 +1814,9 @@ class SylkServiceGo():
                 else:
                     name = d.split('.')[1]
                     d_name = '{0}'.format(name)
-                    list_d.append(f'{d_name} "{go_package_name}/services/protos/{d_name}"')
+                    d_path = self._sylk_json.get_path(d.split('.')[0],d.split('.')[1],d.split('.')[2])
+                    path = '/'.join(d_path.split('/')[:-1])
+                    list_d.append(f'{d_name} "{go_package_name}/services/{path}"')
 
             list_d = '\n\t'.join(list_d)
             return f'{list_d}'
@@ -1812,11 +1824,14 @@ class SylkServiceGo():
             return ''
 
     def write_struct(self):
-        temp_name = self._name[0].capitalize() + self._name[1:]
-        return 'type {0} struct {1}\n\t{3}Servicer.Unimplemented{0}Server\n{2}'.format(temp_name,_OPEN_BRCK,_CLOSING_BRCK,self._name)
+        name = self._name.split('/')[-1].split('.')[0]
+        temp_name = name[0].capitalize() + name[1:]
+
+        return 'type {0} struct {1}\n\t{3}Servicer.Unimplemented{0}Server\n{2}'.format(temp_name,_OPEN_BRCK,_CLOSING_BRCK,name)
 
     def write_methods(self):
-        temp_name = self._name[0].capitalize() + self._name[1:]
+        name = self._name.split('/')[-1].split('.')[0]
+        temp_name = name[0].capitalize() + name[1:]
         list_of_rpcs = []
         for rpc in self._service.get('methods'):
             rpc_temp_name = rpc.get('name')[0].capitalize() + rpc.get('name')[1:]
@@ -1839,8 +1854,8 @@ class SylkServiceGo():
             # Unary
             if rpc_output_type == False and rpc_input_type == False:
                 list_of_rpcs.append('\n'.join([
-                    f'\n\n// [sylk.build] - {self._name}.{rpc_temp_name} - {rpc_description}',
-                    f'func ({self._name}Servicer *{temp_name}) {rpc_temp_name}(ctx context.Context, {rpc_input_name} *{rpc_input_package_name}.{temp_go_rpc_input_name}) (response *{rpc_output_package_name}.{temp_go_rpc_output_name}, err error) {_OPEN_BRCK}',
+                    f'\n\n// [sylk.build] - {name}.{rpc_temp_name} - {rpc_description}',
+                    f'func ({name}Servicer *{temp_name}) {rpc_temp_name}(ctx context.Context, {rpc_input_name} *{rpc_input_package_name}.{temp_go_rpc_input_name}) (response *{rpc_output_package_name}.{temp_go_rpc_output_name}, err error) {_OPEN_BRCK}',
                     f'\tprintLog("{rpc_temp_name}",ctx, {rpc_input_name})',
                     f'\treturn &{rpc_output_package_name}.{temp_go_rpc_output_name}{_OPEN_BRCK}{_CLOSING_BRCK}, nil',
                     f'{_CLOSING_BRCK}'
@@ -1848,8 +1863,8 @@ class SylkServiceGo():
             # Client stream
             elif rpc_input_type == True and rpc_output_type == False:
                 list_of_rpcs.append('\n'.join([
-                    f'\n\n// [sylk.build] - {self._name}.{rpc_temp_name} - {rpc_description}',
-                    f'func ({self._name}Servicer *{temp_name}) {rpc_temp_name}(stream {self._name}Servicer.{temp_name}_{rpc_temp_name}Server) (err error) {_OPEN_BRCK}',
+                    f'\n\n// [sylk.build] - {name}.{rpc_temp_name} - {rpc_description}',
+                    f'func ({name}Servicer *{temp_name}) {rpc_temp_name}(stream {name}Servicer.{temp_name}_{rpc_temp_name}Server) (err error) {_OPEN_BRCK}',
                     f'\tprintLog("{rpc_temp_name}",stream.Context(), nil)',
                     f'\tfor {_OPEN_BRCK}',
                     f'\t\tclientStreamRequest, err := stream.Recv()',
@@ -1870,8 +1885,8 @@ class SylkServiceGo():
             # Server stream
             elif rpc_input_type == False and rpc_output_type == True:
                 list_of_rpcs.append('\n'.join([
-                    f'\n\n// [sylk.build] - {self._name}.{rpc_temp_name} - {rpc_description}',
-                    f'func ({self._name}Servicer *{temp_name}) {rpc_temp_name}({rpc_input_name} *{rpc_input_package_name}.{temp_go_rpc_input_name}, stream {self._name}Servicer.{temp_name}_{rpc_temp_name}Server) (err error) {_OPEN_BRCK}',
+                    f'\n\n// [sylk.build] - {name}.{rpc_temp_name} - {rpc_description}',
+                    f'func ({name}Servicer *{temp_name}) {rpc_temp_name}({rpc_input_name} *{rpc_input_package_name}.{temp_go_rpc_input_name}, stream {name}Servicer.{temp_name}_{rpc_temp_name}Server) (err error) {_OPEN_BRCK}',
                     f'\tprintLog("{rpc_temp_name}",stream.Context(), nil)',
                     f'\t// Do loop for responses',
                     f'\treturn nil',
@@ -1881,8 +1896,8 @@ class SylkServiceGo():
             elif rpc_input_type and rpc_output_type:
 
                 list_of_rpcs.append('\n'.join([
-                    f'\n\n// [sylk.build] - {self._name}.{rpc_temp_name} - {rpc_description}',
-                    f'func ({self._name}Servicer *{temp_name}) {rpc_temp_name}(stream {self._name}Servicer.{temp_name}_{rpc_temp_name}Server) (err error) {_OPEN_BRCK}',
+                    f'\n\n// [sylk.build] - {name}.{rpc_temp_name} - {rpc_description}',
+                    f'func ({name}Servicer *{temp_name}) {rpc_temp_name}(stream {name}Servicer.{temp_name}_{rpc_temp_name}Server) (err error) {_OPEN_BRCK}',
                     f'\tprintLog("{rpc_temp_name}",stream.Context(), nil)',
                     f'\tfor {_OPEN_BRCK}',
                     f'\t\tbidirectionalStreamRequest, err := stream.Recv()',
@@ -1916,7 +1931,8 @@ class SylkServiceGo():
         return self.__str__()
 
     def __str__(self):
-        temp_svc_name = self._name[0].capitalize() + self._name[1:]
+        name = self._name.split('/')[-1].split('.')[0]
+        temp_svc_name = name[0].capitalize() + name[1:]
         return f'package {temp_svc_name}\n\nimport (\n\t{self.write_imports()}\n)\n\n{self.write_struct()}\n{self.write_methods()}\n\n{self.write_log_func()}'
 
 class SylkServiceJs():

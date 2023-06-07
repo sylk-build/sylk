@@ -202,8 +202,8 @@ class SylkCloud:
 
     def buildProject(self):
         
-        if is_semver_less(self.sylkJson.sylk_version,"0.2.0"):
-            _pretty.print_error("current project built with {} sylk cli version, build remote project is supported only for sylk-cli-version>=0.2.*".format(self.sylkJson.sylk_version)) 
+        if is_semver_less(self.sylkJson.sylk_version,"1.0.0"):
+            _pretty.print_error("current project built with {} sylk cli version, build remote project is will be supported only later versions".format(self.sylkJson.sylk_version)) 
             exit(1)
             
         _pretty.print_info("connecting to sylk-protoc...")

@@ -92,7 +92,7 @@ _CLOSING_BRCK = '}'
 
 @builder.hookimpl
 def write_server(sylk_json: helpers.SylkJson, sylk_context: helpers.SylkContext,pre_data):
-    pretty.print_error(pre_data,True,'pre_data')
+    # pretty.print_error(pre_data,True,'pre_data')
     temp_imports = []
     imports = ['const services = require(\'./services\')','let grpc = require(\'@grpc/grpc-js\');','let protoLoader = require(\'@grpc/proto-loader\');']
     services_bindings = []

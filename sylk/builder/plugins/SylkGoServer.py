@@ -96,12 +96,13 @@ def init_project_structure(sylk_json: helpers.SylkJson, sylk_context: helpers.Sy
 @builder.hookimpl
 def write_services(sylk_json: helpers.SylkJson, sylk_context: helpers.SylkContext):
     for svc in sylk_json.services:
+        svc_name = svc.split('/')[-1].split('.')[0]
         if file_system.check_if_file_exists(file_system.join_path(
-            sylk_json.path, 'services',svc, f'{svc}.go')) == False:
+            sylk_json.path, 'services',svc_name, f'{svc_name}.go')) == False:
             service_code = helpers.SylkServiceGo(sylk_json.project.get('packageName'), svc, sylk_json.services[svc].get(
                 'dependencies'), sylk_json.services[svc], context=sylk_context,sylk_json=sylk_json).to_str()
             file_system.wFile(file_system.join_path(
-                sylk_json.path, 'services',svc, f'{svc}.go'), service_code, overwrite=True)
+                sylk_json.path, 'services',svc_name, f'{svc_name}.go'), service_code, overwrite=True,force=True)
         # else:
         #     pretty.print_info("Make sure you are editing the {0} file\n - See how to edit service written in Go".format(file_system.join_path(
         #         sylk_json.path, 'services',svc, f'{svc}.go')))
@@ -116,6 +117,9 @@ def pre_compile_protos(sylk_json: helpers.SylkJson, sylk_context: helpers.SylkCo
             '--go_opt=paths=source_relative',
             '--go-grpc_out=./services/protos',
             '--go-grpc_opt=paths=source_relative',
+            '--go_out=./clients/go/protos',
+            '--go-grpc_out=./clients/go/protos',
+
             '-I./protos/'
         ],
         'sylk.builder.plugins.SylkProto:compile_protos():include_dirs':[],
@@ -135,9 +139,9 @@ def compile_protos(sylk_json: helpers.SylkJson, sylk_context: helpers.SylkContex
     file_system.wFile(file_system.join_path(
         sylk_json.path, 'bin', 'init-go.sh'), bash_init_script_go(sylk_json.project.get('goPackage'),services_protoc,packages_protoc),True)
     # Running ./bin/init-go.sh script for compiling protos
-    logging.info("Running ./bin/init-go.sh script for 'protoc' compiler")
-    # subprocess.run(['bash', file_system.join_path(
-        # sylk_json.path, 'bin', 'init-go.sh')])
+    # logging.info("Running ./bin/init-go.sh script for 'protoc' compiler")
+    subprocess.run(['bash', file_system.join_path(
+        sylk_json.path, 'bin', 'init-go.sh')])
 
 
 _OPEN_BRCK = '{'
@@ -146,16 +150,18 @@ _CLOSING_BRCK = '}'
 
 @builder.hookimpl
 def write_server(sylk_json: helpers.SylkJson, sylk_context: helpers.SylkContext,pre_data):
-    pretty.print_error(pre_data,True,'pre_data')
+    # pretty.print_error(pre_data,True,'pre_data')
     go_package_name = sylk_json.project.get('goPackage')
     imports = ['"log"','"fmt"','"flag"','"net"','"google.golang.org/grpc"']
     services_bindings = []
     for svc in sylk_json.services:
-        imports.append(f'{svc}Servicer "{go_package_name}/services/protos/{svc}"')
-        imports.append(f'{svc} "{go_package_name}/services/{svc}"')
-        temp_svc_name = svc[0].capitalize() + svc[1:]
+        svc_name = svc.split('/')[-1].split('.')[0]
+        svc_path = '/'.join(svc.split('/')[:-1])
+        imports.append(f'{svc_name}Servicer "{go_package_name}/services/{svc_path}"')
+        imports.append(f'{svc_name} "{go_package_name}/services/{svc_name}"')
+        temp_svc_name = svc_name[0].capitalize() + svc_name[1:]
         services_bindings.append(
-            f'{svc}Servicer.Register{temp_svc_name}Server(grpcServer, new({svc}.{temp_svc_name}));')
+            f'{svc_name}Servicer.Register{temp_svc_name}Server(grpcServer, new({svc_name}.{temp_svc_name}));')
     services_bindings = '\n\t'.join(services_bindings)
     imports = '\n\t'.join(imports)
     port = sylk_json._config.get('port')

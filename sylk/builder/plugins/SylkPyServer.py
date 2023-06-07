@@ -118,6 +118,13 @@ def compile_protos(sylk_json: helpers.SylkJson, sylk_context: helpers.SylkContex
                 file_system.mkdir(file_system.join_path(sylk_json.path, 'services', '/'.join(temp_path)))
             if file_system.check_if_file_exists(file_system.join_path(sylk_json.path, 'services', '/'.join(temp_path),'__init__.py')) == False:
                 file_system.wFile(file_system.join_path(sylk_json.path, 'services', '/'.join(temp_path),'__init__.py'),'')
+        name = pkg.split('/')[-1].split('.')[0]
+        pkg_path = '/'.join(pkg.split('/')[:-1])
+        if file_system.check_if_file_exists(file_system.join_path(sylk_json.path, 'services', pkg_path,f'{name}_pb2.py')) == False:
+            try:
+                file_system.copyFile(file_system.join_path(sylk_json.path, 'clients','python', pkg_path,f'{name}_pb2.py'),file_system.join_path(sylk_json.path, 'services', '/'.join(temp_path),f'{name}_pb2.py'))
+            except Exception as e:
+                pass
                     # print(file_system.join_path(sylk_json.path, 'services', '/'.join(temp_path),'__init__.py'))
                 # file_system.mv(file_system.join_path(sylk_json.path, pkg_path, file),
                 #             file_system.join_path(sylk_json.path, 'services',  target_file, file))
@@ -132,6 +139,13 @@ def compile_protos(sylk_json: helpers.SylkJson, sylk_context: helpers.SylkContex
                 file_system.mkdir(file_system.join_path(sylk_json.path, 'services', '/'.join(temp_path)))
             if file_system.check_if_file_exists(file_system.join_path(sylk_json.path, 'services', '/'.join(temp_path),'__init__.py')) == False:
                 file_system.wFile(file_system.join_path(sylk_json.path, 'services', '/'.join(temp_path),'__init__.py'),'')
+        name = svc.split('/')[-1].split('.')[0]
+        svc_path = '/'.join(svc.split('/')[:-1])
+        if file_system.check_if_file_exists(file_system.join_path(sylk_json.path, 'services', svc_path,f'{name}_pb2.py')) == False:
+            try:
+                file_system.copyFile(file_system.join_path(sylk_json.path, 'clients','python', svc_path,f'{name}_pb2.py'),file_system.join_path(sylk_json.path, 'services', '/'.join(temp_path),f'{name}_pb2.py'))
+            except Exception as e:
+                pass
                 # print(file_system.join_path(sylk_json.path, 'services', '/'.join(temp_path),'__init__.py'))
                 # file_system.mv(file_system.join_path(sylk_json.path, svc_path, file),
                 #             file_system.join_path(sylk_json.path, 'services',  target_file, file))
@@ -140,7 +154,7 @@ def compile_protos(sylk_json: helpers.SylkJson, sylk_context: helpers.SylkContex
 
 @builder.hookimpl
 def write_server(sylk_json: helpers.SylkJson, sylk_context: helpers.SylkContext,pre_data):
-    pretty.print_error(pre_data,True,'pre_data')
+    # pretty.print_error(pre_data,True,'pre_data')
     
     if file_system.check_if_file_exists(file_system.join_path(
             sylk_json.path, 'server', 'server.py')) == False:

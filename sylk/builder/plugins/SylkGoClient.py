@@ -103,6 +103,8 @@ def pre_compile_protos(sylk_json: helpers.SylkJson, sylk_context: helpers.SylkCo
                 '--go_opt=paths=source_relative',
                 '--go-grpc_out=./services/protos',
                 '--go-grpc_opt=paths=source_relative',
+                '--go_out=./clients/go/protos',
+                '--go-grpc_out=./clients/go/protos',
                 '-I./protos/'
             ],
             'sylk.builder.plugins.SylkProto:compile_protos():include_dirs':[],

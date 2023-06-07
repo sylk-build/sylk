@@ -85,7 +85,7 @@ def init_project_structure(sylk_json: helpers.SylkJson, sylk_context: helpers.Sy
     # tsconfig.json
     if sylk_json.get_server_language() != 'typescript':
         file_system.wFile(file_system.join_path(sylk_json.path, 'tsconfig.json'),main_ts_config_client_only)
-        file_system.wFile(file_system.join_path(sylk_json.path, 'services', 'protos', 'tsconfig.json'),protos_ts_config_client_only)
+        file_system.wFile(file_system.join_path(sylk_json.path, 'services', 'protos', 'tsconfig.json'),protos_ts_config_client_only(sylk_json.domain))
     
     # file_system.wFile(file_system.join_path(sylk_json.path,'.sylk','contxt.json'),'{"files":[]}')
     

@@ -72,7 +72,7 @@ def init_project_structure(sylk_json: helpers.SylkJson, sylk_context: helpers.Sy
 @builder.hookimpl
 def pre_compile_protos(sylk_json: helpers.SylkJson, sylk_context: helpers.SylkContext):
     if sylk_json.get_server_language() != 'python':
-        pretty.print_info("Running pre compile protos")
+        pretty.print_info("Running pre compile protos - python")
         return {
             'sylk.builder.plugins.SylkProto:compile_protos():commands':[
                 '--proto_path=protos/',

@@ -25,7 +25,7 @@ import subprocess
 import sys
 import sylk.builder as builder
 from sylk.commons import helpers, file_system
-from sylk.commons.pretty import print_error, print_info
+from sylk.commons.pretty import print_error, print_info, print_note
 import pkg_resources
 from grpc_tools import _protoc_compiler
 log = logging.getLogger('sylk.cli.main')
@@ -53,7 +53,9 @@ def compile_protos(sylk_json: helpers.SylkJson, sylk_context: helpers.SylkContex
     well_known_protos = pkg_resources.resource_filename('grpc_tools', '_proto')
     sylk_protos = pkg_resources.resource_filename('sylk', '_proto')
     commands = []
-    include_dirs = ['-I{}'.format(well_known_protos),'-I{}'.format(sylk_json.path+'/protos')]
+    include_dirs = ['-I{}'.format(well_known_protos),
+        # '-I{}'.format(sylk_json.path+'/protos')
+    ]
     if pre_data:
         _hook_name = inspect.stack()[0][3]
         for mini_hooks in pre_data:
@@ -67,10 +69,9 @@ def compile_protos(sylk_json: helpers.SylkJson, sylk_context: helpers.SylkContex
                                     include_dirs.append('-I{}'.format(d))
                         if 'commands' in hook.split(':')[2]:
                             if mini_hooks[hook] is not None and len(mini_hooks[hook]) > 0:
-                                print_error(mini_hooks[hook])
+                                # print_error(mini_hooks[hook])
                                 commands = commands + mini_hooks[hook]
 
-    # print(sylk_protos)
     proto_files = []
     for pkg in sylk_json.packages:
         proto_files.append('/'.join(pkg.split('/')[1:]))
@@ -80,9 +81,12 @@ def compile_protos(sylk_json: helpers.SylkJson, sylk_context: helpers.SylkContex
 
 
     if sylk_json.is_language("python"):
-        run_protoc(commands+ include_dirs + proto_files)
+        protoc_params = [c for c in list(map(lambda f: f if '--python' in f or '--grpc_python_out' in f or '--pyi' in f or '-I' in f or '--proto-path' in f else None,commands)) if c is not None]+ include_dirs + proto_files
+        print_note(protoc_params)
+        run_protoc(protoc_params)
     else:
         protoc_params = ['protoc']+ commands +include_dirs+ proto_files
+        # print_note(protoc_params)
         process = subprocess.Popen(protoc_params,
                     stdout=subprocess.PIPE, 
                     stderr=subprocess.PIPE)
@@ -92,6 +96,7 @@ def compile_protos(sylk_json: helpers.SylkJson, sylk_context: helpers.SylkContex
 
     if sylk_json.is_language("go"):
         protoc_params = ['protoc']+ [c for c in list(map(lambda f: f if '--go' in f or '-I' in f or '--proto-path' in f else None,commands)) if c is not None] +include_dirs+ proto_files
+        # print_note(protoc_params)
         process = subprocess.Popen(protoc_params,
                     stdout=subprocess.PIPE, 
                     stderr=subprocess.PIPE)
