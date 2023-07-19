@@ -44,7 +44,7 @@ class SylkProjectConfigs(_message.Message):
     def __init__(self, description: _Optional[str] = ..., host: _Optional[str] = ..., template: _Optional[_Union[SylkTemplateConfigs, _Mapping]] = ..., port: _Optional[int] = ..., current_version: _Optional[str] = ..., plugins: _Optional[_Iterable[str]] = ..., proto_base_path: _Optional[str] = ..., proto_compiled_path: _Optional[str] = ...) -> None: ...
 
 class SylkCliConfigs(_message.Message):
-    __slots__ = ["sylk_templates", "port", "token", "analytics", "first_run", "host", "plugins"]
+    __slots__ = ["sylk_templates", "port", "token", "analytics", "first_run", "host", "plugins", "proto_base_path", "proto_compiled_path", "template"]
     SYLK_TEMPLATES_FIELD_NUMBER: _ClassVar[int]
     PORT_FIELD_NUMBER: _ClassVar[int]
     TOKEN_FIELD_NUMBER: _ClassVar[int]
@@ -52,6 +52,9 @@ class SylkCliConfigs(_message.Message):
     FIRST_RUN_FIELD_NUMBER: _ClassVar[int]
     HOST_FIELD_NUMBER: _ClassVar[int]
     PLUGINS_FIELD_NUMBER: _ClassVar[int]
+    PROTO_BASE_PATH_FIELD_NUMBER: _ClassVar[int]
+    PROTO_COMPILED_PATH_FIELD_NUMBER: _ClassVar[int]
+    TEMPLATE_FIELD_NUMBER: _ClassVar[int]
     sylk_templates: _containers.RepeatedScalarFieldContainer[str]
     port: int
     token: str
@@ -59,4 +62,7 @@ class SylkCliConfigs(_message.Message):
     first_run: bool
     host: str
     plugins: _containers.RepeatedScalarFieldContainer[str]
-    def __init__(self, sylk_templates: _Optional[_Iterable[str]] = ..., port: _Optional[int] = ..., token: _Optional[str] = ..., analytics: bool = ..., first_run: bool = ..., host: _Optional[str] = ..., plugins: _Optional[_Iterable[str]] = ...) -> None: ...
+    proto_base_path: str
+    proto_compiled_path: str
+    template: SylkTemplateConfigs
+    def __init__(self, sylk_templates: _Optional[_Iterable[str]] = ..., port: _Optional[int] = ..., token: _Optional[str] = ..., analytics: bool = ..., first_run: bool = ..., host: _Optional[str] = ..., plugins: _Optional[_Iterable[str]] = ..., proto_base_path: _Optional[str] = ..., proto_compiled_path: _Optional[str] = ..., template: _Optional[_Union[SylkTemplateConfigs, _Mapping]] = ...) -> None: ...

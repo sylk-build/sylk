@@ -14,7 +14,7 @@ _sym_db = _symbol_database.Default()
 from sylk.commons.protos.sylk.SylkApi.v1 import SylkApi_pb2 as sylk_dot_SylkApi_dot_v1_dot_SylkApi__pb2
 
 
-DESCRIPTOR = _descriptor_pool.Default().AddSerializedFile(b'\n\x19sylk/Users/v1/Users.proto\x1a\x1dsylk/SylkApi/v1/SylkApi.proto2\xa7\x05\n\x05Users\x12U\n\nCreateUser\x12\".sylk.SylkApi.v1.CreateUserRequest\x1a#.sylk.SylkApi.v1.CreateUserResponse\x12\x61\n\x0eGetAccessToken\x12&.sylk.SylkApi.v1.GetAccessTokenRequest\x1a\'.sylk.SylkApi.v1.GetAccessTokenResponse\x12j\n\x11\x43reateAccessToken\x12).sylk.SylkApi.v1.CreateAccessTokenRequest\x1a*.sylk.SylkApi.v1.CreateAccessTokenResponse\x12L\n\x07GetUser\x12\x1f.sylk.SylkApi.v1.GetUserRequest\x1a .sylk.SylkApi.v1.GetUserResponse\x12g\n\x10ListAccessTokens\x12(.sylk.SylkApi.v1.ListAccessTokensRequest\x1a\'.sylk.SylkApi.v1.GetAccessTokenResponse0\x01\x12j\n\x11RevokeAccessToken\x12).sylk.SylkApi.v1.RevokeAccessTokenRequest\x1a*.sylk.SylkApi.v1.RevokeAccessTokenResponse\x12U\n\nUpdateUser\x12\".sylk.SylkApi.v1.UpdateUserRequest\x1a#.sylk.SylkApi.v1.UpdateUserResponseB?Z=github.com/sylk-build/sylk-core/services/protos/sylk/Users/v1b\x06proto3')
+DESCRIPTOR = _descriptor_pool.Default().AddSerializedFile(b'\n\x19sylk/Users/v1/Users.proto\x12\rsylk.Users.v1\x1a\x1dsylk/SylkApi/v1/SylkApi.proto2\xa7\x05\n\x05Users\x12U\n\nCreateUser\x12\".sylk.SylkApi.v1.CreateUserRequest\x1a#.sylk.SylkApi.v1.CreateUserResponse\x12\x61\n\x0eGetAccessToken\x12&.sylk.SylkApi.v1.GetAccessTokenRequest\x1a\'.sylk.SylkApi.v1.GetAccessTokenResponse\x12j\n\x11\x43reateAccessToken\x12).sylk.SylkApi.v1.CreateAccessTokenRequest\x1a*.sylk.SylkApi.v1.CreateAccessTokenResponse\x12L\n\x07GetUser\x12\x1f.sylk.SylkApi.v1.GetUserRequest\x1a .sylk.SylkApi.v1.GetUserResponse\x12g\n\x10ListAccessTokens\x12(.sylk.SylkApi.v1.ListAccessTokensRequest\x1a\'.sylk.SylkApi.v1.GetAccessTokenResponse0\x01\x12j\n\x11RevokeAccessToken\x12).sylk.SylkApi.v1.RevokeAccessTokenRequest\x1a*.sylk.SylkApi.v1.RevokeAccessTokenResponse\x12U\n\nUpdateUser\x12\".sylk.SylkApi.v1.UpdateUserRequest\x1a#.sylk.SylkApi.v1.UpdateUserResponseb\x06proto3')
 
 _globals = globals()
 _builder.BuildMessageAndEnumDescriptors(DESCRIPTOR, _globals)
@@ -22,7 +22,6 @@ _builder.BuildTopDescriptorsAndMessages(DESCRIPTOR, 'sylk.Users.v1.Users_pb2', _
 if _descriptor._USE_C_DESCRIPTORS == False:
 
   DESCRIPTOR._options = None
-  DESCRIPTOR._serialized_options = b'Z=github.com/sylk-build/sylk-core/services/protos/sylk/Users/v1'
-  _globals['_USERS']._serialized_start=61
-  _globals['_USERS']._serialized_end=740
+  _globals['_USERS']._serialized_start=76
+  _globals['_USERS']._serialized_end=755
 # @@protoc_insertion_point(module_scope)

@@ -1,4 +1,4 @@
-from sylk.types.google.rpc import code_pb2 as _code_pb2
+from google.rpc import code_pb2 as _code_pb2
 from google.protobuf.internal import containers as _containers
 from google.protobuf import descriptor as _descriptor
 from google.protobuf import message as _message
@@ -50,11 +50,11 @@ class MethodConfig(_message.Message):
     MAX_REQUEST_MESSAGE_BYTES_FIELD_NUMBER: _ClassVar[int]
     MAX_RESPONSE_MESSAGE_BYTES_FIELD_NUMBER: _ClassVar[int]
     RETRY_THROTTLING_FIELD_NUMBER: _ClassVar[int]
-    name: MethodConfig.MethodPath
+    name: _containers.RepeatedCompositeFieldContainer[MethodConfig.MethodPath]
     retry_policy: MethodConfig.RetryPolicy
     wait_for_ready: bool
     timeout: str
     max_request_message_bytes: int
     max_response_message_bytes: int
     retry_throttling: MethodConfig.RetryThrottling
-    def __init__(self, name: _Optional[_Union[MethodConfig.MethodPath, _Mapping]] = ..., retry_policy: _Optional[_Union[MethodConfig.RetryPolicy, _Mapping]] = ..., wait_for_ready: bool = ..., timeout: _Optional[str] = ..., max_request_message_bytes: _Optional[int] = ..., max_response_message_bytes: _Optional[int] = ..., retry_throttling: _Optional[_Union[MethodConfig.RetryThrottling, _Mapping]] = ...) -> None: ...
+    def __init__(self, name: _Optional[_Iterable[_Union[MethodConfig.MethodPath, _Mapping]]] = ..., retry_policy: _Optional[_Union[MethodConfig.RetryPolicy, _Mapping]] = ..., wait_for_ready: bool = ..., timeout: _Optional[str] = ..., max_request_message_bytes: _Optional[int] = ..., max_response_message_bytes: _Optional[int] = ..., retry_throttling: _Optional[_Union[MethodConfig.RetryThrottling, _Mapping]] = ...) -> None: ...

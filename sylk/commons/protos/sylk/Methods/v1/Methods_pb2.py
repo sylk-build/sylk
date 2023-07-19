@@ -14,7 +14,7 @@ _sym_db = _symbol_database.Default()
 from sylk.commons.protos.sylk.SylkApi.v1 import SylkApi_pb2 as sylk_dot_SylkApi_dot_v1_dot_SylkApi__pb2
 
 
-DESCRIPTOR = _descriptor_pool.Default().AddSerializedFile(b'\n\x1dsylk/Methods/v1/Methods.proto\x1a\x1dsylk/SylkApi/v1/SylkApi.proto2\xf4\x02\n\x07Methods\x12[\n\x0c\x43reateMethod\x12$.sylk.SylkApi.v1.CreateMethodRequest\x1a%.sylk.SylkApi.v1.CreateMethodResponse\x12R\n\tGetMethod\x12!.sylk.SylkApi.v1.GetMethodRequest\x1a\".sylk.SylkApi.v1.GetMethodResponse\x12[\n\x0c\x44\x65leteMethod\x12$.sylk.SylkApi.v1.DeleteMethodRequest\x1a%.sylk.SylkApi.v1.DeleteMethodResponse\x12[\n\x0cUpdateMethod\x12$.sylk.SylkApi.v1.UpdateMethodRequest\x1a%.sylk.SylkApi.v1.UpdateMethodResponseBAZ?github.com/sylk-build/sylk-core/services/protos/sylk/Methods/v1b\x06proto3')
+DESCRIPTOR = _descriptor_pool.Default().AddSerializedFile(b'\n\x1dsylk/Methods/v1/Methods.proto\x12\x0fsylk.Methods.v1\x1a\x1dsylk/SylkApi/v1/SylkApi.proto2\xf4\x02\n\x07Methods\x12[\n\x0c\x43reateMethod\x12$.sylk.SylkApi.v1.CreateMethodRequest\x1a%.sylk.SylkApi.v1.CreateMethodResponse\x12R\n\tGetMethod\x12!.sylk.SylkApi.v1.GetMethodRequest\x1a\".sylk.SylkApi.v1.GetMethodResponse\x12[\n\x0c\x44\x65leteMethod\x12$.sylk.SylkApi.v1.DeleteMethodRequest\x1a%.sylk.SylkApi.v1.DeleteMethodResponse\x12[\n\x0cUpdateMethod\x12$.sylk.SylkApi.v1.UpdateMethodRequest\x1a%.sylk.SylkApi.v1.UpdateMethodResponseb\x06proto3')
 
 _globals = globals()
 _builder.BuildMessageAndEnumDescriptors(DESCRIPTOR, _globals)
@@ -22,7 +22,6 @@ _builder.BuildTopDescriptorsAndMessages(DESCRIPTOR, 'sylk.Methods.v1.Methods_pb2
 if _descriptor._USE_C_DESCRIPTORS == False:
 
   DESCRIPTOR._options = None
-  DESCRIPTOR._serialized_options = b'Z?github.com/sylk-build/sylk-core/services/protos/sylk/Methods/v1'
-  _globals['_METHODS']._serialized_start=65
-  _globals['_METHODS']._serialized_end=437
+  _globals['_METHODS']._serialized_start=82
+  _globals['_METHODS']._serialized_end=454
 # @@protoc_insertion_point(module_scope)

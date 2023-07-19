@@ -15,22 +15,22 @@ class EnumValuesStub(object):
             channel: A grpc.Channel.
         """
         self.GetEnumValue = channel.unary_unary(
-                '/EnumValues/GetEnumValue',
+                '/sylk.EnumValues.v1.EnumValues/GetEnumValue',
                 request_serializer=sylk_dot_SylkApi_dot_v1_dot_SylkApi__pb2.GetEnumValueRequest.SerializeToString,
                 response_deserializer=sylk_dot_SylkApi_dot_v1_dot_SylkApi__pb2.GetEnumValueResponse.FromString,
                 )
         self.CreateEnumValue = channel.unary_unary(
-                '/EnumValues/CreateEnumValue',
+                '/sylk.EnumValues.v1.EnumValues/CreateEnumValue',
                 request_serializer=sylk_dot_SylkApi_dot_v1_dot_SylkApi__pb2.CreateEnumValueRequest.SerializeToString,
                 response_deserializer=sylk_dot_SylkApi_dot_v1_dot_SylkApi__pb2.CreateEnumValueResponse.FromString,
                 )
         self.DeleteEnumValue = channel.unary_unary(
-                '/EnumValues/DeleteEnumValue',
+                '/sylk.EnumValues.v1.EnumValues/DeleteEnumValue',
                 request_serializer=sylk_dot_SylkApi_dot_v1_dot_SylkApi__pb2.DeleteEnumValueRequest.SerializeToString,
                 response_deserializer=sylk_dot_SylkApi_dot_v1_dot_SylkApi__pb2.DeleteEnumValueResponse.FromString,
                 )
         self.UpdateEnumValue = channel.unary_unary(
-                '/EnumValues/UpdateEnumValue',
+                '/sylk.EnumValues.v1.EnumValues/UpdateEnumValue',
                 request_serializer=sylk_dot_SylkApi_dot_v1_dot_SylkApi__pb2.UpdateEnumValueRequest.SerializeToString,
                 response_deserializer=sylk_dot_SylkApi_dot_v1_dot_SylkApi__pb2.UpdateEnumValueResponse.FromString,
                 )
@@ -92,7 +92,7 @@ def add_EnumValuesServicer_to_server(servicer, server):
             ),
     }
     generic_handler = grpc.method_handlers_generic_handler(
-            'EnumValues', rpc_method_handlers)
+            'sylk.EnumValues.v1.EnumValues', rpc_method_handlers)
     server.add_generic_rpc_handlers((generic_handler,))
 
 
@@ -111,7 +111,7 @@ class EnumValues(object):
             wait_for_ready=None,
             timeout=None,
             metadata=None):
-        return grpc.experimental.unary_unary(request, target, '/EnumValues/GetEnumValue',
+        return grpc.experimental.unary_unary(request, target, '/sylk.EnumValues.v1.EnumValues/GetEnumValue',
             sylk_dot_SylkApi_dot_v1_dot_SylkApi__pb2.GetEnumValueRequest.SerializeToString,
             sylk_dot_SylkApi_dot_v1_dot_SylkApi__pb2.GetEnumValueResponse.FromString,
             options, channel_credentials,
@@ -128,7 +128,7 @@ class EnumValues(object):
             wait_for_ready=None,
             timeout=None,
             metadata=None):
-        return grpc.experimental.unary_unary(request, target, '/EnumValues/CreateEnumValue',
+        return grpc.experimental.unary_unary(request, target, '/sylk.EnumValues.v1.EnumValues/CreateEnumValue',
             sylk_dot_SylkApi_dot_v1_dot_SylkApi__pb2.CreateEnumValueRequest.SerializeToString,
             sylk_dot_SylkApi_dot_v1_dot_SylkApi__pb2.CreateEnumValueResponse.FromString,
             options, channel_credentials,
@@ -145,7 +145,7 @@ class EnumValues(object):
             wait_for_ready=None,
             timeout=None,
             metadata=None):
-        return grpc.experimental.unary_unary(request, target, '/EnumValues/DeleteEnumValue',
+        return grpc.experimental.unary_unary(request, target, '/sylk.EnumValues.v1.EnumValues/DeleteEnumValue',
             sylk_dot_SylkApi_dot_v1_dot_SylkApi__pb2.DeleteEnumValueRequest.SerializeToString,
             sylk_dot_SylkApi_dot_v1_dot_SylkApi__pb2.DeleteEnumValueResponse.FromString,
             options, channel_credentials,
@@ -162,7 +162,7 @@ class EnumValues(object):
             wait_for_ready=None,
             timeout=None,
             metadata=None):
-        return grpc.experimental.unary_unary(request, target, '/EnumValues/UpdateEnumValue',
+        return grpc.experimental.unary_unary(request, target, '/sylk.EnumValues.v1.EnumValues/UpdateEnumValue',
             sylk_dot_SylkApi_dot_v1_dot_SylkApi__pb2.UpdateEnumValueRequest.SerializeToString,
             sylk_dot_SylkApi_dot_v1_dot_SylkApi__pb2.UpdateEnumValueResponse.FromString,
             options, channel_credentials,

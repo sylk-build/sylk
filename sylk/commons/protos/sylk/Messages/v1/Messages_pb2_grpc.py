@@ -15,22 +15,22 @@ class MessagesStub(object):
             channel: A grpc.Channel.
         """
         self.GetMessage = channel.unary_unary(
-                '/Messages/GetMessage',
+                '/sylk.Messages.v1.Messages/GetMessage',
                 request_serializer=sylk_dot_SylkApi_dot_v1_dot_SylkApi__pb2.GetMessageRequest.SerializeToString,
                 response_deserializer=sylk_dot_SylkApi_dot_v1_dot_SylkApi__pb2.GetMessageResponse.FromString,
                 )
         self.UpdateMessage = channel.unary_unary(
-                '/Messages/UpdateMessage',
+                '/sylk.Messages.v1.Messages/UpdateMessage',
                 request_serializer=sylk_dot_SylkApi_dot_v1_dot_SylkApi__pb2.UpdateMessageRequest.SerializeToString,
                 response_deserializer=sylk_dot_SylkApi_dot_v1_dot_SylkApi__pb2.UpdateMessageResponse.FromString,
                 )
         self.CreateMessage = channel.unary_unary(
-                '/Messages/CreateMessage',
+                '/sylk.Messages.v1.Messages/CreateMessage',
                 request_serializer=sylk_dot_SylkApi_dot_v1_dot_SylkApi__pb2.CreateMessageRequest.SerializeToString,
                 response_deserializer=sylk_dot_SylkApi_dot_v1_dot_SylkApi__pb2.CreateMessageResponse.FromString,
                 )
         self.DeleteMessage = channel.unary_unary(
-                '/Messages/DeleteMessage',
+                '/sylk.Messages.v1.Messages/DeleteMessage',
                 request_serializer=sylk_dot_SylkApi_dot_v1_dot_SylkApi__pb2.DeleteMessageRequest.SerializeToString,
                 response_deserializer=sylk_dot_SylkApi_dot_v1_dot_SylkApi__pb2.DeleteMessageResponse.FromString,
                 )
@@ -92,7 +92,7 @@ def add_MessagesServicer_to_server(servicer, server):
             ),
     }
     generic_handler = grpc.method_handlers_generic_handler(
-            'Messages', rpc_method_handlers)
+            'sylk.Messages.v1.Messages', rpc_method_handlers)
     server.add_generic_rpc_handlers((generic_handler,))
 
 
@@ -111,7 +111,7 @@ class Messages(object):
             wait_for_ready=None,
             timeout=None,
             metadata=None):
-        return grpc.experimental.unary_unary(request, target, '/Messages/GetMessage',
+        return grpc.experimental.unary_unary(request, target, '/sylk.Messages.v1.Messages/GetMessage',
             sylk_dot_SylkApi_dot_v1_dot_SylkApi__pb2.GetMessageRequest.SerializeToString,
             sylk_dot_SylkApi_dot_v1_dot_SylkApi__pb2.GetMessageResponse.FromString,
             options, channel_credentials,
@@ -128,7 +128,7 @@ class Messages(object):
             wait_for_ready=None,
             timeout=None,
             metadata=None):
-        return grpc.experimental.unary_unary(request, target, '/Messages/UpdateMessage',
+        return grpc.experimental.unary_unary(request, target, '/sylk.Messages.v1.Messages/UpdateMessage',
             sylk_dot_SylkApi_dot_v1_dot_SylkApi__pb2.UpdateMessageRequest.SerializeToString,
             sylk_dot_SylkApi_dot_v1_dot_SylkApi__pb2.UpdateMessageResponse.FromString,
             options, channel_credentials,
@@ -145,7 +145,7 @@ class Messages(object):
             wait_for_ready=None,
             timeout=None,
             metadata=None):
-        return grpc.experimental.unary_unary(request, target, '/Messages/CreateMessage',
+        return grpc.experimental.unary_unary(request, target, '/sylk.Messages.v1.Messages/CreateMessage',
             sylk_dot_SylkApi_dot_v1_dot_SylkApi__pb2.CreateMessageRequest.SerializeToString,
             sylk_dot_SylkApi_dot_v1_dot_SylkApi__pb2.CreateMessageResponse.FromString,
             options, channel_credentials,
@@ -162,7 +162,7 @@ class Messages(object):
             wait_for_ready=None,
             timeout=None,
             metadata=None):
-        return grpc.experimental.unary_unary(request, target, '/Messages/DeleteMessage',
+        return grpc.experimental.unary_unary(request, target, '/sylk.Messages.v1.Messages/DeleteMessage',
             sylk_dot_SylkApi_dot_v1_dot_SylkApi__pb2.DeleteMessageRequest.SerializeToString,
             sylk_dot_SylkApi_dot_v1_dot_SylkApi__pb2.DeleteMessageResponse.FromString,
             options, channel_credentials,

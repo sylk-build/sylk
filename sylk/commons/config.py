@@ -52,6 +52,7 @@ class SylkProjectConfig:
         self.monitor = kwargs.get('monitor')
         self.proxy = kwargs.get('proxy')
         self.docs = kwargs.get('docs')
+        self.format = kwargs.get('format','json')
 
     def config(self):
         temp_dict = {}
@@ -71,6 +72,8 @@ class SylkProjectConfig:
             temp_dict['proxy'] = self.proxy
         if self.docs:
             temp_dict['docs'] = self.docs
+        if self.format:
+            temp_dict['format'] = self.format
 
         return temp_dict
 
@@ -201,13 +204,14 @@ def parse_config_file_dict(root_path):
                 # Custom plugins
                 custom_plugins = prj_conf_module.custom_plugins  if hasattr(prj_conf_module,'custom_plugins') else None,
                 # Templating options
-                template = prj_conf_module.template  if hasattr(prj_conf_module,'template') else None,
+                template = prj_conf_module.template if hasattr(prj_conf_module,'template') else None,
                 deployment = temp_configs.deployment,
                 monitor = MessageToDict(temp_configs.monitor),
                 proxy =  MessageToDict(temp_configs.proxy),
                 host = temp_configs.host,
                 plugins = temp_configs.plugins,
-                docs = temp_configs.docs
+                docs = temp_configs.docs,
+                format = temp_configs.format
 
             )
         else:

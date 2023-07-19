@@ -19,7 +19,7 @@
 # OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION
 # WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 
-gitignore_py = '# Byte-compiled / optimized / DLL files\n\
+gitignore_py = "# Byte-compiled / optimized / DLL files\n\
 __pycache__/\n\
 *.py[cod]\n\
 *$py.class\n\n\
@@ -93,9 +93,9 @@ env/\n\
 venv/\n\
 ENV/\n\
 env.bak/\n\
-venv.bak/\n'
+venv.bak/\n"
 
-gitignore_go = '# If you prefer the allow list template instead of the deny list, see community template:\n\
+gitignore_go = "# If you prefer the allow list template instead of the deny list, see community template:\n\
 # https://github.com/github/gitignore/blob/main/community/Golang/Go.AllowList.gitignore\n\
 #\n\
 # Binaries for programs and plugins\n\
@@ -111,9 +111,9 @@ gitignore_go = '# If you prefer the allow list template instead of the deny list
 # Dependency directories (remove the comment below to include it)\n\n\
 # vendor/\n\n\
 # Go workspace file\n\
-go.work'
+go.work"
 
-gitignore_js = '# Logs\n\
+gitignore_js = "# Logs\n\
 logs\n\
 *.log\n\
 npm-debug.log*\n\
@@ -167,9 +167,9 @@ web_modules/\n\n\
 .yarn/unplugged\n\
 .yarn/build-state.yml\n\
 .yarn/install-state.gz\n\
-.pnp.*\n'
+.pnp.*\n"
 
-gitignore_ts = 'lib-cov\n\
+gitignore_ts = "lib-cov\n\
 *.seed\n\
 *.log\n\
 *.csv\n\
@@ -201,9 +201,10 @@ Thumbs.db\n\n\
 dist/**/*\n\
 # ignore yarn.lock\n\
 yarn.lock\n\n\
-.sylk\n'
-_OPEN_BRCK='{'
-_CLOSING_BRCK = '}'
+.sylk\n"
+_OPEN_BRCK = "{"
+_CLOSING_BRCK = "}"
+
 
 def bash_init_script_go(project_package, services, packages):
     services_protoc = []
@@ -224,7 +225,14 @@ go mod tidy\n\
 go test\n\
 statuscode=$?\n\
 echo "Exit code for go.mod tidy and test -> "$statuscode\n\
-[[ "$statuscode" != "0" ]] && {3} echo "Some error occured during init script for Go"; echo "Running init for : {0}"; go mod init {0}; {4}\n'.format(project_package,'\n'.join(services_protoc),'\n'.join(packages_protoc),_OPEN_BRCK,_CLOSING_BRCK)
+[[ "$statuscode" != "0" ]] && {3} echo "Some error occured during init script for Go"; echo "Running init for : {0}"; go mod init {0}; {4}\n'.format(
+        project_package,
+        "\n".join(services_protoc),
+        "\n".join(packages_protoc),
+        _OPEN_BRCK,
+        _CLOSING_BRCK,
+    )
+
 
 bash_init_script_ts = '#!/bin/bash\n\n\
 echo "[sylk.build] init.sh starting protoc compiler"\n\
@@ -250,13 +258,20 @@ for SERVICE in "${0}services[@]{1}"; do\n\
         echo "[sylk-script] Compiling -> "$filename\n\
         sudo protoc -I=../protos $filename  --js_out=import_style=commonjs,binary:../clients/webpack   --grpc-web_out=import_style=typescript,mode=grpcwebtext:../clients/webpack\n\
     done\n\
-done'.format(_OPEN_BRCK,_CLOSING_BRCK)
+done'.format(
+    _OPEN_BRCK, _CLOSING_BRCK
+)
 
 bash_run_server_script_ts = '#!/bin/bash\n\n\
 if [[ $1 == "debug" ]]\n\
 then\n\
 \techo "Debug mode: $1"\n\
 \tGRPC_VERBOSITY=DEBUG GRPC_TRACE=all node ./server/server.js\n\
+elif [[ $1 == "info" ]]\n\
+then\n\
+\techo "Info Mode: $1"\n\
+\tGRPC_VERBOSITY=INFO GRPC_TRACE=all node ./server/server.js\n\
+else\n\
 else\n\
 \tnode ./server/server.js\n\
 fi'
@@ -294,8 +309,9 @@ const protoConfig = [\n\
 execSync(`${PROTOC_PATH} ${protoConfig.join(" ")}`);\n\
 console.log(`> Proto models created: ${MODEL_DIR}`);'
 
+
 def interceptors_js(version):
-    return f'const unpack = (...args) => ({_OPEN_BRCK}\n\
+    return f"const unpack = (...args) => ({_OPEN_BRCK}\n\
 	request: args[1], // Outgoing client call.request object\n\
 	metadata: args[2], // Outgoing client call.metadata object\n\
 	cb: args[3], // Client passed CallBack function\n\
@@ -314,8 +330,8 @@ function _preMethodCallDecorator(fn) {_OPEN_BRCK}\n\
 	  // For example, you could log the method name and arguments\n\
 	  const req = args[1];\n\
 	  const md = args[2];\n\
-	  if(md.get(\'sylk-version\').length === 0) {_OPEN_BRCK}\n\
-		  md.add(\'sylk-version\',\'{version}\')\n\
+	  if(md.get('sylk-version').length === 0) {_OPEN_BRCK}\n\
+		  md.add('sylk-version','{version}')\n\
 	  {_CLOSING_BRCK}\n\
 	  // Call the method\n\
 	  return fn.apply(this, args);\n\
@@ -344,7 +360,7 @@ function _retry(next) {_OPEN_BRCK}\n\
 					return originalCB ? originalCB(err,null) : err\n\
 				{_CLOSING_BRCK} else {_OPEN_BRCK}\n\
                     retryAttempt += 1;\n\
-                    const sylkMaxRetries = \'x-sylk-retries\';\n\
+                    const sylkMaxRetries = 'x-sylk-retries';\n\
                     let maxRetriesCount = metadata.get(sylkMaxRetries)\n\
                     maxRetriesCount.length>0 ? metadata.set(sylkMaxRetries,Number(maxRetriesCount[0])+1) : metadata.add(sylkMaxRetries,retryAttempt)\n\n\
                     if(retryAttempt >= maxRetries) {_OPEN_BRCK}\n\
@@ -367,7 +383,8 @@ function _retry(next) {_OPEN_BRCK}\n\
 module.exports = {_OPEN_BRCK}\n\
 	clientMethodWrapper : _preMethodCallDecorator,\n\
     clientRetries : _retry\n\
-{_CLOSING_BRCK}'
+{_CLOSING_BRCK}"
+
 
 def js_package_json(prj_name):
     return '{\n\
@@ -384,9 +401,12 @@ def js_package_json(prj_name):
 \t"dependencies": {\n\
 \t"@grpc/grpc-js": "^1.8.14"\n\
 \t}\n\
-}'.replace("REPLACEME",prj_name)
+}'.replace(
+        "REPLACEME", prj_name
+    )
 
-package_json ='{\n\
+
+package_json = '{\n\
     "name": "REPLACEME",\n\
     "version": "1.0.0",\n\
     "description": "This project has been generated thanks to ```sylk.io``` CLI. For start using it please run  ```sylk run --build```  and see the magic in action. For more information please visit https://docs.sylk.build",\n\
@@ -454,12 +474,12 @@ package_json_webpack = '{\n\
   }\n\
 }'
 
-utils_errors_ts = 'import { Metadata, ServiceError as grpcServiceError, status } from \'@grpc/grpc-js\';\n\n\
+utils_errors_ts = "import { Metadata, ServiceError as grpcServiceError, status } from '@grpc/grpc-js';\n\n\
 /**\n\
  * https://grpc.io/grpc/node/grpc.html#~ServiceError__anchor\n\
  */\n\
 export class ServiceError extends Error implements Partial<grpcServiceError> {\n\
-	public override name: string = \'ServiceError\';\n\n\
+	public override name: string = 'ServiceError';\n\n\
 	constructor(\n\
 		public code: status,\n\
 		public override message: string,\n\
@@ -468,15 +488,15 @@ export class ServiceError extends Error implements Partial<grpcServiceError> {\n
 	) {\n\
 		super(message);\n\
 	}\n\
-}'
+}"
 
-utils_interfaces = '// Insert here more interfaces to service will be able to speak with\n\
+utils_interfaces = "// Insert here more interfaces to service will be able to speak with\n\
 interface Api<T> {\n\
 	[method: string]: T;\n\
 }\n\n\
 export type ApiType<T> = Api<T> & {\n\
 \n\
-}'
+}"
 
 main_ts_config = '{\n\
     "compilerOptions": {\n\
@@ -534,6 +554,7 @@ clients_ts_configs = '{\n\
         "node_modules"\n\
     ]\n\
 }'
+
 
 def protos_ts_config(domain):
     return f'{_OPEN_BRCK}\n\
@@ -593,6 +614,7 @@ main_ts_config_client_only = '{\n\
     ]\n\
 }'
 
+
 def protos_ts_config_client_only(domain):
     return f'{_OPEN_BRCK}\n\
     "extends": "../../tsconfig.json",\n\
@@ -609,16 +631,22 @@ def protos_ts_config_client_only(domain):
     ]\n\
 {_CLOSING_BRCK}'
 
+
 bash_run_server_script_go = '#!/bin/bash\n\n\
 if [[ $1 == "debug" ]]\n\
 then\n\
 \techo "Debug mode: $1"\n\
-\tGRPC_VERBOSITY=DEBUG GRPC_TRACE=all ngo run ./server/server.go\n\
+\tGRPC_VERBOSITY=DEBUG GRPC_TRACE=all go run ./server/server.go\n\
+elif [[ $1 == "info" ]]\n\
+then\n\
+\techo "Info Mode: $1"\n\
+\tGRPC_VERBOSITY=INFO GRPC_TRACE=all go run ./server/server.go\n\
+else\n\
 else\n\
 go run ./server/server.go\n\
 fi'
 
-logger_js = ''
+logger_js = ""
 
 utils_go = 'package utils\n\n\
 import (\n\

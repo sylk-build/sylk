@@ -31,19 +31,37 @@ from sylk.commons.protos.sylk.SylkServer.v1 import SylkServer_pb2
 from sylk.commons.protos.sylk.SylkProject.v1 import SylkProject_pb2
 
 from google.protobuf.json_format import MessageToDict
-from sylk.commons.resources import generate_enum, generate_message, generate_package, generate_project,\
-                                     generate_rpc, generate_service
+from sylk.commons.resources import (
+    generate_enum,
+    generate_message,
+    generate_package,
+    generate_project,
+    generate_rpc,
+    generate_service,
+)
 
 from sylk.architect.recievers import Builder
-from sylk.architect.commands import AddResource, EditResource, InitProject,\
-                                    Logger,RemoveResource, SetDomain
+from sylk.architect.commands import (
+    AddResource,
+    EditResource,
+    InitProject,
+    Logger,
+    RemoveResource,
+    SetDomain,
+)
 from sylk.architect.invoker import Sylk
 
 logging.basicConfig(
-    level='INFO',
-    format='%(asctime)s - [%(filename)10s] - %(funcName)10s() - %(name)s - %(levelname)s - %(message)s',
-    datefmt='%Y%m%d-%H:%M%p',
+    level="INFO",
+    format="%(asctime)s - [%(filename)10s] - %(funcName)10s() - %(name)s - %(levelname)s - %(message)s",
+    datefmt="%Y%m%d-%H:%M%p",
 )
+
+def replace_object_element(array, target_object, new_object):
+    for i, element in enumerate(array):
+        if element == target_object:  # Using the '==' operator for object comparison
+            array[i] = new_object
+            break
 
 class CommandMap(Enum):
     _REMOVE_RESOURCE = "RemoveResource"
@@ -52,144 +70,368 @@ class CommandMap(Enum):
     _SET_DOMAIN = "SetDomain"
     _SET_CONFIG = "SetConfig"
 
-
-class SylkArchitect():
-
-    def __init__(self,path,domain='domain',project_name='project',save=None) -> None:
+class SylkArchitect:
+    def __init__(
+        self, path, domain="domain", project_name="project", save=None, base_protos="protos"
+    ) -> None:
         logging.debug("Starting sylk build architect process")
-        if 'sylk.json' not in path:
-            raise SylkProtoError('sylk.json file path is not valid','Make sure you pass in your architect class the right path to your sylk.json file')
+        if "sylk.json" not in path:
+            raise SylkProtoError(
+                "sylk.json file path is not valid",
+                "Make sure you pass in your architect class the right path to your sylk.json file",
+            )
         self._path = path
         self._org_id = None
         self._project = None
         self._domain = domain
         self._project_name = project_name
+        self._base_protos = base_protos
         self._builder = Builder()
         self._remove_resource = RemoveResource(self._builder)
         self._edit_resource = EditResource(self._builder)
         self._add_resource = AddResource(self._builder)
         self._logger = Logger(self._builder)
         self._set_domain = SetDomain(self._builder)
-        self._sylk = Sylk(self._path,save)
-        self._sylk.registerCommand(CommandMap._REMOVE_RESOURCE,self._remove_resource)
-        self._sylk.registerCommand(CommandMap._EDIT_RESOURCE,self._edit_resource)
-        self._sylk.registerCommand(CommandMap._ADD_RESOURCE,self._add_resource)
-        self._sylk.registerHook(CommandMap._ADD_RESOURCE,'log',self._logger)
+        self._sylk = Sylk(self._path, save)
+        self._sylk.registerCommand(CommandMap._REMOVE_RESOURCE, self._remove_resource)
+        self._sylk.registerCommand(CommandMap._EDIT_RESOURCE, self._edit_resource)
+        self._sylk.registerCommand(CommandMap._ADD_RESOURCE, self._add_resource)
+        self._sylk.registerHook(CommandMap._ADD_RESOURCE, "log", self._logger)
 
-    def SetDomain(self,domain):
+    def SetDomain(self, domain):
         self._domain = domain
-        self._sylk.execute(CommandMap._ADD_RESOURCE, {'organization': { 'domain' : domain }})
-    
-    def SetOrgId(self,orgId):
+        self._sylk.execute(
+            CommandMap._ADD_RESOURCE, {"organization": {"domain": domain}}, []
+        )
+
+    def SetOrgId(self, orgId):
         self._org_id = orgId
-        self._sylk.execute(CommandMap._ADD_RESOURCE, {'organization': { 'orgId' : orgId }})
-    
-    def SetConfig(self,config):
-        self._sylk.execute(CommandMap._ADD_RESOURCE, { 'configs' : config })
+        self._sylk.execute(CommandMap._ADD_RESOURCE, {"organization": {"orgId": orgId}}, [])
+
+    def SetConfig(self, config):
+        self._sylk.execute(CommandMap._ADD_RESOURCE, {"configs": config}, [])
 
     def SetSylkVersion(self):
-        self._sylk.execute(CommandMap._ADD_RESOURCE, { 'sylkVersion' : __version__.__version__ })
+        self._sylk.execute(
+            CommandMap._ADD_RESOURCE, {"sylkVersion": __version__.__version__}, []
+        )
 
-    def AddProject(self,name=None,server_language=SylkServer_pb2.SylkServerLanguages.Name(SylkServer_pb2.python),clients=[]) -> SylkProject_pb2.SylkProject:
+    def AddProject(
+        self,
+        name=None,
+        server_language=SylkServer_pb2.SylkServerLanguages.Name(SylkServer_pb2.python),
+        clients=[],
+    ) -> SylkProject_pb2.SylkProject:
         name = name if name is not None else self._project_name
-        dict = generate_project(self._path,name,server_language,clients,json=True)
-        project = generate_project(self._path,name,server_language,clients)
-        self._sylk.execute(CommandMap._ADD_RESOURCE,{'project':dict})
+        dict = generate_project(self._path, name, server_language, clients, json=True)
+        project = generate_project(self._path, name, server_language, clients)
+        self._sylk.execute(CommandMap._ADD_RESOURCE, {"project": dict}, [])
         self._project = project
         return project
-    
+
     def AddClient(self):
         pass
 
-    def AddService(self,name,dependencies,description,methods,extensions=None,version:str='v1'):
-        dict = generate_service(self._path,self._domain,name,self._sylk.sylkJson.get('project')['server']['language'],dependencies=dependencies,description=description,extensions=extensions,json=True,methods=methods,sylk_json=self._sylk.sylkJson) 
-        service = generate_service(self._path,self._domain,name,self._sylk.sylkJson.get('project')['server']['language'],dependencies=dependencies,description=description,extensions=extensions,methods=methods,sylk_json=self._sylk.sylkJson)
-        services = self._sylk.sylkJson.get('services') if self._sylk.sylkJson.get('services') is not None else {} 
-        services[f'protos/{self._domain}/{name}/{version}/{name}.proto'] = dict
-        self._sylk.execute(CommandMap._ADD_RESOURCE,{'services': services })
+    def AddService(
+        self,
+        name,
+        dependencies,
+        description,
+        methods,
+        package,
+        extensions=None,
+        tag=None,
+        order_pkg=[]
+    ):
+
+        path_with_domain = package.package + '.' + name
+        service = generate_service(
+            self._path,
+            path_with_domain,
+            self._sylk.sylkJson.get("project")["server"]["language"],
+            dependencies=dependencies,
+            description=description,
+            extensions=extensions,
+            methods=methods,
+            sylk_json=self._sylk.sylkJson,
+            tag=tag
+        )
+        if next((s for s in package.services if s.name == service.name), None) is None:
+            package.services.append(service)
+            self._sylk.execute(
+                CommandMap._ADD_RESOURCE,
+                {
+                    "packages": {
+                        f"{package.package.replace('.','/')}": MessageToDict(
+                            package
+                        )
+                    }
+                },
+                order_pkg
+            )
+            return service
+        else:
+            logging.error(
+                f"Cannot create service '{service.name}' already exists under '{package.name}' package"
+            )
         return service
 
-    def AddRPC(self,service,name,*args):
-        service_name = service.name
-        service_ver = service.full_name.split('.')[2]
-        service_path = f'protos/{self._domain}/{service_name}/{service_ver}/{service_name}.proto'
+    def AddRPC(self, package, service, name, *args):
+        # service_name = service.name
+        # service_ver = service.full_name.split(".")[2]
+        package_path = (
+            f"{package.package.replace('.','/')}"
+        )
         _IN = args[0][0]
         _OUT = args[0][1]
-        RPC = generate_rpc(self._path,name,_IN[0],_OUT[0],_IN[1],_OUT[1],args[1])
+        RPC = generate_rpc(self._path, name, _IN[0], _OUT[0], _IN[1], _OUT[1], args[1])
         service.methods.append(RPC)
         
-        in_package = '.'.join(_IN[1].split('.')[:-1])
-        out_package = '.'.join(_OUT[1].split('.')[:-1])
+        for i, svc in enumerate(package.services):
+            if svc.name == service.name:
+                package.services[i].methods.append(RPC)
+                break
+        
+        self._sylk.execute(
+            CommandMap._ADD_RESOURCE,
+            {"packages": {package_path: MessageToDict(package)}},
+        )
 
-        if in_package not in service.dependencies:
-            service.dependencies.append(in_package)
-        if out_package not in service.dependencies:
-            service.dependencies.append(out_package)
-        self._sylk.execute(CommandMap._ADD_RESOURCE,{'services': { service_path : MessageToDict(service) } })
-
-    def AddPackage(self,name,dependencies=[],messages=[],description=None,domain=None,extensions=None,version:str='v1'):
-        dict = generate_package(self._path,self._domain if domain is None else domain,name,dependencies=dependencies,messages=messages,description=description,extensions=extensions,json=True,sylk_json=self._sylk.sylkJson)
-        package = generate_package(self._path,self._domain if domain is None else domain,name,dependencies=dependencies,messages=messages,description=description,extensions=extensions,sylk_json=self._sylk.sylkJson)
-        self._sylk.execute(CommandMap._ADD_RESOURCE,{'packages': { f'protos/{self._domain}/{name}/{version}/{name}.proto' : dict } })
+    def AddPackage(
+        self,
+        name,
+        dependencies=[],
+        messages=[],
+        description=None,
+        extensions=None,
+        version_component=None,
+        order_pkg=[]
+    ):
+        path_with_domain = self._domain + '.' + name
+        dict = generate_package(
+            self._path,
+            path_with_domain,
+            dependencies=dependencies,
+            messages=messages,
+            description=description,
+            extensions=extensions,
+            json=True,
+            sylk_json=self._sylk.sylkJson,
+            version=version_component
+        )
+        package = generate_package(
+            self._path,
+            path_with_domain,
+            dependencies=dependencies,
+            messages=messages,
+            description=description,
+            extensions=extensions,
+            sylk_json=self._sylk.sylkJson,
+            version=version_component
+        )
+        self._sylk.execute(
+            CommandMap._ADD_RESOURCE,
+            {
+                "packages": {
+                    f"{path_with_domain.replace('.','/')}": dict
+                }
+            },
+            order_pkg
+        )
         return package
 
-    def AddMessage(self,package,name,fields,description=None,options=None,extensions=None,domain=None,version:str='v1'):
-        message = generate_message(self._path,self._domain if domain is None else domain,package,name,fields,option=options,description=description,extensions=extensions,sylk_json=self._sylk.sylkJson)
+    def AddMessage(
+        self,
+        package,
+        name,
+        fields,
+        description=None,
+        options=None,
+        extensions=None,
+        domain=None,
+        tag=None,
+        order_pkg=[]
+    ):
+        path_with_domain = self._domain + '.' + name
+        message = generate_message(
+            self._path,
+            self._domain if domain is None else domain,
+            package,
+            name,
+            fields,
+            option=options,
+            description=description,
+            extensions=extensions,
+            sylk_json=self._sylk.sylkJson,
+            tag=tag,
+        )
         if next((m for m in package.messages if m.name == message.name), None) is None:
             package.messages.append(message)
-            self._sylk.execute(CommandMap._ADD_RESOURCE,{'packages':{f'protos/{self._domain}/{package.name}/{version}/{package.name}.proto': MessageToDict(package)}})
+            self._sylk.execute(
+                CommandMap._ADD_RESOURCE,
+                {
+                    "packages": {
+                        f"{package.package.replace('.','/')}": MessageToDict(
+                            package
+                        )
+                    }
+                },
+                order_pkg
+            )
             return message
         else:
-            logging.error(f"Cannot create message '{message.name}' already exists under '{package.name}' package")
+            logging.error(
+                f"Cannot create message '{message.name}' already exists under '{package.name}' package"
+            )
         return message
+
+    def AddEnum(
+        self,
+        package,
+        name,
+        enum_values,
+        description=None,
+        domain=None,
+        tag=None,
+        order_pkg=[]
+    ):
+        enum = generate_enum(
+            self._path,
+            self._domain if domain is None else domain,
+            package,
+            name,
+            enum_values,
+            description=description,
+            tag=tag
+        )
         
-    def AddEnum(self,package,name,enum_values,description=None,domain=None,version:str='v1'):
-        enum = generate_enum(self._path,self._domain if domain is None else domain,package.name,name,enum_values,description=description)
         package.enums.append(enum)
-        self._sylk.execute(CommandMap._ADD_RESOURCE,{'packages':{f'protos/{self._domain}/{package.name}/{version}/{package.name}.proto': MessageToDict(package)}})
+        self._sylk.execute(
+            CommandMap._ADD_RESOURCE,
+            {
+                "packages": {
+                    f"{package.package.replace('.','/')}": MessageToDict(
+                        package
+                    )
+                }
+            },
+            order_pkg
+        )
         return enum
 
-    def EditService(self,name,dependencies,description,methods,extensions=None):
-        service = generate_service(self._path,self._domain,name,self._sylk.sylkJson.get('project')['server']['language'],dependencies=dependencies,description=description,methods=methods,extensions=extensions,sylk_json=self._sylk.sylkJson)
-        self._sylk.execute(CommandMap._EDIT_RESOURCE,MessageToDict(service))
+    def EditService(
+        self, name, dependencies, description, methods, extensions=None, version="v1"
+    ):
+        service = generate_service(
+            self._path,
+            self._domain,
+            name,
+            self._sylk.sylkJson.get("project")["server"]["language"],
+            dependencies=dependencies,
+            description=description,
+            methods=methods,
+            extensions=extensions,
+            sylk_json=self._sylk.sylkJson,
+            version=version,
+        )
+        self._sylk.execute(CommandMap._EDIT_RESOURCE, MessageToDict(service))
         return service
 
-    def EditPackage(self,name,dependencies=[],messages=[],enums=[],description=None,extensions=None):
-        package = generate_package(self._path,self._domain,name,dependencies=dependencies,messages=messages,description=description,enums=enums,extensions=extensions,sylk_json=self._sylk.sylkJson)
-        self._sylk.execute(CommandMap._EDIT_RESOURCE,MessageToDict(package))
+    def EditPackage(
+        self,
+        name,
+        dependencies=[],
+        messages=[],
+        enums=[],
+        description=None,
+        extensions=None,
+        version="v1",
+    ):
+        package = generate_package(
+            self._path,
+            name,
+            dependencies=dependencies,
+            messages=messages,
+            description=description,
+            enums=enums,
+            extensions=extensions,
+            sylk_json=self._sylk.sylkJson,
+            version=version,
+        )
+        self._sylk.execute(CommandMap._EDIT_RESOURCE, MessageToDict(package))
         return package
 
-    def EditMessage(self,package,name,fields,description=None,options=None,old_name=None,extensions=None):
-        message = generate_message(self._path,self._domain,package,name,fields,option=options,description=description,extensions=extensions,sylk_json=self._sylk.sylkJson)
-        self._sylk.execute(CommandMap._EDIT_RESOURCE,MessageToDict(message),old_name=old_name)
+    def EditMessage(
+        self,
+        package,
+        name,
+        fields,
+        description=None,
+        options=None,
+        old_name=None,
+        extensions=None,
+        tag=None
+    ):
+        message = generate_message(
+            self._path,
+            self._domain,
+            package,
+            name,
+            fields,
+            option=options,
+            description=description,
+            extensions=extensions,
+            sylk_json=self._sylk.sylkJson,
+            tag=tag
+        )
+        self._sylk.execute(
+            CommandMap._EDIT_RESOURCE, MessageToDict(message), old_name=old_name, package=package.package
+        )
         return message
 
-    def EditEnum(self,package,name,enum_values):
-        enum = generate_enum(self._path,self._domain,package.name,name,enum_values)
-        self._sylk.execute(CommandMap._EDIT_RESOURCE,MessageToDict(enum))
-    
-    def EditRPC(self,service,name,input_type,output_type,client_stream,server_stream,description,extensions=None):
-        RPC = generate_rpc(self._path,name,client_stream,server_stream,input_type,output_type,description)
-        self._sylk.execute(CommandMap._EDIT_RESOURCE,MessageToDict(RPC))
+    def EditEnum(self, package, name, enum_values):
+        enum = generate_enum(self._path, self._domain, package, name, enum_values)
+        self._sylk.execute(CommandMap._EDIT_RESOURCE, MessageToDict(enum))
 
-    def RemoveEnum(self,full_name):
-        self._sylk.execute(CommandMap._REMOVE_RESOURCE,full_name)
-    
-    def RemoveMessage(self,full_name):
-        self._sylk.execute(CommandMap._REMOVE_RESOURCE,full_name)
+    def EditRPC(
+        self,
+        service,
+        name,
+        input_type,
+        output_type,
+        client_stream,
+        server_stream,
+        description,
+        extensions=None,
+    ):
+        RPC = generate_rpc(
+            self._path,
+            name,
+            client_stream,
+            server_stream,
+            input_type,
+            output_type,
+            description,
+        )
+        self._sylk.execute(CommandMap._EDIT_RESOURCE, MessageToDict(RPC))
+
+    def RemoveEnum(self, full_name):
+        self._sylk.execute(CommandMap._REMOVE_RESOURCE, full_name)
+
+    def RemoveMessage(self, full_name):
+        self._sylk.execute(CommandMap._REMOVE_RESOURCE, full_name)
 
     def RemoveRpc(self, full_name):
-        self._sylk.execute(CommandMap._REMOVE_RESOURCE,full_name)
+        self._sylk.execute(CommandMap._REMOVE_RESOURCE, full_name)
 
     def RemoveField(self, full_name):
-        self._sylk.execute(CommandMap._REMOVE_RESOURCE,full_name)
+        self._sylk.execute(CommandMap._REMOVE_RESOURCE, full_name)
 
     def RemoveOneofField(self, full_name):
-        self._sylk.execute(CommandMap._REMOVE_RESOURCE,full_name)
-        
-    def RemoveEnumValue(self, full_name):
-        self._sylk.execute(CommandMap._REMOVE_RESOURCE,full_name)
+        self._sylk.execute(CommandMap._REMOVE_RESOURCE, full_name)
 
+    def RemoveEnumValue(self, full_name):
+        self._sylk.execute(CommandMap._REMOVE_RESOURCE, full_name)
 
     def Save(self):
         logging.debug("Saving sylk.build architect process")

@@ -1,23 +1,13 @@
 from google.protobuf import timestamp_pb2 as _timestamp_pb2
-from sylk.commons.protos.sylk.SylkCommons.v1 import SylkCommons_pb2 as _SylkCommons_pb2
+from sylk.SylkCommons.v1 import SylkCommons_pb2 as _SylkCommons_pb2
 from google.protobuf import struct_pb2 as _struct_pb2
-from sylk.commons.protos.sylk.SylkField.v1 import SylkField_pb2 as _SylkField_pb2
+from sylk.SylkField.v1 import SylkField_pb2 as _SylkField_pb2
 from google.protobuf.internal import containers as _containers
 from google.protobuf import descriptor as _descriptor
 from google.protobuf import message as _message
 from typing import ClassVar as _ClassVar, Iterable as _Iterable, Mapping as _Mapping, Optional as _Optional, Union as _Union
 
 DESCRIPTOR: _descriptor.FileDescriptor
-
-class SylkMessageDisplay(_message.Message):
-    __slots__ = ["updated_at", "message", "created_at"]
-    UPDATED_AT_FIELD_NUMBER: _ClassVar[int]
-    MESSAGE_FIELD_NUMBER: _ClassVar[int]
-    CREATED_AT_FIELD_NUMBER: _ClassVar[int]
-    updated_at: _timestamp_pb2.Timestamp
-    message: SylkMessage
-    created_at: _timestamp_pb2.Timestamp
-    def __init__(self, updated_at: _Optional[_Union[_timestamp_pb2.Timestamp, _Mapping]] = ..., message: _Optional[_Union[SylkMessage, _Mapping]] = ..., created_at: _Optional[_Union[_timestamp_pb2.Timestamp, _Mapping]] = ...) -> None: ...
 
 class SylkMessage(_message.Message):
     __slots__ = ["extension_type", "name", "uri", "extensions", "full_name", "type", "description", "kind", "fields"]
@@ -47,3 +37,13 @@ class SylkMessage(_message.Message):
     kind: str
     fields: _containers.RepeatedCompositeFieldContainer[_SylkField_pb2.SylkField]
     def __init__(self, extension_type: _Optional[_Union[_SylkCommons_pb2.SylkExtensions, str]] = ..., name: _Optional[str] = ..., uri: _Optional[str] = ..., extensions: _Optional[_Mapping[str, _struct_pb2.Struct]] = ..., full_name: _Optional[str] = ..., type: _Optional[str] = ..., description: _Optional[str] = ..., kind: _Optional[str] = ..., fields: _Optional[_Iterable[_Union[_SylkField_pb2.SylkField, _Mapping]]] = ...) -> None: ...
+
+class SylkMessageDisplay(_message.Message):
+    __slots__ = ["updated_at", "message", "created_at"]
+    UPDATED_AT_FIELD_NUMBER: _ClassVar[int]
+    MESSAGE_FIELD_NUMBER: _ClassVar[int]
+    CREATED_AT_FIELD_NUMBER: _ClassVar[int]
+    updated_at: _timestamp_pb2.Timestamp
+    message: SylkMessage
+    created_at: _timestamp_pb2.Timestamp
+    def __init__(self, updated_at: _Optional[_Union[_timestamp_pb2.Timestamp, _Mapping]] = ..., message: _Optional[_Union[SylkMessage, _Mapping]] = ..., created_at: _Optional[_Union[_timestamp_pb2.Timestamp, _Mapping]] = ...) -> None: ...

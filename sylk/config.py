@@ -15,7 +15,7 @@ configs=SylkCliConfigs(
     analytics=False,
     # First run flag
     first_run=False,
-    token=None,
+    token="sylk_967c2e81-1b96-441c-b9a0-cff33c38cb79",
     # Supported builtins templates
     sylk_templates = [
         "@sylk/Blank",
@@ -28,3 +28,5 @@ configs=SylkCliConfigs(
         # "@sylk/HelloWorldTs"
     ]
 )
+
+sylk_api_host='localhost'

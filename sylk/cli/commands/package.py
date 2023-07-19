@@ -30,56 +30,69 @@ def import_package(source,target,path,sylk_json:SylkJson):
     ARCHITECT = SylkArchitect(
         path=path,domain=sylk_json.domain,project_name=sylk_json.project.get('name'))
 
-    if len(target.split('.')) > 2:
+    if len(target.split('.')) > 1:
         importing_into_pkg = True
-        old_pkg = sylk_json.get_package(
-            target.split('.')[1])
-        dep = []
-        if old_pkg is None:
-            print_error(f"Package '{target}' not exists")
-            exit(1)
-        if old_pkg.get('dependencies') is not None:
-            dep = old_pkg.get('dependencies')
-            if source not in old_pkg.get('dependencies'):
+        try:
+            old_pkg = sylk_json.get_package(target)
+            pkg = sylk_json.get_package(old_pkg.get('package'),False)
+            dep = []
+            if old_pkg is None:
+                print_error(f"Package '{target}' not exists")
+                exit(1)
+            if old_pkg.get('dependencies') is not None:
                 dep = old_pkg.get('dependencies')
-                dep.append(source)
+                if source not in old_pkg.get('dependencies'):
+                    dep = old_pkg.get('dependencies')
+                    dep.append(source)
+                    pkg.dependencies.append(source)
+                else:
+                    print_warning(
+                        f"Package '{source}' already injected into '{target}' package")
+                    exit(1)
             else:
-                print_warning(
-                    f"Package '{source}' already injected into '{target}' package")
+                dep.append(source)
+                pkg.dependencies.append(source)
+            temp_msgs = []
+            for m in pkg.messages:
+                temp_msgs.append(MessageToDict(m))
+            pkg_node = sylk_json._proto_tree._find_node(pkg.package,sylk_json._proto_tree.root)
+            pkg_node.references.append(source)
+            circular_deps = sylk_json._proto_tree._resolve_dependencies_refs(pkg_node) 
+            if circular_deps is None:
+                ARCHITECT.EditPackage(old_pkg.get('package'), pkg.dependencies,temp_msgs,description=old_pkg.get('description'),enums=old_pkg.get('enums'),extensions=old_pkg.get('extensions'),version=old_pkg.get('package').split('.')[-1])
+                ARCHITECT.Save()
+                print_info(
+                    f"Attaching package '{source}' -> '{target}' {importing_into_pkg}")
+            else:
+                print_error(f"could not resolve references, detected circular dependencies:\n\t- {circular_deps}")
+        except Exception as e:
+            print(e)
+            dep = []
+            old_svc = sylk_json.get_service(target.split('.')[1])
+            if old_svc is None:
+                print_error(f"Service '{target}' not exists")
                 exit(1)
-        else:
-            dep.append(source)
-        pkg = sylk_json.get_package(old_pkg.get('name'),False)
-        temp_msgs = []
-        for m in pkg.messages:
-            temp_msgs.append(MessageToDict(m))
-        ARCHITECT.EditPackage(old_pkg.get('name'), dep,temp_msgs,description=old_pkg.get('description'),enums=old_pkg.get('enums'),extensions=old_pkg.get('extensions'))
-        ARCHITECT.Save()
-
-    else:
-        dep = []
-        old_svc = sylk_json.get_service(target,sylk_json=sylk_json._sylk_json)
-        if old_svc is None:
-            print_error(f"Service '{target}' not exists")
-            exit(1)
-        if old_svc.get('dependencies') is not None:
-            dep = old_svc.get('dependencies')
-            if source not in old_svc.get('dependencies'):
+            if old_svc.get('dependencies') is not None:
                 dep = old_svc.get('dependencies')
-                dep.append(source)
+                if source not in old_svc.get('dependencies'):
+                    dep = old_svc.get('dependencies')
+                    dep.append(source)
+                else:
+                    print_warning(
+                        f"Package '{source}' already injected into '{target}' service")
+                    exit(1)
             else:
-                print_warning(
-                    f"Package '{source}' already injected into '{target}' service")
-                exit(1)
-        else:
-            dep.append(source)
+                dep.append(source)
 
-        ARCHITECT.EditService(old_svc.get('name'), dep, old_svc.get('description'),old_svc.get('methods'),extensions=old_svc.get('extensions'))
-        ARCHITECT.Save()
-
-    importing_into_pkg = 'package' if importing_into_pkg == True else 'service'
-    print_info(
-        f"Attaching package '{source}' -> '{target}' {importing_into_pkg}")
+            ARCHITECT.EditService(old_svc.get('name'), dep, old_svc.get('description'),old_svc.get('methods'),extensions=old_svc.get('extensions'),version=old_svc.get('fullName').split('.')[-1])
+            ARCHITECT.Save()
+            importing_into_pkg = 'package' if importing_into_pkg == True else 'service'
+            print_info(
+                f"Attaching package '{source}' -> '{target}' {importing_into_pkg}")
+    else:
+        print_error('target {} for import is not valid'.format(target))
+        exit(1)
+    
 
 def remove_import(source,target,path,sylk_json:SylkJson):
     ARCHITECT = SylkArchitect(
@@ -87,7 +100,7 @@ def remove_import(source,target,path,sylk_json:SylkJson):
 
     if len(target.split('.')) > 2:
         old_pkg = sylk_json.get_package(
-            target.split('.')[1])
+            target.split('.')[1], version=target.split('.')[-1])
         dep = []
         if old_pkg is None:
             print_error(f"Package '{target}' not exists")
@@ -105,11 +118,12 @@ def remove_import(source,target,path,sylk_json:SylkJson):
             print_error(f"'{source}' cannot be found under '{target}'")
             exit(1)
             
-        pkg = sylk_json.get_package(old_pkg.get('name'),False)
+        pkg = sylk_json.get_package(old_pkg.get('name'),False,version=old_pkg.get('package').split('.')[-1])
         temp_msgs = []
         for m in pkg.messages:
             temp_msgs.append(MessageToDict(m))
-        ARCHITECT.EditPackage(old_pkg.get('name'), dep,temp_msgs,description=old_pkg.get('description'),enums=old_pkg.get('enums'),extensions=old_pkg.get('extensions'))
+
+        ARCHITECT.EditPackage(old_pkg.get('name'), dep,temp_msgs,description=old_pkg.get('description'),enums=old_pkg.get('enums'),extensions=old_pkg.get('extensions'),version=old_pkg.get('package').split('.')[-1])
         ARCHITECT.Save()
 
     else:
@@ -128,7 +142,7 @@ def remove_import(source,target,path,sylk_json:SylkJson):
                 dep = old_svc.get('dependencies')
                 dep.remove(source)
         
-        ARCHITECT.EditService(old_svc.get('name'), dep,methods=old_svc.get('methods'),description=old_svc.get('description'),extensions=old_svc.get('extensions'))
+        ARCHITECT.EditService(old_svc.get('name'), dep,methods=old_svc.get('methods'),description=old_svc.get('description'),extensions=old_svc.get('extensions'),version=old_svc.get('fullName').split('.')[-1])
         ARCHITECT.Save()
 
     print_warning(

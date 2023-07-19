@@ -42,7 +42,6 @@ def edit_message(resource,action,sub_actions,sylk_json:helpers.SylkJson,architec
     architect - The architect class instantiated to the sylk.json context
     expand - If expanding optional inputs
     """
-
     if action is None:
         if sub_actions is not None:
             print_warning("Passed sub actions before passing action")
@@ -96,7 +95,7 @@ def edit_message(resource,action,sub_actions,sylk_json:helpers.SylkJson,architec
     else:
         # Prompting for sub-action
         if sub_actions is None:
-            sub_actions = modify_resource([('Add fields','fields'),('Rename','name')])
+            sub_actions = modify_resource([('Add fields','fields'),('Tag message', 'tag'),('Rename','name')])
         # Edit fields
         if sub_actions[0] == 'fields' :
             add_fields(resource,sylk_json,architect=architect,expand=expand)
@@ -106,6 +105,9 @@ def edit_message(resource,action,sub_actions,sylk_json:helpers.SylkJson,architec
             dependencies = get_dependencies(full_name=resource.get('fullName'),sylk_json=sylk_json)
             display_dependencies(dependencies,resource,'rename')
             rename_message(resource,sylk_json,architect,dependencies)
+        elif sub_actions[0] == 'tag':
+            # Getting dependencies for resources
+            tag_message(resource,sylk_json,architect)
         # Not supporting option
         else:
             print_error("Not supporting editing {}".format(sub_actions))
@@ -962,7 +964,7 @@ def get_dependencies(full_name,sylk_json:helpers.SylkJson):
     
 
 def display_dependencies(dependencies,resource,action):
-    """Display the depndencies for the specified resources"""
+    """Display the dependencies for the specified resources"""
 
     if len(dependencies) > 0:
         print_warning("The following resources are going to be affected from {0} {1}:\n".format(action,resource.get('fullName')))
@@ -977,6 +979,22 @@ def display_dependencies(dependencies,resource,action):
     print('')
 
 
+def tag_message(resource,sylk_json:helpers.SylkJson,architect:SylkArchitect):
+    tag_name = inquirer.prompt([inquirer.Text('tag_name','Enter tag name for message',validate=tag_name_validator)],theme=SylkTheme())
+    if tag_name is None:
+        print_warning("Exiting editing process for message {}".format(resource.get('fullName')))
+        exit(1)
+    else:
+        tag_name = tag_name['tag_name']
+        _pkg = sylk_json._resolve_path_backwards(resource.get('fullName'))
+        pkg = sylk_json.get_package(_pkg.get('package'),False)
+        old_name = resource.get('name')
+        print_success("Tagging {} -> {}".format(resource.get('fullName'),tag_name))
+        resource['tag'] = tag_name
+        architect.EditMessage(pkg, resource.get('name'),
+                            resource.get('fields'), resource.get('description'), resource.get('extensionType'),old_name=old_name,extensions=resource.get('extensions'),tag=resource.get('tag'))
+        architect.Save()
+
 def rename_message(resource,sylk_json:helpers.SylkJson,architect:SylkArchitect,dependencies):
     """A function to rename the message"""
 
@@ -987,12 +1005,11 @@ def rename_message(resource,sylk_json:helpers.SylkJson,architect:SylkArchitect,d
     else:
         message_name = message_name['message_name']
     
-    _pkg = sylk_json.get_package(resource.get('fullName').split('.')[1],False)
     new_full_name = '{}.{}'.format('.'.join(resource.get('fullName').split('.')[:-1]),message_name)
+    _pkg = sylk_json._resolve_path_backwards(resource.get('fullName'))
+    pkg = sylk_json.get_package(_pkg.get('package'),False)
 
-   
-
-    if next((msg for msg in _pkg.messages if msg.name == message_name),None) is None:
+    if next((msg for msg in pkg.messages if msg.name == message_name),None) is None:
         print_success("Renaming {} -> {}".format(resource.get('fullName'),new_full_name))
         # Handling all dependencies and rename the type as well
         for d in dependencies:
@@ -1002,8 +1019,8 @@ def rename_message(resource,sylk_json:helpers.SylkJson,architect:SylkArchitect,d
         old_name = resource['name']
         resource['name'] = message_name
         resource['fullName'] = new_full_name
-        architect.EditMessage(_pkg, resource.get('name'),
-                            resource.get('fields'), resource.get('description'), resource.get('extensionType'),old_name=old_name,extensions=resource.get('extensions'))
+        architect.EditMessage(pkg, resource.get('name'),
+                            resource.get('fields'), resource.get('description'), resource.get('extensionType'),old_name=old_name,extensions=resource.get('extensions'),tag=resource.get('tag'))
         architect.Save()
     else:
         print_error("{} is already existing under {} package !".format(message_name,resource.get('fullName').split('.')[1]))
@@ -1024,4 +1041,18 @@ def message_name_validation(answers, current):
     if len(re.findall('-', current)) > 0:
         raise inquirerErrors.ValidationError(
             current, reason='Resource name must not include hyphens, underscores are allowed')
+    return True
+
+def tag_name_validator(answers, current):
+    """Validate tag of messages"""
+
+    if len(current) == 0:
+        raise inquirerErrors.ValidationError(
+            current, reason='Resource tag must not be blank')
+    if len(re.findall('\s', current)) > 0:
+        raise inquirerErrors.ValidationError(
+            current, reason='Resource tag must not include blank spaces')
+    if len(re.findall('-', current)) > 0:
+        raise inquirerErrors.ValidationError(
+            current, reason='Resource tag must not include hyphens, underscores are allowed')
     return True

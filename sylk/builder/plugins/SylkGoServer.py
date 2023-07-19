@@ -22,8 +22,13 @@
 import logging
 import subprocess
 import sylk.builder as builder
-from sylk.commons import helpers, file_system, resources,pretty, protos
-from sylk.builder.plugins.static import gitignore_go,bash_init_script_go,bash_run_server_script_go,utils_go
+from sylk.commons import helpers, file_system, resources, pretty, protos
+from sylk.builder.plugins.static import (
+    gitignore_go,
+    bash_init_script_go,
+    bash_run_server_script_go,
+    utils_go,
+)
 
 
 @builder.hookimpl
@@ -35,24 +40,29 @@ def pre_build(sylk_json: helpers.SylkJson, sylk_context: helpers.SylkContext):
 def post_build(sylk_json: helpers.SylkJson, sylk_context: helpers.SylkContext):
     # TODO add postbuild validation of generated code
     # pretty.print_success("Finished sylk build process %s plugin" % (__name__))
-    return (__name__,'OK')
+    return (__name__, "OK")
+
 
 @builder.hookimpl
-def init_project_structure(sylk_json: helpers.SylkJson, sylk_context: helpers.SylkContext):
+def init_project_structure(
+    sylk_json: helpers.SylkJson, sylk_context: helpers.SylkContext
+):
     directories = [
         # Utils
-        file_system.join_path(sylk_json.path, 'services', 'utils'),
+        file_system.join_path(sylk_json.path, "services", "utils"),
         # Protos
-        file_system.join_path(sylk_json.path, 'services', 'protos')]
+        file_system.join_path(sylk_json.path, "services", "protos"),
+    ]
 
     for dir in directories:
         file_system.mkdir(dir)
     # Utils
-    file_system.wFile(file_system.join_path(
-        sylk_json.path, 'services','utils', 'utils.go'), utils_go)
+    file_system.wFile(
+        file_system.join_path(sylk_json.path, "services", "utils", "utils.go"), utils_go
+    )
     # Utils Interfaces
     # file_system.wFile(file_system.join_path(
-        # sylk_json.path, 'services','utils', 'interfaces.ts'), utils_interfaces)
+    # sylk_json.path, 'services','utils', 'interfaces.ts'), utils_interfaces)
     # package.json
     # file_system.wFile(file_system.join_path(sylk_json.path,'package.json'),package_json.replace('REPLACEME',sylk_json.project.get('packageName')))
     # Bin files
@@ -73,22 +83,24 @@ def init_project_structure(sylk_json: helpers.SylkJson, sylk_context: helpers.Sy
 
     # Bin files
     # file_system.wFile(file_system.join_path(
-        # sylk_json.path, 'bin', 'init-go.sh'), bash_init_script_ts)
+    # sylk_json.path, 'bin', 'init-go.sh'), bash_init_script_ts)
     # file_system.wFile(file_system.join_path(
-        # sylk_json.path, 'bin', 'proto.js'), protos_compile_script_ts)
+    # sylk_json.path, 'bin', 'proto.js'), protos_compile_script_ts)
 
     # tsconfig.json
     # file_system.wFile(file_system.join_path(sylk_json.path, 'tsconfig.json'),main_ts_config)
     # file_system.wFile(file_system.join_path(sylk_json.path, 'services', 'protos', 'tsconfig.json'),protos_ts_config)
-    
-    if sylk_json.get_server_language() == 'go':
-        file_system.wFile(file_system.join_path(
-            sylk_json.path, 'bin', 'run-server.sh'), bash_run_server_script_go)
-    
+
+    if sylk_json.get_server_language() == "go":
+        file_system.wFile(
+            file_system.join_path(sylk_json.path, "bin", "run-server.sh"),
+            bash_run_server_script_go,
+        )
+
     # file_system.wFile(file_system.join_path(sylk_json.path,'.webezy','contxt.json'),'{"files":[]}')
-    
+
     # .gitignore
-    file_system.wFile(file_system.join_path(sylk_json.path,'.gitignore'),gitignore_go)
+    file_system.wFile(file_system.join_path(sylk_json.path, ".gitignore"), gitignore_go)
 
     return [directories]
 
@@ -96,33 +108,55 @@ def init_project_structure(sylk_json: helpers.SylkJson, sylk_context: helpers.Sy
 @builder.hookimpl
 def write_services(sylk_json: helpers.SylkJson, sylk_context: helpers.SylkContext):
     for svc in sylk_json.services:
-        svc_name = svc.split('/')[-1].split('.')[0]
-        if file_system.check_if_file_exists(file_system.join_path(
-            sylk_json.path, 'services',svc_name, f'{svc_name}.go')) == False:
-            service_code = helpers.SylkServiceGo(sylk_json.project.get('packageName'), svc, sylk_json.services[svc].get(
-                'dependencies'), sylk_json.services[svc], context=sylk_context,sylk_json=sylk_json).to_str()
-            file_system.wFile(file_system.join_path(
-                sylk_json.path, 'services',svc_name, f'{svc_name}.go'), service_code, overwrite=True,force=True)
+        svc_name = svc.split("/")[-1].split(".")[0]
+        svc_ver = svc.split("/")[-2]
+        if (
+            file_system.check_if_file_exists(
+                file_system.join_path(
+                    sylk_json.path, "services", svc_name, svc_ver, f"{svc_name}.go"
+                )
+            )
+            == False
+        ):
+            service_code = helpers.SylkServiceGo(
+                sylk_json.project.get("packageName"),
+                svc,
+                sylk_json.services[svc].get("dependencies"),
+                sylk_json.services[svc],
+                context=sylk_context,
+                sylk_json=sylk_json,
+            ).to_str()
+            file_system.wFile(
+                file_system.join_path(
+                    sylk_json.path, "services", svc_name, svc_ver, f"{svc_name}.go"
+                ),
+                service_code,
+                overwrite=True,
+                force=True,
+            )
         # else:
         #     pretty.print_info("Make sure you are editing the {0} file\n - See how to edit service written in Go".format(file_system.join_path(
         #         sylk_json.path, 'services',svc, f'{svc}.go')))
+
+
 # mkdir $DST_DIR"/{0}"\nprotoc -I=$SRC_DIR --go_out=$DST_DIR --go_opt=paths=source_relative --go-grpc_out=$DST_DIR"/{0}"  --go-grpc_opt=paths=source_relative protos/{0}.proto
+
 
 @builder.hookimpl
 def pre_compile_protos(sylk_json: helpers.SylkJson, sylk_context: helpers.SylkContext):
     pretty.print_info("Running pre compile protos")
     return {
-        'sylk.builder.plugins.SylkProto:compile_protos():commands':[
-            '--go_out=./services/protos',
-            '--go_opt=paths=source_relative',
-            '--go-grpc_out=./services/protos',
-            '--go-grpc_opt=paths=source_relative',
-            '--go_out=./clients/go/protos',
-            '--go-grpc_out=./clients/go/protos',
-
-            '-I./protos/'
+        "sylk.builder.plugins.SylkProto:compile_protos():commands": [
+            "--proto_path=protos/",
+            "--go_out=./services/protos",
+            "--go_opt=paths=source_relative",
+            "--go-grpc_out=./services/protos",
+            "--go-grpc_opt=paths=source_relative",
+            "--go_out=./clients/go/protos",
+            "--go-grpc_out=./clients/go/protos",
+            "-I./protos/",
         ],
-        'sylk.builder.plugins.SylkProto:compile_protos():include_dirs':[],
+        "sylk.builder.plugins.SylkProto:compile_protos():include_dirs": [],
     }
 
 
@@ -135,36 +169,48 @@ def compile_protos(sylk_json: helpers.SylkJson, sylk_context: helpers.SylkContex
             services_protoc.append(s)
     if sylk_json.packages is not None:
         for p in sylk_json.packages:
-            packages_protoc.append(sylk_json.packages[p].get('name'))
-    file_system.wFile(file_system.join_path(
-        sylk_json.path, 'bin', 'init-go.sh'), bash_init_script_go(sylk_json.project.get('goPackage'),services_protoc,packages_protoc),True)
+            packages_protoc.append(sylk_json.packages[p].get("name"))
+    file_system.wFile(
+        file_system.join_path(sylk_json.path, "bin", "init-go.sh"),
+        bash_init_script_go(
+            sylk_json.project.get("goPackage"), services_protoc, packages_protoc
+        ),
+        True,
+    )
     # Running ./bin/init-go.sh script for compiling protos
     # logging.info("Running ./bin/init-go.sh script for 'protoc' compiler")
-    subprocess.run(['bash', file_system.join_path(
-        sylk_json.path, 'bin', 'init-go.sh')])
+    subprocess.run(["bash", file_system.join_path(sylk_json.path, "bin", "init-go.sh")])
 
 
-_OPEN_BRCK = '{'
-_CLOSING_BRCK = '}'
+_OPEN_BRCK = "{"
+_CLOSING_BRCK = "}"
 
 
 @builder.hookimpl
-def write_server(sylk_json: helpers.SylkJson, sylk_context: helpers.SylkContext,pre_data):
+def write_server(
+    sylk_json: helpers.SylkJson, sylk_context: helpers.SylkContext, pre_data
+):
     # pretty.print_error(pre_data,True,'pre_data')
-    go_package_name = sylk_json.project.get('goPackage')
-    imports = ['"log"','"fmt"','"flag"','"net"','"google.golang.org/grpc"']
+    go_package_name = sylk_json.project.get("goPackage")
+    imports = ['"log"', '"fmt"', '"flag"', '"net"', '"google.golang.org/grpc"']
     services_bindings = []
     for svc in sylk_json.services:
-        svc_name = svc.split('/')[-1].split('.')[0]
-        svc_path = '/'.join(svc.split('/')[:-1])
-        imports.append(f'{svc_name}Servicer "{go_package_name}/services/{svc_path}"')
-        imports.append(f'{svc_name} "{go_package_name}/services/{svc_name}"')
+        svc_name = svc.split("/")[-1].split(".")[0]
+        svc_path = "/".join(svc.split("/")[:-1])
+        svc_ver = svc.split("/")[-2]
+        imports.append(
+            f'{svc_name}{svc_ver}Servicer "{go_package_name}/services/{svc_path}"'
+        )
+        imports.append(
+            f'{svc_name}{svc_ver} "{go_package_name}/services/{svc_name}/{svc_ver}"'
+        )
         temp_svc_name = svc_name[0].capitalize() + svc_name[1:]
         services_bindings.append(
-            f'{svc_name}Servicer.Register{temp_svc_name}Server(grpcServer, new({svc_name}.{temp_svc_name}));')
-    services_bindings = '\n\t'.join(services_bindings)
-    imports = '\n\t'.join(imports)
-    port = sylk_json._config.get('port')
+            f"{svc_name}{svc_ver}Servicer.Register{temp_svc_name}Server(grpcServer, new({svc_name}{svc_ver}.{temp_svc_name}));"
+        )
+    services_bindings = "\n\t".join(services_bindings)
+    imports = "\n\t".join(imports)
+    port = sylk_json._config.get("port")
     server_code = f'// sylk.build Generated Server Code\n\
 package main\n\n\
 import (\n\t{imports}\n)\n\
@@ -183,10 +229,19 @@ func main() {_OPEN_BRCK}\n\
 \tlog.Printf("[sylk.build] Starting server (Go) at -> %d",*port)\n\
 \tgrpcServer.Serve(lis)\n\
 {_CLOSING_BRCK}'
-   
-    if file_system.check_if_file_exists(file_system.join_path(
-            sylk_json.path,'server', 'server.go')) == False:
-        file_system.wFile(file_system.join_path(
-            sylk_json.path, 'server', 'server.go'), server_code, overwrite=True)
+
+    if (
+        file_system.check_if_file_exists(
+            file_system.join_path(sylk_json.path, "server", "server.go")
+        )
+        == False
+    ):
+        file_system.wFile(
+            file_system.join_path(sylk_json.path, "server", "server.go"),
+            server_code,
+            overwrite=True,
+        )
     else:
-        pretty.print_warning("Make sure you make desired changes on server/server.go file !")
+        pretty.print_warning(
+            "Make sure you make desired changes on server/server.go file !"
+        )

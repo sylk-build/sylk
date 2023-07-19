@@ -7,16 +7,6 @@ from typing import ClassVar as _ClassVar, Mapping as _Mapping, Optional as _Opti
 
 DESCRIPTOR: _descriptor.FileDescriptor
 
-class SylkMethodDisplay(_message.Message):
-    __slots__ = ["created_at", "method", "updated_at"]
-    CREATED_AT_FIELD_NUMBER: _ClassVar[int]
-    METHOD_FIELD_NUMBER: _ClassVar[int]
-    UPDATED_AT_FIELD_NUMBER: _ClassVar[int]
-    created_at: _timestamp_pb2.Timestamp
-    method: SylkMethod
-    updated_at: _timestamp_pb2.Timestamp
-    def __init__(self, created_at: _Optional[_Union[_timestamp_pb2.Timestamp, _Mapping]] = ..., method: _Optional[_Union[SylkMethod, _Mapping]] = ..., updated_at: _Optional[_Union[_timestamp_pb2.Timestamp, _Mapping]] = ...) -> None: ...
-
 class SylkMethod(_message.Message):
     __slots__ = ["client_streaming", "full_name", "type", "name", "server_streaming", "description", "kind", "extensions", "input_type", "output_type", "uri"]
     class ExtensionsEntry(_message.Message):
@@ -49,3 +39,15 @@ class SylkMethod(_message.Message):
     output_type: str
     uri: str
     def __init__(self, client_streaming: bool = ..., full_name: _Optional[str] = ..., type: _Optional[str] = ..., name: _Optional[str] = ..., server_streaming: bool = ..., description: _Optional[str] = ..., kind: _Optional[str] = ..., extensions: _Optional[_Mapping[str, _struct_pb2.Struct]] = ..., input_type: _Optional[str] = ..., output_type: _Optional[str] = ..., uri: _Optional[str] = ...) -> None: ...
+
+class SylkMethodDisplay(_message.Message):
+    __slots__ = ["created_at", "method", "updated_at", "id"]
+    CREATED_AT_FIELD_NUMBER: _ClassVar[int]
+    METHOD_FIELD_NUMBER: _ClassVar[int]
+    UPDATED_AT_FIELD_NUMBER: _ClassVar[int]
+    ID_FIELD_NUMBER: _ClassVar[int]
+    created_at: _timestamp_pb2.Timestamp
+    method: SylkMethod
+    updated_at: _timestamp_pb2.Timestamp
+    id: str
+    def __init__(self, created_at: _Optional[_Union[_timestamp_pb2.Timestamp, _Mapping]] = ..., method: _Optional[_Union[SylkMethod, _Mapping]] = ..., updated_at: _Optional[_Union[_timestamp_pb2.Timestamp, _Mapping]] = ..., id: _Optional[str] = ...) -> None: ...

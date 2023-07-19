@@ -15,22 +15,22 @@ class FieldsStub(object):
             channel: A grpc.Channel.
         """
         self.CreateField = channel.unary_unary(
-                '/Fields/CreateField',
+                '/sylk.Fields.v1.Fields/CreateField',
                 request_serializer=sylk_dot_SylkApi_dot_v1_dot_SylkApi__pb2.CreateFieldRequest.SerializeToString,
                 response_deserializer=sylk_dot_SylkApi_dot_v1_dot_SylkApi__pb2.CreateFieldResponse.FromString,
                 )
         self.GetField = channel.unary_unary(
-                '/Fields/GetField',
+                '/sylk.Fields.v1.Fields/GetField',
                 request_serializer=sylk_dot_SylkApi_dot_v1_dot_SylkApi__pb2.GetFieldRequest.SerializeToString,
                 response_deserializer=sylk_dot_SylkApi_dot_v1_dot_SylkApi__pb2.GetFieldResponse.FromString,
                 )
         self.DeleteField = channel.unary_unary(
-                '/Fields/DeleteField',
+                '/sylk.Fields.v1.Fields/DeleteField',
                 request_serializer=sylk_dot_SylkApi_dot_v1_dot_SylkApi__pb2.DeleteFieldRequest.SerializeToString,
                 response_deserializer=sylk_dot_SylkApi_dot_v1_dot_SylkApi__pb2.DeleteFieldResponse.FromString,
                 )
         self.UpdateField = channel.unary_unary(
-                '/Fields/UpdateField',
+                '/sylk.Fields.v1.Fields/UpdateField',
                 request_serializer=sylk_dot_SylkApi_dot_v1_dot_SylkApi__pb2.UpdateFieldRequest.SerializeToString,
                 response_deserializer=sylk_dot_SylkApi_dot_v1_dot_SylkApi__pb2.UpdateFieldResponse.FromString,
                 )
@@ -92,7 +92,7 @@ def add_FieldsServicer_to_server(servicer, server):
             ),
     }
     generic_handler = grpc.method_handlers_generic_handler(
-            'Fields', rpc_method_handlers)
+            'sylk.Fields.v1.Fields', rpc_method_handlers)
     server.add_generic_rpc_handlers((generic_handler,))
 
 
@@ -111,7 +111,7 @@ class Fields(object):
             wait_for_ready=None,
             timeout=None,
             metadata=None):
-        return grpc.experimental.unary_unary(request, target, '/Fields/CreateField',
+        return grpc.experimental.unary_unary(request, target, '/sylk.Fields.v1.Fields/CreateField',
             sylk_dot_SylkApi_dot_v1_dot_SylkApi__pb2.CreateFieldRequest.SerializeToString,
             sylk_dot_SylkApi_dot_v1_dot_SylkApi__pb2.CreateFieldResponse.FromString,
             options, channel_credentials,
@@ -128,7 +128,7 @@ class Fields(object):
             wait_for_ready=None,
             timeout=None,
             metadata=None):
-        return grpc.experimental.unary_unary(request, target, '/Fields/GetField',
+        return grpc.experimental.unary_unary(request, target, '/sylk.Fields.v1.Fields/GetField',
             sylk_dot_SylkApi_dot_v1_dot_SylkApi__pb2.GetFieldRequest.SerializeToString,
             sylk_dot_SylkApi_dot_v1_dot_SylkApi__pb2.GetFieldResponse.FromString,
             options, channel_credentials,
@@ -145,7 +145,7 @@ class Fields(object):
             wait_for_ready=None,
             timeout=None,
             metadata=None):
-        return grpc.experimental.unary_unary(request, target, '/Fields/DeleteField',
+        return grpc.experimental.unary_unary(request, target, '/sylk.Fields.v1.Fields/DeleteField',
             sylk_dot_SylkApi_dot_v1_dot_SylkApi__pb2.DeleteFieldRequest.SerializeToString,
             sylk_dot_SylkApi_dot_v1_dot_SylkApi__pb2.DeleteFieldResponse.FromString,
             options, channel_credentials,
@@ -162,7 +162,7 @@ class Fields(object):
             wait_for_ready=None,
             timeout=None,
             metadata=None):
-        return grpc.experimental.unary_unary(request, target, '/Fields/UpdateField',
+        return grpc.experimental.unary_unary(request, target, '/sylk.Fields.v1.Fields/UpdateField',
             sylk_dot_SylkApi_dot_v1_dot_SylkApi__pb2.UpdateFieldRequest.SerializeToString,
             sylk_dot_SylkApi_dot_v1_dot_SylkApi__pb2.UpdateFieldResponse.FromString,
             options, channel_credentials,

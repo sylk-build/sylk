@@ -21,11 +21,15 @@ FieldOptions: SylkExtensions
 ServiceOptions: SylkExtensions
 MethodOptions: SylkExtensions
 
-class SylkContext(_message.Message):
-    __slots__ = ["files"]
-    FILES_FIELD_NUMBER: _ClassVar[int]
-    files: _containers.RepeatedCompositeFieldContainer[SylkFileContext]
-    def __init__(self, files: _Optional[_Iterable[_Union[SylkFileContext, _Mapping]]] = ...) -> None: ...
+class SylkMethodContext(_message.Message):
+    __slots__ = ["code", "type", "name"]
+    CODE_FIELD_NUMBER: _ClassVar[int]
+    TYPE_FIELD_NUMBER: _ClassVar[int]
+    NAME_FIELD_NUMBER: _ClassVar[int]
+    code: str
+    type: str
+    name: str
+    def __init__(self, code: _Optional[str] = ..., type: _Optional[str] = ..., name: _Optional[str] = ...) -> None: ...
 
 class SylkFileContext(_message.Message):
     __slots__ = ["file", "code", "methods"]
@@ -37,12 +41,8 @@ class SylkFileContext(_message.Message):
     methods: _containers.RepeatedCompositeFieldContainer[SylkMethodContext]
     def __init__(self, file: _Optional[str] = ..., code: _Optional[bytes] = ..., methods: _Optional[_Iterable[_Union[SylkMethodContext, _Mapping]]] = ...) -> None: ...
 
-class SylkMethodContext(_message.Message):
-    __slots__ = ["code", "type", "name"]
-    CODE_FIELD_NUMBER: _ClassVar[int]
-    TYPE_FIELD_NUMBER: _ClassVar[int]
-    NAME_FIELD_NUMBER: _ClassVar[int]
-    code: str
-    type: str
-    name: str
-    def __init__(self, code: _Optional[str] = ..., type: _Optional[str] = ..., name: _Optional[str] = ...) -> None: ...
+class SylkContext(_message.Message):
+    __slots__ = ["files"]
+    FILES_FIELD_NUMBER: _ClassVar[int]
+    files: _containers.RepeatedCompositeFieldContainer[SylkFileContext]
+    def __init__(self, files: _Optional[_Iterable[_Union[SylkFileContext, _Mapping]]] = ...) -> None: ...

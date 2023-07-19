@@ -47,18 +47,6 @@ class PersonalAccessToken(_message.Message):
     user_id: str
     def __init__(self, token: _Optional[str] = ..., org_id: _Optional[str] = ..., description: _Optional[str] = ..., expires_at: _Optional[_Union[_timestamp_pb2.Timestamp, _Mapping]] = ..., created_at: _Optional[_Union[_timestamp_pb2.Timestamp, _Mapping]] = ..., revoked: bool = ..., user_id: _Optional[str] = ...) -> None: ...
 
-class SylkUserDisplay(_message.Message):
-    __slots__ = ["user", "last_active", "created_at", "updated_at"]
-    USER_FIELD_NUMBER: _ClassVar[int]
-    LAST_ACTIVE_FIELD_NUMBER: _ClassVar[int]
-    CREATED_AT_FIELD_NUMBER: _ClassVar[int]
-    UPDATED_AT_FIELD_NUMBER: _ClassVar[int]
-    user: SylkUser
-    last_active: _timestamp_pb2.Timestamp
-    created_at: _timestamp_pb2.Timestamp
-    updated_at: _timestamp_pb2.Timestamp
-    def __init__(self, user: _Optional[_Union[SylkUser, _Mapping]] = ..., last_active: _Optional[_Union[_timestamp_pb2.Timestamp, _Mapping]] = ..., created_at: _Optional[_Union[_timestamp_pb2.Timestamp, _Mapping]] = ..., updated_at: _Optional[_Union[_timestamp_pb2.Timestamp, _Mapping]] = ...) -> None: ...
-
 class SylkUser(_message.Message):
     __slots__ = ["email", "orgs_ids", "locale", "given_name", "nickname", "status", "picture", "connection", "user_id", "email_verified", "family_name"]
     class OrgsIdsEntry(_message.Message):
@@ -91,3 +79,15 @@ class SylkUser(_message.Message):
     email_verified: bool
     family_name: str
     def __init__(self, email: _Optional[str] = ..., orgs_ids: _Optional[_Mapping[str, SylkUserRoles]] = ..., locale: _Optional[str] = ..., given_name: _Optional[str] = ..., nickname: _Optional[str] = ..., status: _Optional[_Union[SylkUserStatuses, str]] = ..., picture: _Optional[str] = ..., connection: _Optional[str] = ..., user_id: _Optional[str] = ..., email_verified: bool = ..., family_name: _Optional[str] = ...) -> None: ...
+
+class SylkUserDisplay(_message.Message):
+    __slots__ = ["user", "last_active", "created_at", "updated_at"]
+    USER_FIELD_NUMBER: _ClassVar[int]
+    LAST_ACTIVE_FIELD_NUMBER: _ClassVar[int]
+    CREATED_AT_FIELD_NUMBER: _ClassVar[int]
+    UPDATED_AT_FIELD_NUMBER: _ClassVar[int]
+    user: SylkUser
+    last_active: _timestamp_pb2.Timestamp
+    created_at: _timestamp_pb2.Timestamp
+    updated_at: _timestamp_pb2.Timestamp
+    def __init__(self, user: _Optional[_Union[SylkUser, _Mapping]] = ..., last_active: _Optional[_Union[_timestamp_pb2.Timestamp, _Mapping]] = ..., created_at: _Optional[_Union[_timestamp_pb2.Timestamp, _Mapping]] = ..., updated_at: _Optional[_Union[_timestamp_pb2.Timestamp, _Mapping]] = ...) -> None: ...

@@ -22,10 +22,10 @@
 from importlib import import_module,util
 from pathlib import Path
 from sylk.cli import prompter
-from sylk import __version__
+from sylk import __version__, config
 
 from sylk.commons import helpers as _helpers, file_system as _fs, pretty as _pretty
-from sylk.commons.protos import sylkcore
+from sylk.commons.protos import Projects_v1, Packages_v2, Messages_v2, Organizations_v1, Methods_v2, Enums_v2,  Users_v1,EnumValues_v2, Tags_v2, Folders_v2, Fields_v2, Services_v2
 import ast
 from sylk.commons.helpers import Graph, MessageToDict,MessageToJson, is_semver_less, read_to_parse_protos
 
@@ -42,13 +42,34 @@ def validation_sylk_token(answers, current):
       raise prompter.inquirer_errors.ValidationError('', reason='Token is not valid')
     return True
 
+class sylkcore:
+
+    def __init__(self) -> None:
+        _configs = {
+            "host": config.sylk_api_host,
+            "port": 9000
+        }
+        self._organizations = Organizations_v1(client_opt=_configs)
+        self._projects = Projects_v1(client_opt=_configs)
+        self._folders = Folders_v2(client_opt=_configs)
+        self._packages = Packages_v2(client_opt=_configs)
+        self._messages = Messages_v2(client_opt=_configs)
+        self._enums = Enums_v2(client_opt=_configs)
+        self._services = Services_v2(client_opt=_configs)
+        self._fields = Fields_v2(client_opt=_configs)
+        self._tags = Tags_v2(client_opt=_configs)
+        self._methods = Methods_v2(client_opt=_configs)
+        self._users = Users_v1(client_opt=_configs)
+        self._enum_values = EnumValues_v2(client_opt=_configs)
+
+
 class SylkCloud:
 
     def __init__(self,token=None,org_id=None,SylkJson=_helpers.SylkJson) -> None:
         self._token = token
         self.sylkJson = SylkJson
         self._org_id = org_id
-        self._sylk_cloud = sylkcore('api.sylk.build',80)
+        self._sylk_cloud = sylkcore()
         # Check if configs have valid token
         self.set_token()
         # Check if organization has orgId field
@@ -56,10 +77,10 @@ class SylkCloud:
     
     def _validate_token(self):
         _pretty.print_note(f'🔑 Validating token: {self._token[0:5]}[REDACTED]')
-        res, call = self._sylk_cloud.GetAccessToken_WithCall(GetAccessTokenRequest(token=self._token))
-        for key, value in call.trailing_metadata():
-            _pretty.print_note('cloud client received trailing metadata: key=%s value=%s' %
-              (key, value))
+        res = self._sylk_cloud._users.GetAccessToken(GetAccessTokenRequest(token=self._token))
+        # for key, value in call.trailing_metadata():
+            # _pretty.print_note('cloud client received trailing metadata: key=%s value=%s' %
+            #   (key, value))
         if res.result.expires_at.ToDatetime() <= datetime.now():
             _pretty.print_error('Token is expired!')
             exit(1)
@@ -107,7 +128,7 @@ class SylkCloud:
             #     org_id=org_id,
             # ),metadata=_md)
 
-            project = self._sylk_cloud.GetProject(
+            project = self._sylk_cloud._projects.GetProject(
                 request=GetProjectRequest(
                     project=projectId
                 ),
@@ -123,29 +144,29 @@ class SylkCloud:
             packages = {}
             services = {}
 
-            pkgs = self._sylk_cloud.ListPackages(
+            folders = self._sylk_cloud._folders.ListFolders(
                 ListPackagesRequest(
                     project_id=projectId
                 ),
                 _md
             )
 
-            for p in pkgs:
-                domain = p.result.package.package.split('.')[0]
-                p_ver = p.result.package.package.split('.')[-1]
-                packages[f'protos/{domain}/{p.result.package.name}/{p_ver}/{p.result.package.name}.proto'] = p.result.package
+            for f in folders:
+                for p in f.packages:
+                    pkg_path = p.result.package.package.replace('.','/')
+                    packages[f'{pkg_path}'] = p.result.package
 
-            svcs = self._sylk_cloud.ListServices(
-                ListServicesRequest(
-                    project_id=projectId
-                ),
-                _md
-            )
+            # svcs = self._sylk_cloud._services.ListServices(
+            #     ListServicesRequest(
+            #         project_id=projectId
+            #     ),
+            #     _md
+            # )
 
-            for s in svcs:
-                domain = s.result.service.full_name.split('.')[0]
-                s_ver = s.result.service.full_name.split('.')[2]
-                services[f'protos/{domain}/{s.result.service.name}/{s_ver}/{s.result.service.name}.proto'] = s.result.service
+            # for s in svcs:
+            #     domain = s.result.service.full_name.split('.')[0]
+            #     s_ver = s.result.service.full_name.split('.')[2]
+            #     services[f'protos/{domain}/{s.result.service.name}/{s_ver}/{s.result.service.name}.proto'] = s.result.service
 
             sylk_org = SylkOrganization(
                 domain="sylk",
@@ -176,7 +197,8 @@ class SylkCloud:
                         temp_messages.append(next((tmpM for tmpM in sylkDict['packages'][pkg]['messages'] if tmpM.get('fullName') == m),None))
                     sylkDict['packages'][pkg]['messages'] = temp_messages
                 except KeyError as e:
-                    _pretty.print_warning("Error while sorting the dependencies graph of package messages\n\t- If this error appeared right after making rename of message then ignore it...\n\t- Else please issue a bug report !")
+                    # _pretty.print_warning("Error while sorting the dependencies graph of package messages\n\t- If this error appeared right after making rename of message then ignore it...\n\t- Else please issue a bug report !")
+                    raise Exception('Seems like your project is nor ready to be built locally.. missing fields maybe?')
                 
             
             if overwrite:
@@ -189,7 +211,7 @@ class SylkCloud:
         
     def get_project(self):
 
-        projects = self._sylk_cloud.GetProject(
+        projects = self._sylk_cloud._projects.GetProject(
             request=GetProjectRequest(project=self._org_id),
             metadata=(('sylk-build-token',self._token),)
         )
@@ -198,7 +220,7 @@ class SylkCloud:
         
 
     def listProjects(self):
-        return self._sylk_cloud.ListProjects(ListProjectsRequest(org_id=self._org_id),(('sylk-build-token',self._token),))
+        return self._sylk_cloud._projects.ListProjects(ListProjectsRequest(org_id=self._org_id),(('sylk-build-token',self._token),))
 
     def buildProject(self):
         

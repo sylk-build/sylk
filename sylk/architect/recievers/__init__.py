@@ -20,9 +20,13 @@
 # WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 
 import logging
+
+from google.protobuf.json_format import ParseDict
+
 from sylk.commons import resources
 from sylk.commons.helpers import Graph
 from sylk.commons.pretty import print_error, print_info, print_warning
+from sylk.commons.protos.sylk.Sylk.v2 import Sylk_pb2
 
 from sylk.commons.resources import get_blank_sylk_json
 from sylk.commons.file_system import mkdir, rFile, wFile, get_current_location, join_path, check_if_file_exists
@@ -34,13 +38,20 @@ class Core:
         # log.debug(args)
         if args[0][0] is None:
             current_path = get_current_location()
-            destination_path = join_path(current_path,'sylk.json')
-            log.debug("Writing new sylk json {1}".format(args[0][0],destination_path))
+            opts = args[0][0]
+            format = opts.get('format')
+            destination_path = join_path(current_path,f'sylk.{format}')
+            log.debug("Writing new sylk {2} {1}".format(args[0][0],destination_path,format))
             sylkJson = get_blank_sylk_json(True)
-            wFile(destination_path,sylkJson,json=True)
+            if format == 'textpb':
+                sylk_json = ParseDict(sylkJson,Sylk_pb2.SylkJson())
+                wFile(destination_path,sylk_json,flags='wb')
+            else:
+                wFile(destination_path,sylkJson,json=True)
             # destination_path = destination_path.replace('sylk.json','.sylk')
             # mkdir(destination_path)
         else:
+            print(args)
             log.debug("Getting sylk json {0}".format(args[0][0]))
             try:
                 sylkJson = rFile(args[0][0],json=True)
@@ -51,8 +62,13 @@ class Core:
         return sylkJson
 
     def save_sylk_json(self,*args,**kwargs):
-        log.debug("Saving sylk json")
-        wFile(args[0][0],args[0][1][0],json=True,overwrite=True)
+        opts = args[0][1][1]
+        log.debug(f"Saving sylk {opts.get('format')}")
+        if opts.get('format') == 'textpb':
+            sylk_json = ParseDict(args[0][1][0],Sylk_pb2.SylkJson())
+            wFile(args[0][0].replace('sylk.json','sylk.textpb'), sylk_json.SerializeToString(), overwrite=True,flags='wb')
+        else:
+            wFile(args[0][0],args[0][1][0],json=True,overwrite=True)
 
 
 class Builder:
@@ -62,6 +78,7 @@ class Builder:
    
     def add_resource(self,sylkJson,*args,**kwargs):
         request = args[0][0][0]
+        order_dict = args[0][0][1]
         for k in request:
             # log.debug(f"Adding resource : {k}")
             if sylkJson.get(k) is None:
@@ -74,19 +91,25 @@ class Builder:
                 # Composites
                 else:
                     for j in request[k]:
+
                         sylkJson[k][j] = request[k][j]
+                    if k == 'packages':
+                        def reorder_dict(dictionary, key_order):
+                            return {key: dictionary[key] for key in key_order if key in dictionary}
+                        sylkJson[k] = reorder_dict(sylkJson[k],[c.replace('.','/') for c in order_dict])
 
     def edit_resource(self,sylkJson,resource,args):
 
         resource = resource[0]
         type = resource.get('type')
         kind = resource.get('kind')
-
+        base_protos = sylkJson.get('configs').get('protoBasePath')+'/' if sylkJson.get('configs').get('protoBasePath') is not None else ''
+        
         if type is not None:
-            if type == 'descriptors':
+            if type == 'descriptor':
                 if kind == resources.ResourceKinds.message.value:
                     fullname = resource.get('fullName')
-                    pkgname = 'protos/{0}/{1}/{2}/{1}.proto'.format(fullname.split('.')[0],fullname.split('.')[1],fullname.split('.')[2])
+                    pkgname = args[0].get('package').replace('.','/')
                     package = sylkJson.get('packages').get(pkgname)
                     if package is not None:
 
@@ -118,7 +141,7 @@ class Builder:
                     pass
                 elif kind == resources.ResourceKinds.enum.value:
                     fullname = resource.get('fullName')
-                    pkgname = 'protos/{0}/{1}/{2}/{1}.proto'.format(fullname.split('.')[0],fullname.split('.')[1],fullname.split('.')[1])
+                    pkgname = args[0].get('package').replace('.','/')
                     package = sylkJson.get('packages').get(pkgname)
                     if package is not None:
                         index = 0
@@ -131,14 +154,27 @@ class Builder:
                     pass
                 elif kind == resources.ResourceKinds.field.value:
                     pass
-            elif type == 'packages':
+            elif type == 'package':
                 fullname = resource.get('package')
-                pkgname = 'protos/{0}/{1}/{2}/{1}.proto'.format(fullname.split('.')[0],fullname.split('.')[1],fullname.split('.')[2])
+                pkgname = fullname.replace('.','/')
                 package = sylkJson.get('packages').get(pkgname)
                 if package is not None:
                     sylkJson['packages'][pkgname] = resource
-            elif type == 'services':
-                sylkJson['services'][resource.get('name')] = resource
+            elif type == 'service':
+                svc_path = args[0].get('package').replace('.','/')
+                index = 0
+                for s in sylkJson['packages'][svc_path]['services']:
+                    if args[0] is not None and args[0].get('old_name') is not None:
+
+                        if s.get('name') == args[0].get('old_name'):
+                            sylkJson['packages'][svc_path]['services'][index] = resource
+                            break
+
+                    if s.get('fullName') == resource.get('fullName'):
+                        sylkJson['packages'][svc_path]['services'][index] = resource
+                        break
+                    
+                    index += 1
 
     def remove_resource(self,sylkJson,full_name,*args,**kwargs):
         """Removing sylk.build resource by full name identifier"""

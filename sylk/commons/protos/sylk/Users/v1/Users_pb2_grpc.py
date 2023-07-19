@@ -15,37 +15,37 @@ class UsersStub(object):
             channel: A grpc.Channel.
         """
         self.CreateUser = channel.unary_unary(
-                '/Users/CreateUser',
+                '/sylk.Users.v1.Users/CreateUser',
                 request_serializer=sylk_dot_SylkApi_dot_v1_dot_SylkApi__pb2.CreateUserRequest.SerializeToString,
                 response_deserializer=sylk_dot_SylkApi_dot_v1_dot_SylkApi__pb2.CreateUserResponse.FromString,
                 )
         self.GetAccessToken = channel.unary_unary(
-                '/Users/GetAccessToken',
+                '/sylk.Users.v1.Users/GetAccessToken',
                 request_serializer=sylk_dot_SylkApi_dot_v1_dot_SylkApi__pb2.GetAccessTokenRequest.SerializeToString,
                 response_deserializer=sylk_dot_SylkApi_dot_v1_dot_SylkApi__pb2.GetAccessTokenResponse.FromString,
                 )
         self.CreateAccessToken = channel.unary_unary(
-                '/Users/CreateAccessToken',
+                '/sylk.Users.v1.Users/CreateAccessToken',
                 request_serializer=sylk_dot_SylkApi_dot_v1_dot_SylkApi__pb2.CreateAccessTokenRequest.SerializeToString,
                 response_deserializer=sylk_dot_SylkApi_dot_v1_dot_SylkApi__pb2.CreateAccessTokenResponse.FromString,
                 )
         self.GetUser = channel.unary_unary(
-                '/Users/GetUser',
+                '/sylk.Users.v1.Users/GetUser',
                 request_serializer=sylk_dot_SylkApi_dot_v1_dot_SylkApi__pb2.GetUserRequest.SerializeToString,
                 response_deserializer=sylk_dot_SylkApi_dot_v1_dot_SylkApi__pb2.GetUserResponse.FromString,
                 )
         self.ListAccessTokens = channel.unary_stream(
-                '/Users/ListAccessTokens',
+                '/sylk.Users.v1.Users/ListAccessTokens',
                 request_serializer=sylk_dot_SylkApi_dot_v1_dot_SylkApi__pb2.ListAccessTokensRequest.SerializeToString,
                 response_deserializer=sylk_dot_SylkApi_dot_v1_dot_SylkApi__pb2.GetAccessTokenResponse.FromString,
                 )
         self.RevokeAccessToken = channel.unary_unary(
-                '/Users/RevokeAccessToken',
+                '/sylk.Users.v1.Users/RevokeAccessToken',
                 request_serializer=sylk_dot_SylkApi_dot_v1_dot_SylkApi__pb2.RevokeAccessTokenRequest.SerializeToString,
                 response_deserializer=sylk_dot_SylkApi_dot_v1_dot_SylkApi__pb2.RevokeAccessTokenResponse.FromString,
                 )
         self.UpdateUser = channel.unary_unary(
-                '/Users/UpdateUser',
+                '/sylk.Users.v1.Users/UpdateUser',
                 request_serializer=sylk_dot_SylkApi_dot_v1_dot_SylkApi__pb2.UpdateUserRequest.SerializeToString,
                 response_deserializer=sylk_dot_SylkApi_dot_v1_dot_SylkApi__pb2.UpdateUserResponse.FromString,
                 )
@@ -143,7 +143,7 @@ def add_UsersServicer_to_server(servicer, server):
             ),
     }
     generic_handler = grpc.method_handlers_generic_handler(
-            'Users', rpc_method_handlers)
+            'sylk.Users.v1.Users', rpc_method_handlers)
     server.add_generic_rpc_handlers((generic_handler,))
 
 
@@ -162,7 +162,7 @@ class Users(object):
             wait_for_ready=None,
             timeout=None,
             metadata=None):
-        return grpc.experimental.unary_unary(request, target, '/Users/CreateUser',
+        return grpc.experimental.unary_unary(request, target, '/sylk.Users.v1.Users/CreateUser',
             sylk_dot_SylkApi_dot_v1_dot_SylkApi__pb2.CreateUserRequest.SerializeToString,
             sylk_dot_SylkApi_dot_v1_dot_SylkApi__pb2.CreateUserResponse.FromString,
             options, channel_credentials,
@@ -179,7 +179,7 @@ class Users(object):
             wait_for_ready=None,
             timeout=None,
             metadata=None):
-        return grpc.experimental.unary_unary(request, target, '/Users/GetAccessToken',
+        return grpc.experimental.unary_unary(request, target, '/sylk.Users.v1.Users/GetAccessToken',
             sylk_dot_SylkApi_dot_v1_dot_SylkApi__pb2.GetAccessTokenRequest.SerializeToString,
             sylk_dot_SylkApi_dot_v1_dot_SylkApi__pb2.GetAccessTokenResponse.FromString,
             options, channel_credentials,
@@ -196,7 +196,7 @@ class Users(object):
             wait_for_ready=None,
             timeout=None,
             metadata=None):
-        return grpc.experimental.unary_unary(request, target, '/Users/CreateAccessToken',
+        return grpc.experimental.unary_unary(request, target, '/sylk.Users.v1.Users/CreateAccessToken',
             sylk_dot_SylkApi_dot_v1_dot_SylkApi__pb2.CreateAccessTokenRequest.SerializeToString,
             sylk_dot_SylkApi_dot_v1_dot_SylkApi__pb2.CreateAccessTokenResponse.FromString,
             options, channel_credentials,
@@ -213,7 +213,7 @@ class Users(object):
             wait_for_ready=None,
             timeout=None,
             metadata=None):
-        return grpc.experimental.unary_unary(request, target, '/Users/GetUser',
+        return grpc.experimental.unary_unary(request, target, '/sylk.Users.v1.Users/GetUser',
             sylk_dot_SylkApi_dot_v1_dot_SylkApi__pb2.GetUserRequest.SerializeToString,
             sylk_dot_SylkApi_dot_v1_dot_SylkApi__pb2.GetUserResponse.FromString,
             options, channel_credentials,
@@ -230,7 +230,7 @@ class Users(object):
             wait_for_ready=None,
             timeout=None,
             metadata=None):
-        return grpc.experimental.unary_stream(request, target, '/Users/ListAccessTokens',
+        return grpc.experimental.unary_stream(request, target, '/sylk.Users.v1.Users/ListAccessTokens',
             sylk_dot_SylkApi_dot_v1_dot_SylkApi__pb2.ListAccessTokensRequest.SerializeToString,
             sylk_dot_SylkApi_dot_v1_dot_SylkApi__pb2.GetAccessTokenResponse.FromString,
             options, channel_credentials,
@@ -247,7 +247,7 @@ class Users(object):
             wait_for_ready=None,
             timeout=None,
             metadata=None):
-        return grpc.experimental.unary_unary(request, target, '/Users/RevokeAccessToken',
+        return grpc.experimental.unary_unary(request, target, '/sylk.Users.v1.Users/RevokeAccessToken',
             sylk_dot_SylkApi_dot_v1_dot_SylkApi__pb2.RevokeAccessTokenRequest.SerializeToString,
             sylk_dot_SylkApi_dot_v1_dot_SylkApi__pb2.RevokeAccessTokenResponse.FromString,
             options, channel_credentials,
@@ -264,7 +264,7 @@ class Users(object):
             wait_for_ready=None,
             timeout=None,
             metadata=None):
-        return grpc.experimental.unary_unary(request, target, '/Users/UpdateUser',
+        return grpc.experimental.unary_unary(request, target, '/sylk.Users.v1.Users/UpdateUser',
             sylk_dot_SylkApi_dot_v1_dot_SylkApi__pb2.UpdateUserRequest.SerializeToString,
             sylk_dot_SylkApi_dot_v1_dot_SylkApi__pb2.UpdateUserResponse.FromString,
             options, channel_credentials,

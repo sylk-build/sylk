@@ -68,14 +68,13 @@ def list_templates(configs,sylk_json:SylkJson):
 
 def list_dependencies(resource,sylk_json:SylkJson):
     resources = []
-
+    print(sylk_json._proto_tree.topological_sort())
     if resource is None or resource in ['service','package']:
         for p in sylk_json.packages:
             pkg = sylk_json.packages[p]
             resources.append(pkg)
         for s in sylk_json.services:
-            svc = sylk_json.services[s]
-            resources.append(svc)
+            resources.append(s)
 
         resourcesSorted = Graph(resources,True).topologicalSort()
     elif resource == 'message':
@@ -85,24 +84,34 @@ def list_dependencies(resource,sylk_json:SylkJson):
                 resources.append(m)
         resourcesSorted = dict(Graph(resources).graph)
         del resourcesSorted[None]
+    else:
+        print_error("not supporting listing dependencies for: rpc / fields / enums / enum values")
+        exit(1)
 
     print_info('Listing Dependencies {}'.format(resource if resource is not None else 'All'),True)
     
     for dep in resourcesSorted:
-        if len(dep.split('.')) == 1:
+        try:
+            pkg = sylk_json.get_package(dep)
+            if resource is None or resource == 'package':
+                print()
+                print_note('|| Package: {}'.format(dep))
+                pkg_name = '{0}/{1}'.format(sylk_json._root_protos,dep.replace('.','/'))
+                if sylk_json.packages[pkg_name].get('dependencies'):
+                    for d in sylk_json.packages[pkg_name].get('dependencies'):
+                        print('    ||\t     |\n    ||\t      -- {}'.format(d))
+        except:
+            svc = sylk_json.get_service(dep)
             if resource is None or resource == 'service':
                 print()
                 # display_resource(dep,sylk_json,1)
                 print_success('|| Service: {}'.format(dep))
 
-                if sylk_json.services[dep].get('dependencies'):
-                    for d in sylk_json.services[dep].get('dependencies'):
+                if svc.get('dependencies'):
+                    for d in svc.get('dependencies'):
                         print('    ||\t     |\n    ||\t     Package -- {}'.format(d))
                         if 'google.protobuf.' not in d:
-                            deep_pkg_domain = d.split('.')[0]
-                            deep_pkg = d.split('.')[1]
-                            deep_pkg_version = d.split('.')[2]
-                            pkg_proto_path = f'protos/{deep_pkg_domain}/{deep_pkg}/{deep_pkg_version}/{deep_pkg}.proto'
+                            pkg_proto_path = '.'.join(d.split('.')[:-1])
                             if sylk_json.packages[pkg_proto_path].get('dependencies'):
                                 for deep_dep in sylk_json.packages[pkg_proto_path].get('dependencies'):
                                     if 'google.protobuf.' not in deep_dep:
@@ -113,15 +122,9 @@ def list_dependencies(resource,sylk_json:SylkJson):
                             # for deep_dep in sylk_json.packages[f'protos/{deep_pkg_version}/{deep_pkg}.proto'].get('dependencies'):
                         else:
                             print('    ||\t     |\n    ||\t      Package -- {}'.format(d))
-        elif resource is None or resource == 'package':
-            print()
-            print_note('| Package: {}'.format(dep))
-            pkg_name = 'protos/{0}/{1}/{2}/{1}.proto'.format(dep.split('.')[0],dep.split('.')[1],dep.split('.')[2])
-            if sylk_json.packages[pkg_name].get('dependencies'):
-                for d in sylk_json.packages[pkg_name].get('dependencies'):
-                    print('    ||\t     |\n    ||\t      -- {}'.format(d))
         
-        elif resource == 'message':
+        
+        if resource == 'message':
             msg = resourcesSorted[dep]
             print()
             print_note('|| Message: {}'.format(dep))
@@ -156,7 +159,7 @@ def list_by_name(full_name,sylk_json:SylkJson):
             pkg = sylk_json.get_package(full_name.split('.')[1])
             header = ['Package','Messages','Enums','Dependencies']
             tab = PrettyTable(header)
-            tab.add_row([pkg['name'],len(pkg.get('messages') if pkg.get('messages') is not None else []),len(pkg.get('enums')) if pkg.get('enums') is not None else 0,pkg.get('dependencies')])
+            tab.add_row([pkg['name']+ ' [{}]'.format(pkg['package'].split('.')[-1]),len(pkg.get('messages') if pkg.get('messages') is not None else []),len(pkg.get('enums')) if pkg.get('enums') is not None else 0,pkg.get('dependencies')])
             print_info(tab,True,'Listing package resource')
         except Exception as e:
             logging.error(e)
@@ -253,7 +256,7 @@ def list_by_resource(type,sylk_json:SylkJson):
                 if pkg.get('extensions') is not None:
                     ext = list(map(lambda k: k,pkg.get('extensions')))
                 ext = ext if len(ext) >0 else '-'
-                tab.add_row([pkg['name'],len(pkg.get('messages') if pkg.get('messages') is not None else []),len(pkg.get('enums') if pkg.get('enums') is not None else []),pkg.get('dependencies'),ext ])
+                tab.add_row([pkg['name']+ ' [{}]'.format(pkg['package'].split('.')[-1]),len(pkg.get('messages') if pkg.get('messages') is not None else []),len(pkg.get('enums') if pkg.get('enums') is not None else []),pkg.get('dependencies'),ext ])
             print_info(tab,True,'Listing packages resources')
         else:
             print_warning("No packages under {}".format(sylk_json.project.get('packageName')))
@@ -328,14 +331,13 @@ def list_all(sylk_json:SylkJson):
         tab_rpcs = PrettyTable(header)
         
         for svc in sylk_json.services:
-            service=sylk_json.services[svc]
             ext = []
-            if service.get('extensions') is not None:
-                ext = list(map(lambda k: k,service.get('extensions')))
+            if svc.get('extensions') is not None:
+                ext = list(map(lambda k: k,svc.get('extensions')))
             ext = ext if len(ext) >0 else '-'
-            add_service_desc(tab,service,ext)
-            if service.get('methods') is not None:
-                for rpc in service.get('methods'):
+            add_service_desc(tab,svc,ext)
+            if svc.get('methods') is not None:
+                for rpc in svc.get('methods'):
                     add_rpc_desc(tab_rpcs,rpc,)
     
         print_info(tab,True,'📡 Listing services resources')
@@ -397,16 +399,16 @@ def add_project_desc(tab,prj,org):
     tab.add_row([f'{org}.{prj.project.package_name}',prj.project.name, SylkServerLanguages.Name(prj.project.server.language),[SylkClientLanguages.Name(c.language) for c in prj.project.clients],prj.numServices,prj.numPackages,prj.numMethods,prj.numMessages])
 
 def add_service_desc(tab,svc_description,extensions=None):
-    tab.add_row([svc_description.get('name'),len(svc_description.get('methods') if svc_description.get('methods') is not None else []),svc_description.get('dependencies'),extensions])
+    tab.add_row([svc_description.get('name') + ' [{}]'.format(svc_description.get('fullName')),len(svc_description.get('methods') if svc_description.get('methods') is not None else []),svc_description.get('dependencies'),extensions])
 
 def add_package_desc(tab,package_desc,ext):
-    tab.add_row([package_desc.get('name'),len(package_desc.get('messages') if package_desc.get('messages') is not None else []),len(package_desc.get('enums') if package_desc.get('enums') is not None else []),package_desc.get('dependencies'),ext ])
+    tab.add_row([package_desc.get('name') + ' [{}]'.format(package_desc.get('package')),len(package_desc.get('messages') if package_desc.get('messages') is not None else []),len(package_desc.get('enums') if package_desc.get('enums') is not None else []),package_desc.get('dependencies'),ext ])
 
 def add_message_desc(tab,msg_desc,package_desc, ext,ext_type ):
-    tab.add_row([msg_desc.get('name'),len(msg_desc.get('fields') if msg_desc.get('fields') is not None else []),package_desc.get('package'), ext,ext_type ])
+    tab.add_row([msg_desc.get('name') + ' [{}]'.format(msg_desc.get('fullName')),len(msg_desc.get('fields') if msg_desc.get('fields') is not None else []),package_desc.get('package'), ext,ext_type ])
 
 def add_enum_desc(tab,enum_desc,package_desc):
-    tab.add_row([enum_desc.get('name'),len(enum_desc.get('values') if enum_desc.get('values') is not None else []),package_desc.get('package')])
+    tab.add_row([enum_desc.get('name') + ' [{}]'.format(enum_desc.get('fullName')),len(enum_desc.get('values') if enum_desc.get('values') is not None else []),package_desc.get('package')])
 
 def add_rpc_desc(tab,rpc_desc):
     rpc_type_server = rpc_desc.get('serverStreaming')

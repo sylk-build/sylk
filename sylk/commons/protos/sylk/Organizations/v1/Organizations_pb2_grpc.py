@@ -15,42 +15,42 @@ class OrganizationsStub(object):
             channel: A grpc.Channel.
         """
         self.AcceprUserInvite = channel.unary_unary(
-                '/Organizations/AcceprUserInvite',
+                '/sylk.Organizations.v1.Organizations/AcceprUserInvite',
                 request_serializer=sylk_dot_SylkApi_dot_v1_dot_SylkApi__pb2.AcceptUserInviteRequest.SerializeToString,
                 response_deserializer=sylk_dot_SylkApi_dot_v1_dot_SylkApi__pb2.AcceptUserInviteResponse.FromString,
                 )
         self.GetOrganization = channel.unary_unary(
-                '/Organizations/GetOrganization',
+                '/sylk.Organizations.v1.Organizations/GetOrganization',
                 request_serializer=sylk_dot_SylkApi_dot_v1_dot_SylkApi__pb2.GetOrganizationRequest.SerializeToString,
                 response_deserializer=sylk_dot_SylkApi_dot_v1_dot_SylkApi__pb2.GetOrganizationResponse.FromString,
                 )
         self.UpdateOrganization = channel.unary_unary(
-                '/Organizations/UpdateOrganization',
+                '/sylk.Organizations.v1.Organizations/UpdateOrganization',
                 request_serializer=sylk_dot_SylkApi_dot_v1_dot_SylkApi__pb2.UpdateOrganizationRequest.SerializeToString,
                 response_deserializer=sylk_dot_SylkApi_dot_v1_dot_SylkApi__pb2.UpdateOrganizationResponse.FromString,
                 )
         self.ListOrganizations = channel.unary_stream(
-                '/Organizations/ListOrganizations',
+                '/sylk.Organizations.v1.Organizations/ListOrganizations',
                 request_serializer=sylk_dot_SylkApi_dot_v1_dot_SylkApi__pb2.ListOrganizationsRequest.SerializeToString,
                 response_deserializer=sylk_dot_SylkApi_dot_v1_dot_SylkApi__pb2.GetOrganizationResponse.FromString,
                 )
         self.AddUser = channel.unary_unary(
-                '/Organizations/AddUser',
+                '/sylk.Organizations.v1.Organizations/AddUser',
                 request_serializer=sylk_dot_SylkApi_dot_v1_dot_SylkApi__pb2.AddUserRequest.SerializeToString,
                 response_deserializer=sylk_dot_SylkApi_dot_v1_dot_SylkApi__pb2.AddUserResponse.FromString,
                 )
         self.UpdateUserStatus = channel.unary_unary(
-                '/Organizations/UpdateUserStatus',
+                '/sylk.Organizations.v1.Organizations/UpdateUserStatus',
                 request_serializer=sylk_dot_SylkApi_dot_v1_dot_SylkApi__pb2.UpdateUserStatusRequest.SerializeToString,
                 response_deserializer=sylk_dot_SylkApi_dot_v1_dot_SylkApi__pb2.UpdateUserStatusResponse.FromString,
                 )
         self.RemoveUser = channel.unary_unary(
-                '/Organizations/RemoveUser',
+                '/sylk.Organizations.v1.Organizations/RemoveUser',
                 request_serializer=sylk_dot_SylkApi_dot_v1_dot_SylkApi__pb2.RemoveUserRequest.SerializeToString,
                 response_deserializer=sylk_dot_SylkApi_dot_v1_dot_SylkApi__pb2.RemoveUserResponse.FromString,
                 )
         self.UpdateUserRole = channel.unary_unary(
-                '/Organizations/UpdateUserRole',
+                '/sylk.Organizations.v1.Organizations/UpdateUserRole',
                 request_serializer=sylk_dot_SylkApi_dot_v1_dot_SylkApi__pb2.UpdateUserRoleRequest.SerializeToString,
                 response_deserializer=sylk_dot_SylkApi_dot_v1_dot_SylkApi__pb2.UpdateUserRoleResponse.FromString,
                 )
@@ -160,7 +160,7 @@ def add_OrganizationsServicer_to_server(servicer, server):
             ),
     }
     generic_handler = grpc.method_handlers_generic_handler(
-            'Organizations', rpc_method_handlers)
+            'sylk.Organizations.v1.Organizations', rpc_method_handlers)
     server.add_generic_rpc_handlers((generic_handler,))
 
 
@@ -179,7 +179,7 @@ class Organizations(object):
             wait_for_ready=None,
             timeout=None,
             metadata=None):
-        return grpc.experimental.unary_unary(request, target, '/Organizations/AcceprUserInvite',
+        return grpc.experimental.unary_unary(request, target, '/sylk.Organizations.v1.Organizations/AcceprUserInvite',
             sylk_dot_SylkApi_dot_v1_dot_SylkApi__pb2.AcceptUserInviteRequest.SerializeToString,
             sylk_dot_SylkApi_dot_v1_dot_SylkApi__pb2.AcceptUserInviteResponse.FromString,
             options, channel_credentials,
@@ -196,7 +196,7 @@ class Organizations(object):
             wait_for_ready=None,
             timeout=None,
             metadata=None):
-        return grpc.experimental.unary_unary(request, target, '/Organizations/GetOrganization',
+        return grpc.experimental.unary_unary(request, target, '/sylk.Organizations.v1.Organizations/GetOrganization',
             sylk_dot_SylkApi_dot_v1_dot_SylkApi__pb2.GetOrganizationRequest.SerializeToString,
             sylk_dot_SylkApi_dot_v1_dot_SylkApi__pb2.GetOrganizationResponse.FromString,
             options, channel_credentials,
@@ -213,7 +213,7 @@ class Organizations(object):
             wait_for_ready=None,
             timeout=None,
             metadata=None):
-        return grpc.experimental.unary_unary(request, target, '/Organizations/UpdateOrganization',
+        return grpc.experimental.unary_unary(request, target, '/sylk.Organizations.v1.Organizations/UpdateOrganization',
             sylk_dot_SylkApi_dot_v1_dot_SylkApi__pb2.UpdateOrganizationRequest.SerializeToString,
             sylk_dot_SylkApi_dot_v1_dot_SylkApi__pb2.UpdateOrganizationResponse.FromString,
             options, channel_credentials,
@@ -230,7 +230,7 @@ class Organizations(object):
             wait_for_ready=None,
             timeout=None,
             metadata=None):
-        return grpc.experimental.unary_stream(request, target, '/Organizations/ListOrganizations',
+        return grpc.experimental.unary_stream(request, target, '/sylk.Organizations.v1.Organizations/ListOrganizations',
             sylk_dot_SylkApi_dot_v1_dot_SylkApi__pb2.ListOrganizationsRequest.SerializeToString,
             sylk_dot_SylkApi_dot_v1_dot_SylkApi__pb2.GetOrganizationResponse.FromString,
             options, channel_credentials,
@@ -247,7 +247,7 @@ class Organizations(object):
             wait_for_ready=None,
             timeout=None,
             metadata=None):
-        return grpc.experimental.unary_unary(request, target, '/Organizations/AddUser',
+        return grpc.experimental.unary_unary(request, target, '/sylk.Organizations.v1.Organizations/AddUser',
             sylk_dot_SylkApi_dot_v1_dot_SylkApi__pb2.AddUserRequest.SerializeToString,
             sylk_dot_SylkApi_dot_v1_dot_SylkApi__pb2.AddUserResponse.FromString,
             options, channel_credentials,
@@ -264,7 +264,7 @@ class Organizations(object):
             wait_for_ready=None,
             timeout=None,
             metadata=None):
-        return grpc.experimental.unary_unary(request, target, '/Organizations/UpdateUserStatus',
+        return grpc.experimental.unary_unary(request, target, '/sylk.Organizations.v1.Organizations/UpdateUserStatus',
             sylk_dot_SylkApi_dot_v1_dot_SylkApi__pb2.UpdateUserStatusRequest.SerializeToString,
             sylk_dot_SylkApi_dot_v1_dot_SylkApi__pb2.UpdateUserStatusResponse.FromString,
             options, channel_credentials,
@@ -281,7 +281,7 @@ class Organizations(object):
             wait_for_ready=None,
             timeout=None,
             metadata=None):
-        return grpc.experimental.unary_unary(request, target, '/Organizations/RemoveUser',
+        return grpc.experimental.unary_unary(request, target, '/sylk.Organizations.v1.Organizations/RemoveUser',
             sylk_dot_SylkApi_dot_v1_dot_SylkApi__pb2.RemoveUserRequest.SerializeToString,
             sylk_dot_SylkApi_dot_v1_dot_SylkApi__pb2.RemoveUserResponse.FromString,
             options, channel_credentials,
@@ -298,7 +298,7 @@ class Organizations(object):
             wait_for_ready=None,
             timeout=None,
             metadata=None):
-        return grpc.experimental.unary_unary(request, target, '/Organizations/UpdateUserRole',
+        return grpc.experimental.unary_unary(request, target, '/sylk.Organizations.v1.Organizations/UpdateUserRole',
             sylk_dot_SylkApi_dot_v1_dot_SylkApi__pb2.UpdateUserRoleRequest.SerializeToString,
             sylk_dot_SylkApi_dot_v1_dot_SylkApi__pb2.UpdateUserRoleResponse.FromString,
             options, channel_credentials,

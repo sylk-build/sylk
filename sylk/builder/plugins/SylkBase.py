@@ -21,99 +21,99 @@
 
 import logging
 import sylk.builder as builder
-from sylk.commons import helpers,file_system,pretty
+from sylk.commons import helpers, file_system, pretty
 from sylk.commons.errors import SylkValidationError
 
 
 @builder.hookimpl
-def pre_build(sylk_json:helpers.SylkJson, sylk_context: helpers.SylkContext):
+def pre_build(sylk_json: helpers.SylkJson, sylk_context: helpers.SylkContext):
     pretty.print_info("🔌 Starting sylk build process %s plugin" % (__name__))
 
     directories = [
         # Clients
-        file_system.join_path(sylk_json.path,'clients'),
-        file_system.join_path(sylk_json.path,'services','protos', sylk_json.domain),
-        file_system.join_path(sylk_json.path,'protos'),
-        file_system.join_path(sylk_json.path,'protos', sylk_json.domain),
-        file_system.join_path(sylk_json.path,'bin'),
-        file_system.join_path(sylk_json.path,'.sylk'),
-        file_system.join_path(sylk_json.path,'server'),
+        file_system.join_path(sylk_json.path, "clients"),
+        file_system.join_path(sylk_json.path, "services", "protos", sylk_json.domain),
+        file_system.join_path(sylk_json.path, "protos"),
+        file_system.join_path(sylk_json.path, "protos", sylk_json.domain),
+        file_system.join_path(sylk_json.path, "bin"),
+        file_system.join_path(sylk_json.path, ".sylk"),
+        file_system.join_path(sylk_json.path, "server"),
     ]
     for d in directories:
         file_system.mkdir(d)
 
 
 @builder.hookimpl(hookwrapper=True)
-def post_build(sylk_json:helpers.SylkJson, sylk_context: helpers.SylkContext):
+def post_build(sylk_json: helpers.SylkJson, sylk_context: helpers.SylkContext):
     # pretty.print_success("Finished sylk.build build process %s plugin" % (__name__))
     # all corresponding hookimpls are invoked here
     outcome = yield
     results = outcome.get_result()
     if results != []:
-        pretty.print_info('Sylk finished build for:')
+        pretty.print_info("Sylk finished build for:")
         for p in results:
-            pretty.print_note(f'\t- {p[0]}')
+            pretty.print_note(f"\t- {p[0]}")
+
 
 @builder.hookimpl(hookwrapper=True)
-def pre_build_server(sylk_json:helpers.SylkJson, sylk_context: helpers.SylkContext):
+def pre_build_server(sylk_json: helpers.SylkJson, sylk_context: helpers.SylkContext):
     # all corresponding hookimpls are invoked here
     outcome = yield
     # outcome.force_result([{'test':'test'}])
     results = outcome.get_result()
 
     inject_base_dependencies = None
-    for s in sylk_json.services:
-        svc = sylk_json.services[s]
-        if svc.get('dependencies') is not None and len(svc.get('dependencies')) > 0:
-            for d in svc.get('dependencies') :
-                dependentSvc = sylk_json.get_service(d.split('.')[1])
+    for svc in sylk_json.services:
+        if svc.get("dependencies") is not None and len(svc.get("dependencies")) > 0:
+            for d in svc.get("dependencies"):
+                dependentSvc = sylk_json.get_service(d.split(".")[1])
                 if dependentSvc is not None:
                     if inject_base_dependencies is None:
                         inject_base_dependencies = {}
-                    inject_base_dependencies[s] = d.split('.')[1]+'Impl'
+                    inject_base_dependencies[svc.get('name')] = d.split(".")[1] + "Impl"
     if inject_base_dependencies is not None:
-        results.append({
-            'sylk.build.builder.plugins.SylkTsServer:write_server():inject_service': inject_base_dependencies
-        })
+        results.append(
+            {
+                "sylk.build.builder.plugins.SylkTsServer:write_server():inject_service": inject_base_dependencies
+            }
+        )
     if results != []:
         for impl in results:
             for mini_hook in impl:
-                pretty.print_info(f'[pre_build_server] Found MiniHook: {mini_hook}')
+                pretty.print_info(f"[pre_build_server] Found MiniHook: {mini_hook}")
+
 
 @builder.hookimpl(hookwrapper=True)
-def post_build_server(sylk_json:helpers.SylkJson, sylk_context: helpers.SylkContext):
+def post_build_server(sylk_json: helpers.SylkJson, sylk_context: helpers.SylkContext):
     # all corresponding hookimpls are invoked here
     outcome = yield
     results = outcome.get_result()
     if results != []:
         for impl in results:
             for mini_hook in impl:
-                pretty.print_info(f'[post_build_server] Found MiniHook: {mini_hook}')
+                pretty.print_info(f"[post_build_server] Found MiniHook: {mini_hook}")
 
 
 @builder.hookimpl(hookwrapper=True)
-def pre_build_clients(sylk_json:helpers.SylkJson, sylk_context: helpers.SylkContext):
+def pre_build_clients(sylk_json: helpers.SylkJson, sylk_context: helpers.SylkContext):
     # all corresponding hookimpls are invoked here
     outcome = yield
     results = outcome.get_result()
     if results != []:
         for impl in results:
             for mini_hook in impl:
-                pretty.print_info(f'[pre_build_clients] Found MiniHook: {mini_hook}')
+                pretty.print_info(f"[pre_build_clients] Found MiniHook: {mini_hook}")
 
 
 @builder.hookimpl(hookwrapper=True)
-def post_build_clients(sylk_json:helpers.SylkJson, sylk_context: helpers.SylkContext):
+def post_build_clients(sylk_json: helpers.SylkJson, sylk_context: helpers.SylkContext):
     # all corresponding hookimpls are invoked here
     outcome = yield
     results = outcome.get_result()
     if results != []:
         for impl in results:
             for mini_hook in impl:
-                pretty.print_info(f'[post_build_clients] Found MiniHook: {mini_hook}')
-
-
-
+                pretty.print_info(f"[post_build_clients] Found MiniHook: {mini_hook}")
 
 
 @builder.hookimpl

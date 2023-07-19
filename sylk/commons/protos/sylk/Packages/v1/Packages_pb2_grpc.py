@@ -15,27 +15,27 @@ class PackagesStub(object):
             channel: A grpc.Channel.
         """
         self.GetPackage = channel.unary_unary(
-                '/Packages/GetPackage',
+                '/sylk.Packages.v1.Packages/GetPackage',
                 request_serializer=sylk_dot_SylkApi_dot_v1_dot_SylkApi__pb2.GetPackageRequest.SerializeToString,
                 response_deserializer=sylk_dot_SylkApi_dot_v1_dot_SylkApi__pb2.GetPackageResponse.FromString,
                 )
         self.CreatePackage = channel.unary_unary(
-                '/Packages/CreatePackage',
+                '/sylk.Packages.v1.Packages/CreatePackage',
                 request_serializer=sylk_dot_SylkApi_dot_v1_dot_SylkApi__pb2.CreatePackageRequest.SerializeToString,
                 response_deserializer=sylk_dot_SylkApi_dot_v1_dot_SylkApi__pb2.CreatePackageResponse.FromString,
                 )
         self.DeletePackage = channel.unary_unary(
-                '/Packages/DeletePackage',
+                '/sylk.Packages.v1.Packages/DeletePackage',
                 request_serializer=sylk_dot_SylkApi_dot_v1_dot_SylkApi__pb2.DeletePackageRequest.SerializeToString,
                 response_deserializer=sylk_dot_SylkApi_dot_v1_dot_SylkApi__pb2.DeletePackageResponse.FromString,
                 )
         self.UpdatePackage = channel.unary_unary(
-                '/Packages/UpdatePackage',
+                '/sylk.Packages.v1.Packages/UpdatePackage',
                 request_serializer=sylk_dot_SylkApi_dot_v1_dot_SylkApi__pb2.UpdatePackageRequest.SerializeToString,
                 response_deserializer=sylk_dot_SylkApi_dot_v1_dot_SylkApi__pb2.UpdatePackageResponse.FromString,
                 )
         self.ListPackages = channel.unary_stream(
-                '/Packages/ListPackages',
+                '/sylk.Packages.v1.Packages/ListPackages',
                 request_serializer=sylk_dot_SylkApi_dot_v1_dot_SylkApi__pb2.ListPackagesRequest.SerializeToString,
                 response_deserializer=sylk_dot_SylkApi_dot_v1_dot_SylkApi__pb2.GetPackageResponse.FromString,
                 )
@@ -109,7 +109,7 @@ def add_PackagesServicer_to_server(servicer, server):
             ),
     }
     generic_handler = grpc.method_handlers_generic_handler(
-            'Packages', rpc_method_handlers)
+            'sylk.Packages.v1.Packages', rpc_method_handlers)
     server.add_generic_rpc_handlers((generic_handler,))
 
 
@@ -128,7 +128,7 @@ class Packages(object):
             wait_for_ready=None,
             timeout=None,
             metadata=None):
-        return grpc.experimental.unary_unary(request, target, '/Packages/GetPackage',
+        return grpc.experimental.unary_unary(request, target, '/sylk.Packages.v1.Packages/GetPackage',
             sylk_dot_SylkApi_dot_v1_dot_SylkApi__pb2.GetPackageRequest.SerializeToString,
             sylk_dot_SylkApi_dot_v1_dot_SylkApi__pb2.GetPackageResponse.FromString,
             options, channel_credentials,
@@ -145,7 +145,7 @@ class Packages(object):
             wait_for_ready=None,
             timeout=None,
             metadata=None):
-        return grpc.experimental.unary_unary(request, target, '/Packages/CreatePackage',
+        return grpc.experimental.unary_unary(request, target, '/sylk.Packages.v1.Packages/CreatePackage',
             sylk_dot_SylkApi_dot_v1_dot_SylkApi__pb2.CreatePackageRequest.SerializeToString,
             sylk_dot_SylkApi_dot_v1_dot_SylkApi__pb2.CreatePackageResponse.FromString,
             options, channel_credentials,
@@ -162,7 +162,7 @@ class Packages(object):
             wait_for_ready=None,
             timeout=None,
             metadata=None):
-        return grpc.experimental.unary_unary(request, target, '/Packages/DeletePackage',
+        return grpc.experimental.unary_unary(request, target, '/sylk.Packages.v1.Packages/DeletePackage',
             sylk_dot_SylkApi_dot_v1_dot_SylkApi__pb2.DeletePackageRequest.SerializeToString,
             sylk_dot_SylkApi_dot_v1_dot_SylkApi__pb2.DeletePackageResponse.FromString,
             options, channel_credentials,
@@ -179,7 +179,7 @@ class Packages(object):
             wait_for_ready=None,
             timeout=None,
             metadata=None):
-        return grpc.experimental.unary_unary(request, target, '/Packages/UpdatePackage',
+        return grpc.experimental.unary_unary(request, target, '/sylk.Packages.v1.Packages/UpdatePackage',
             sylk_dot_SylkApi_dot_v1_dot_SylkApi__pb2.UpdatePackageRequest.SerializeToString,
             sylk_dot_SylkApi_dot_v1_dot_SylkApi__pb2.UpdatePackageResponse.FromString,
             options, channel_credentials,
@@ -196,7 +196,7 @@ class Packages(object):
             wait_for_ready=None,
             timeout=None,
             metadata=None):
-        return grpc.experimental.unary_stream(request, target, '/Packages/ListPackages',
+        return grpc.experimental.unary_stream(request, target, '/sylk.Packages.v1.Packages/ListPackages',
             sylk_dot_SylkApi_dot_v1_dot_SylkApi__pb2.ListPackagesRequest.SerializeToString,
             sylk_dot_SylkApi_dot_v1_dot_SylkApi__pb2.GetPackageResponse.FromString,
             options, channel_credentials,

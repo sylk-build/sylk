@@ -14,7 +14,7 @@ _sym_db = _symbol_database.Default()
 from sylk.commons.protos.sylk.SylkApi.v1 import SylkApi_pb2 as sylk_dot_SylkApi_dot_v1_dot_SylkApi__pb2
 
 
-DESCRIPTOR = _descriptor_pool.Default().AddSerializedFile(b'\n\x1bsylk/Fields/v1/Fields.proto\x1a\x1dsylk/SylkApi/v1/SylkApi.proto2\xe7\x02\n\x06\x46ields\x12X\n\x0b\x43reateField\x12#.sylk.SylkApi.v1.CreateFieldRequest\x1a$.sylk.SylkApi.v1.CreateFieldResponse\x12O\n\x08GetField\x12 .sylk.SylkApi.v1.GetFieldRequest\x1a!.sylk.SylkApi.v1.GetFieldResponse\x12X\n\x0b\x44\x65leteField\x12#.sylk.SylkApi.v1.DeleteFieldRequest\x1a$.sylk.SylkApi.v1.DeleteFieldResponse\x12X\n\x0bUpdateField\x12#.sylk.SylkApi.v1.UpdateFieldRequest\x1a$.sylk.SylkApi.v1.UpdateFieldResponseB@Z>github.com/sylk-build/sylk-core/services/protos/sylk/Fields/v1b\x06proto3')
+DESCRIPTOR = _descriptor_pool.Default().AddSerializedFile(b'\n\x1bsylk/Fields/v1/Fields.proto\x12\x0esylk.Fields.v1\x1a\x1dsylk/SylkApi/v1/SylkApi.proto2\xe7\x02\n\x06\x46ields\x12X\n\x0b\x43reateField\x12#.sylk.SylkApi.v1.CreateFieldRequest\x1a$.sylk.SylkApi.v1.CreateFieldResponse\x12O\n\x08GetField\x12 .sylk.SylkApi.v1.GetFieldRequest\x1a!.sylk.SylkApi.v1.GetFieldResponse\x12X\n\x0b\x44\x65leteField\x12#.sylk.SylkApi.v1.DeleteFieldRequest\x1a$.sylk.SylkApi.v1.DeleteFieldResponse\x12X\n\x0bUpdateField\x12#.sylk.SylkApi.v1.UpdateFieldRequest\x1a$.sylk.SylkApi.v1.UpdateFieldResponseb\x06proto3')
 
 _globals = globals()
 _builder.BuildMessageAndEnumDescriptors(DESCRIPTOR, _globals)
@@ -22,7 +22,6 @@ _builder.BuildTopDescriptorsAndMessages(DESCRIPTOR, 'sylk.Fields.v1.Fields_pb2',
 if _descriptor._USE_C_DESCRIPTORS == False:
 
   DESCRIPTOR._options = None
-  DESCRIPTOR._serialized_options = b'Z>github.com/sylk-build/sylk-core/services/protos/sylk/Fields/v1'
-  _globals['_FIELDS']._serialized_start=63
-  _globals['_FIELDS']._serialized_end=422
+  _globals['_FIELDS']._serialized_start=79
+  _globals['_FIELDS']._serialized_end=438
 # @@protoc_insertion_point(module_scope)

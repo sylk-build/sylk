@@ -14,7 +14,7 @@ _sym_db = _symbol_database.Default()
 from google.protobuf import timestamp_pb2 as google_dot_protobuf_dot_timestamp__pb2
 
 
-DESCRIPTOR = _descriptor_pool.Default().AddSerializedFile(b'\n)sylk/SylkEnumValue/v1/SylkEnumValue.proto\x12\x15sylk.SylkEnumValue.v1\x1a\x1fgoogle/protobuf/timestamp.proto\"\xb0\x01\n\x14SylkEnumValueDisplay\x12\x38\n\nenum_value\x18\x01 \x01(\x0b\x32$.sylk.SylkEnumValue.v1.SylkEnumValue\x12.\n\nupdated_at\x18\x03 \x01(\x0b\x32\x1a.google.protobuf.Timestamp\x12.\n\ncreated_at\x18\x02 \x01(\x0b\x32\x1a.google.protobuf.Timestamp\"\x8d\x01\n\rSylkEnumValue\x12\x0c\n\x04kind\x18\x08 \x01(\t\x12\x13\n\x0b\x64\x65scription\x18\x06 \x01(\t\x12\r\n\x05index\x18\x04 \x01(\x05\x12\x0b\n\x03uri\x18\x01 \x01(\t\x12\x0c\n\x04name\x18\x02 \x01(\t\x12\x0e\n\x06number\x18\x05 \x01(\x05\x12\x11\n\tfull_name\x18\x03 \x01(\t\x12\x0c\n\x04type\x18\x07 \x01(\tBGZEgithub.com/sylk-build/sylk-core/services/protos/sylk/SylkEnumValue/v1b\x06proto3')
+DESCRIPTOR = _descriptor_pool.Default().AddSerializedFile(b'\n)sylk/SylkEnumValue/v1/SylkEnumValue.proto\x12\x15sylk.SylkEnumValue.v1\x1a\x1fgoogle/protobuf/timestamp.proto\"\x8d\x01\n\rSylkEnumValue\x12\x0c\n\x04kind\x18\x08 \x01(\t\x12\x13\n\x0b\x64\x65scription\x18\x06 \x01(\t\x12\r\n\x05index\x18\x04 \x01(\x05\x12\x0b\n\x03uri\x18\x01 \x01(\t\x12\x0c\n\x04name\x18\x02 \x01(\t\x12\x0e\n\x06number\x18\x05 \x01(\x05\x12\x11\n\tfull_name\x18\x03 \x01(\t\x12\x0c\n\x04type\x18\x07 \x01(\t\"\xb0\x01\n\x14SylkEnumValueDisplay\x12\x38\n\nenum_value\x18\x01 \x01(\x0b\x32$.sylk.SylkEnumValue.v1.SylkEnumValue\x12.\n\nupdated_at\x18\x03 \x01(\x0b\x32\x1a.google.protobuf.Timestamp\x12.\n\ncreated_at\x18\x02 \x01(\x0b\x32\x1a.google.protobuf.Timestampb\x06proto3')
 
 _globals = globals()
 _builder.BuildMessageAndEnumDescriptors(DESCRIPTOR, _globals)
@@ -22,9 +22,8 @@ _builder.BuildTopDescriptorsAndMessages(DESCRIPTOR, 'sylk.SylkEnumValue.v1.SylkE
 if _descriptor._USE_C_DESCRIPTORS == False:
 
   DESCRIPTOR._options = None
-  DESCRIPTOR._serialized_options = b'ZEgithub.com/sylk-build/sylk-core/services/protos/sylk/SylkEnumValue/v1'
-  _globals['_SYLKENUMVALUEDISPLAY']._serialized_start=102
-  _globals['_SYLKENUMVALUEDISPLAY']._serialized_end=278
-  _globals['_SYLKENUMVALUE']._serialized_start=281
-  _globals['_SYLKENUMVALUE']._serialized_end=422
+  _globals['_SYLKENUMVALUE']._serialized_start=102
+  _globals['_SYLKENUMVALUE']._serialized_end=243
+  _globals['_SYLKENUMVALUEDISPLAY']._serialized_start=246
+  _globals['_SYLKENUMVALUEDISPLAY']._serialized_end=422
 # @@protoc_insertion_point(module_scope)

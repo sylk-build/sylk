@@ -15,22 +15,22 @@ class MethodsStub(object):
             channel: A grpc.Channel.
         """
         self.CreateMethod = channel.unary_unary(
-                '/Methods/CreateMethod',
+                '/sylk.Methods.v1.Methods/CreateMethod',
                 request_serializer=sylk_dot_SylkApi_dot_v1_dot_SylkApi__pb2.CreateMethodRequest.SerializeToString,
                 response_deserializer=sylk_dot_SylkApi_dot_v1_dot_SylkApi__pb2.CreateMethodResponse.FromString,
                 )
         self.GetMethod = channel.unary_unary(
-                '/Methods/GetMethod',
+                '/sylk.Methods.v1.Methods/GetMethod',
                 request_serializer=sylk_dot_SylkApi_dot_v1_dot_SylkApi__pb2.GetMethodRequest.SerializeToString,
                 response_deserializer=sylk_dot_SylkApi_dot_v1_dot_SylkApi__pb2.GetMethodResponse.FromString,
                 )
         self.DeleteMethod = channel.unary_unary(
-                '/Methods/DeleteMethod',
+                '/sylk.Methods.v1.Methods/DeleteMethod',
                 request_serializer=sylk_dot_SylkApi_dot_v1_dot_SylkApi__pb2.DeleteMethodRequest.SerializeToString,
                 response_deserializer=sylk_dot_SylkApi_dot_v1_dot_SylkApi__pb2.DeleteMethodResponse.FromString,
                 )
         self.UpdateMethod = channel.unary_unary(
-                '/Methods/UpdateMethod',
+                '/sylk.Methods.v1.Methods/UpdateMethod',
                 request_serializer=sylk_dot_SylkApi_dot_v1_dot_SylkApi__pb2.UpdateMethodRequest.SerializeToString,
                 response_deserializer=sylk_dot_SylkApi_dot_v1_dot_SylkApi__pb2.UpdateMethodResponse.FromString,
                 )
@@ -92,7 +92,7 @@ def add_MethodsServicer_to_server(servicer, server):
             ),
     }
     generic_handler = grpc.method_handlers_generic_handler(
-            'Methods', rpc_method_handlers)
+            'sylk.Methods.v1.Methods', rpc_method_handlers)
     server.add_generic_rpc_handlers((generic_handler,))
 
 
@@ -111,7 +111,7 @@ class Methods(object):
             wait_for_ready=None,
             timeout=None,
             metadata=None):
-        return grpc.experimental.unary_unary(request, target, '/Methods/CreateMethod',
+        return grpc.experimental.unary_unary(request, target, '/sylk.Methods.v1.Methods/CreateMethod',
             sylk_dot_SylkApi_dot_v1_dot_SylkApi__pb2.CreateMethodRequest.SerializeToString,
             sylk_dot_SylkApi_dot_v1_dot_SylkApi__pb2.CreateMethodResponse.FromString,
             options, channel_credentials,
@@ -128,7 +128,7 @@ class Methods(object):
             wait_for_ready=None,
             timeout=None,
             metadata=None):
-        return grpc.experimental.unary_unary(request, target, '/Methods/GetMethod',
+        return grpc.experimental.unary_unary(request, target, '/sylk.Methods.v1.Methods/GetMethod',
             sylk_dot_SylkApi_dot_v1_dot_SylkApi__pb2.GetMethodRequest.SerializeToString,
             sylk_dot_SylkApi_dot_v1_dot_SylkApi__pb2.GetMethodResponse.FromString,
             options, channel_credentials,
@@ -145,7 +145,7 @@ class Methods(object):
             wait_for_ready=None,
             timeout=None,
             metadata=None):
-        return grpc.experimental.unary_unary(request, target, '/Methods/DeleteMethod',
+        return grpc.experimental.unary_unary(request, target, '/sylk.Methods.v1.Methods/DeleteMethod',
             sylk_dot_SylkApi_dot_v1_dot_SylkApi__pb2.DeleteMethodRequest.SerializeToString,
             sylk_dot_SylkApi_dot_v1_dot_SylkApi__pb2.DeleteMethodResponse.FromString,
             options, channel_credentials,
@@ -162,7 +162,7 @@ class Methods(object):
             wait_for_ready=None,
             timeout=None,
             metadata=None):
-        return grpc.experimental.unary_unary(request, target, '/Methods/UpdateMethod',
+        return grpc.experimental.unary_unary(request, target, '/sylk.Methods.v1.Methods/UpdateMethod',
             sylk_dot_SylkApi_dot_v1_dot_SylkApi__pb2.UpdateMethodRequest.SerializeToString,
             sylk_dot_SylkApi_dot_v1_dot_SylkApi__pb2.UpdateMethodResponse.FromString,
             options, channel_credentials,

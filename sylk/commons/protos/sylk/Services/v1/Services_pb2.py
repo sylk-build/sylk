@@ -14,7 +14,7 @@ _sym_db = _symbol_database.Default()
 from sylk.commons.protos.sylk.SylkApi.v1 import SylkApi_pb2 as sylk_dot_SylkApi_dot_v1_dot_SylkApi__pb2
 
 
-DESCRIPTOR = _descriptor_pool.Default().AddSerializedFile(b'\n\x1fsylk/Services/v1/Services.proto\x1a\x1dsylk/SylkApi/v1/SylkApi.proto2\xde\x03\n\x08Services\x12^\n\rCreateService\x12%.sylk.SylkApi.v1.CreateServiceRequest\x1a&.sylk.SylkApi.v1.CreateServiceResponse\x12U\n\nGetService\x12\".sylk.SylkApi.v1.GetServiceRequest\x1a#.sylk.SylkApi.v1.GetServiceResponse\x12^\n\rUpdateService\x12%.sylk.SylkApi.v1.UpdateServiceRequest\x1a&.sylk.SylkApi.v1.UpdateServiceResponse\x12[\n\x0cListServices\x12$.sylk.SylkApi.v1.ListServicesRequest\x1a#.sylk.SylkApi.v1.GetServiceResponse0\x01\x12^\n\rDeleteService\x12%.sylk.SylkApi.v1.DeleteServiceRequest\x1a&.sylk.SylkApi.v1.DeleteServiceResponseBBZ@github.com/sylk-build/sylk-core/services/protos/sylk/Services/v1b\x06proto3')
+DESCRIPTOR = _descriptor_pool.Default().AddSerializedFile(b'\n\x1fsylk/Services/v1/Services.proto\x12\x10sylk.Services.v1\x1a\x1dsylk/SylkApi/v1/SylkApi.proto2\xde\x03\n\x08Services\x12^\n\rCreateService\x12%.sylk.SylkApi.v1.CreateServiceRequest\x1a&.sylk.SylkApi.v1.CreateServiceResponse\x12U\n\nGetService\x12\".sylk.SylkApi.v1.GetServiceRequest\x1a#.sylk.SylkApi.v1.GetServiceResponse\x12^\n\rUpdateService\x12%.sylk.SylkApi.v1.UpdateServiceRequest\x1a&.sylk.SylkApi.v1.UpdateServiceResponse\x12[\n\x0cListServices\x12$.sylk.SylkApi.v1.ListServicesRequest\x1a#.sylk.SylkApi.v1.GetServiceResponse0\x01\x12^\n\rDeleteService\x12%.sylk.SylkApi.v1.DeleteServiceRequest\x1a&.sylk.SylkApi.v1.DeleteServiceResponseb\x06proto3')
 
 _globals = globals()
 _builder.BuildMessageAndEnumDescriptors(DESCRIPTOR, _globals)
@@ -22,7 +22,6 @@ _builder.BuildTopDescriptorsAndMessages(DESCRIPTOR, 'sylk.Services.v1.Services_p
 if _descriptor._USE_C_DESCRIPTORS == False:
 
   DESCRIPTOR._options = None
-  DESCRIPTOR._serialized_options = b'Z@github.com/sylk-build/sylk-core/services/protos/sylk/Services/v1'
-  _globals['_SERVICES']._serialized_start=67
-  _globals['_SERVICES']._serialized_end=545
+  _globals['_SERVICES']._serialized_start=85
+  _globals['_SERVICES']._serialized_end=563
 # @@protoc_insertion_point(module_scope)

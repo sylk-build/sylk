@@ -1,0 +1,8 @@
+syntax = "proto3";
+
+package sylk.protobuf;
+
+message Plugin {
+    string plugin_name = 2;
+    string executable_path = 1;
+}

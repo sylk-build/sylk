@@ -51,6 +51,21 @@ def cpDir(dir_path,target_path):
 def removeFile(path):
     os.remove(path)
 
+def removeDir(path):
+    try:
+        # Delete all files within the directory
+        for filename in os.listdir(path):
+            file_path = os.path.join(path, filename)
+            if os.path.isfile(file_path):
+                os.remove(file_path)
+            elif os.path.isdir(file_path):
+                removeDir(file_path)
+
+        # Remove the empty directory
+        os.rmdir(path)
+    except OSError as e:
+        print(f"Error: {e}. Failed to remove the directory.")
+
 def walkDirs(path):
     return [x[0] for x in os.walk(path)]
 
@@ -61,7 +76,7 @@ def walkFiles(path):
 def copyFile(file, new_file):
     shutil.copy2(file, new_file)
 
-def wFile(path, content, overwrite=False, json=False,force=False):
+def wFile(path, content, overwrite=False, json=False,force=False,flags='w'):
     if check_if_file_exists(path) == True:
         if force:
             os.makedirs(os.path.dirname(path),mode=0o777, exist_ok=True)
@@ -72,12 +87,12 @@ def wFile(path, content, overwrite=False, json=False,force=False):
                 json_object = JSON.dumps(content, indent=4)
                 # Writing to sample.json
                 log.debug(f"Overwriting json file {path}")
-                with open(path, "w") as outfile:
+                with open(path, flags) as outfile:
                     outfile.write(json_object)
             else:
 
                 log.debug(f"Overwriting file {path}")
-                with open(path, 'w') as file:
+                with open(path, flags) as file:
                     file.write(content)
                     file.close()
         else:
@@ -92,15 +107,15 @@ def wFile(path, content, overwrite=False, json=False,force=False):
             json_object = JSON.dumps(content, indent=4)
             # Writing to sample.json
             log.debug(f"Writing json file {path}")
-            with open(path, "w") as outfile:
+            with open(path, flags) as outfile:
                 outfile.write(json_object)
         else:
             log.debug(f"Writing file {path}")
-            with open(path, 'w') as file:
+            with open(path, flags) as file:
                 file.write(content)
                 file.close()
 
-def rFile(path, json=False):
+def rFile(path, json=False, flags='r'):
     log.debug(f"Reading file -> {path}")
     if check_if_file_exists(path) == True:
         if json:
@@ -109,7 +124,7 @@ def rFile(path, json=False):
             f.close()
             return data
         else:
-            with open(path, 'r') as file:
+            with open(path, flags) as file:
                 lines = file.readlines()
                 file.close()
                 return lines

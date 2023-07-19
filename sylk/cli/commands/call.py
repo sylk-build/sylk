@@ -66,7 +66,7 @@ def CallRPC(service_module_path:str,service_rpc_name:str,sylk_json:_helpers.Sylk
     
     # Dynamic import module (Only supporting clients proto modules)
     # print()
-    sys.path.append(os.getcwd()+'/'+'/'.join(service_module_path.split('/')[0:2]))
+    sys.path.append(os.getcwd()+'/'+'/'.join(service_module_path.split('/')[0:1]))
     service_module = importlib.import_module(path)
     # Init the service stub
     stub = client_wrapper.SylkClient(service_module,stub_name,host,port,timeout)
@@ -80,7 +80,11 @@ def CallRPC(service_module_path:str,service_rpc_name:str,sylk_json:_helpers.Sylk
     output_message_description = sylk_json.get_message(rpc_description['outputType'])
 
     # Get modules objects
-    package_proto = getattr(service_module,input_package_name+'__pb2')
+    pkg_full_name = '_dot_'.join(rpc_description['inputType'].split('.')[:-1])
+    if 'protos_dot_'+pkg_full_name+f'_dot_{input_package_name}__pb2' in dir(service_module):
+        package_proto = getattr(service_module,'protos_dot_'+pkg_full_name+f'_dot_{input_package_name}__pb2')
+    else:
+        package_proto = getattr(service_module,pkg_full_name+f'_dot_{input_package_name}__pb2')
     message_proto = getattr(package_proto,input_message_name)
 
     # TODO allow support iterator for client stream
@@ -135,16 +139,21 @@ def CallRPC(service_module_path:str,service_rpc_name:str,sylk_json:_helpers.Sylk
                         question.append(number_value)
                     elif f['fieldType'] == 'TYPE_DOUBLE' or f['fieldType'] =='TYPE_FLOAT':
                         fields[f.get('name')] = None
-                        number_value = prompter.QText(name=f.get('name'),message='Choose value for "{0}" key (Float)'.format(f.get('name')),default='1.0')
+                        number_value = prompter.QText(name=f.get('name'),message='Choose value for "{0}" key (Float)'.format(f.get('name')),default=1.0)
                         question.append(number_value)
                     if len(question) == 0:
                         pass
                     else:
                         fields[f.get('name')] = prompter.ask_user_question(questions=question).get(f.get('name')) 
+                        print(fields)
                 else:
                     _pretty.print_warning('Skipping {0}->{1}:{2}'.format(f['name'],f['fieldType'],f['messageType']))
                     
             for k in fields:
+                if f['fieldType'] == 'TYPE_INT32' or f['fieldType'] =='TYPE_INT64':
+                    fields[k] = int(fields[k])
+                elif f['fieldType'] == 'TYPE_DOUBLE' or f['fieldType'] =='TYPE_FLOAT':
+                    fields[k] = float(fields[k])
                 setattr(msg,k,fields[k])
 
     _pretty.print_info(msg,True,'Request Object [{0}]'.format(input_message_description['fullName']))
@@ -153,7 +162,8 @@ def CallRPC(service_module_path:str,service_rpc_name:str,sylk_json:_helpers.Sylk
     if debug:
         st = time.time()
     try:
-        response , call = getattr(stub,rpc)(msg)
+        client = getattr(stub,'stub')
+        response , call = getattr(client,rpc)(msg)
         _pretty.print_info('Waiting for server response... [{0}]'.format(output_message_description['fullName']))
         if debug:
             # get the end time

@@ -15,47 +15,47 @@ class ProjectsStub(object):
             channel: A grpc.Channel.
         """
         self.UpdateUserRoleProject = channel.unary_unary(
-                '/Projects/UpdateUserRoleProject',
+                '/sylk.Projects.v1.Projects/UpdateUserRoleProject',
                 request_serializer=sylk_dot_SylkApi_dot_v1_dot_SylkApi__pb2.UpdateUserRoleRequest.SerializeToString,
                 response_deserializer=sylk_dot_SylkApi_dot_v1_dot_SylkApi__pb2.UpdateUserRoleResponse.FromString,
                 )
         self.RemoveUserProject = channel.unary_unary(
-                '/Projects/RemoveUserProject',
+                '/sylk.Projects.v1.Projects/RemoveUserProject',
                 request_serializer=sylk_dot_SylkApi_dot_v1_dot_SylkApi__pb2.RemoveUserRequest.SerializeToString,
                 response_deserializer=sylk_dot_SylkApi_dot_v1_dot_SylkApi__pb2.RemoveUserResponse.FromString,
                 )
         self.AddUserProject = channel.unary_unary(
-                '/Projects/AddUserProject',
+                '/sylk.Projects.v1.Projects/AddUserProject',
                 request_serializer=sylk_dot_SylkApi_dot_v1_dot_SylkApi__pb2.AddUserRequest.SerializeToString,
                 response_deserializer=sylk_dot_SylkApi_dot_v1_dot_SylkApi__pb2.AddUserResponse.FromString,
                 )
         self.GetProject = channel.unary_unary(
-                '/Projects/GetProject',
+                '/sylk.Projects.v1.Projects/GetProject',
                 request_serializer=sylk_dot_SylkApi_dot_v1_dot_SylkApi__pb2.GetProjectRequest.SerializeToString,
                 response_deserializer=sylk_dot_SylkApi_dot_v1_dot_SylkApi__pb2.GetProjectResponse.FromString,
                 )
         self.UpdateProject = channel.unary_unary(
-                '/Projects/UpdateProject',
+                '/sylk.Projects.v1.Projects/UpdateProject',
                 request_serializer=sylk_dot_SylkApi_dot_v1_dot_SylkApi__pb2.UpdateProjectRequest.SerializeToString,
                 response_deserializer=sylk_dot_SylkApi_dot_v1_dot_SylkApi__pb2.UpdateProjectResponse.FromString,
                 )
         self.CreateProject = channel.unary_unary(
-                '/Projects/CreateProject',
+                '/sylk.Projects.v1.Projects/CreateProject',
                 request_serializer=sylk_dot_SylkApi_dot_v1_dot_SylkApi__pb2.CreateProjectRequest.SerializeToString,
                 response_deserializer=sylk_dot_SylkApi_dot_v1_dot_SylkApi__pb2.CreateProjectResponse.FromString,
                 )
         self.DeleteProject = channel.unary_unary(
-                '/Projects/DeleteProject',
+                '/sylk.Projects.v1.Projects/DeleteProject',
                 request_serializer=sylk_dot_SylkApi_dot_v1_dot_SylkApi__pb2.DeleteProjectRequest.SerializeToString,
                 response_deserializer=sylk_dot_SylkApi_dot_v1_dot_SylkApi__pb2.DeleteProjectResponse.FromString,
                 )
         self.ListProjects = channel.unary_stream(
-                '/Projects/ListProjects',
+                '/sylk.Projects.v1.Projects/ListProjects',
                 request_serializer=sylk_dot_SylkApi_dot_v1_dot_SylkApi__pb2.ListProjectsRequest.SerializeToString,
                 response_deserializer=sylk_dot_SylkApi_dot_v1_dot_SylkApi__pb2.GetProjectResponse.FromString,
                 )
         self.UpdateUserStatusProject = channel.unary_unary(
-                '/Projects/UpdateUserStatusProject',
+                '/sylk.Projects.v1.Projects/UpdateUserStatusProject',
                 request_serializer=sylk_dot_SylkApi_dot_v1_dot_SylkApi__pb2.UpdateUserStatusRequest.SerializeToString,
                 response_deserializer=sylk_dot_SylkApi_dot_v1_dot_SylkApi__pb2.UpdateUserStatusResponse.FromString,
                 )
@@ -177,7 +177,7 @@ def add_ProjectsServicer_to_server(servicer, server):
             ),
     }
     generic_handler = grpc.method_handlers_generic_handler(
-            'Projects', rpc_method_handlers)
+            'sylk.Projects.v1.Projects', rpc_method_handlers)
     server.add_generic_rpc_handlers((generic_handler,))
 
 
@@ -196,7 +196,7 @@ class Projects(object):
             wait_for_ready=None,
             timeout=None,
             metadata=None):
-        return grpc.experimental.unary_unary(request, target, '/Projects/UpdateUserRoleProject',
+        return grpc.experimental.unary_unary(request, target, '/sylk.Projects.v1.Projects/UpdateUserRoleProject',
             sylk_dot_SylkApi_dot_v1_dot_SylkApi__pb2.UpdateUserRoleRequest.SerializeToString,
             sylk_dot_SylkApi_dot_v1_dot_SylkApi__pb2.UpdateUserRoleResponse.FromString,
             options, channel_credentials,
@@ -213,7 +213,7 @@ class Projects(object):
             wait_for_ready=None,
             timeout=None,
             metadata=None):
-        return grpc.experimental.unary_unary(request, target, '/Projects/RemoveUserProject',
+        return grpc.experimental.unary_unary(request, target, '/sylk.Projects.v1.Projects/RemoveUserProject',
             sylk_dot_SylkApi_dot_v1_dot_SylkApi__pb2.RemoveUserRequest.SerializeToString,
             sylk_dot_SylkApi_dot_v1_dot_SylkApi__pb2.RemoveUserResponse.FromString,
             options, channel_credentials,
@@ -230,7 +230,7 @@ class Projects(object):
             wait_for_ready=None,
             timeout=None,
             metadata=None):
-        return grpc.experimental.unary_unary(request, target, '/Projects/AddUserProject',
+        return grpc.experimental.unary_unary(request, target, '/sylk.Projects.v1.Projects/AddUserProject',
             sylk_dot_SylkApi_dot_v1_dot_SylkApi__pb2.AddUserRequest.SerializeToString,
             sylk_dot_SylkApi_dot_v1_dot_SylkApi__pb2.AddUserResponse.FromString,
             options, channel_credentials,
@@ -247,7 +247,7 @@ class Projects(object):
             wait_for_ready=None,
             timeout=None,
             metadata=None):
-        return grpc.experimental.unary_unary(request, target, '/Projects/GetProject',
+        return grpc.experimental.unary_unary(request, target, '/sylk.Projects.v1.Projects/GetProject',
             sylk_dot_SylkApi_dot_v1_dot_SylkApi__pb2.GetProjectRequest.SerializeToString,
             sylk_dot_SylkApi_dot_v1_dot_SylkApi__pb2.GetProjectResponse.FromString,
             options, channel_credentials,
@@ -264,7 +264,7 @@ class Projects(object):
             wait_for_ready=None,
             timeout=None,
             metadata=None):
-        return grpc.experimental.unary_unary(request, target, '/Projects/UpdateProject',
+        return grpc.experimental.unary_unary(request, target, '/sylk.Projects.v1.Projects/UpdateProject',
             sylk_dot_SylkApi_dot_v1_dot_SylkApi__pb2.UpdateProjectRequest.SerializeToString,
             sylk_dot_SylkApi_dot_v1_dot_SylkApi__pb2.UpdateProjectResponse.FromString,
             options, channel_credentials,
@@ -281,7 +281,7 @@ class Projects(object):
             wait_for_ready=None,
             timeout=None,
             metadata=None):
-        return grpc.experimental.unary_unary(request, target, '/Projects/CreateProject',
+        return grpc.experimental.unary_unary(request, target, '/sylk.Projects.v1.Projects/CreateProject',
             sylk_dot_SylkApi_dot_v1_dot_SylkApi__pb2.CreateProjectRequest.SerializeToString,
             sylk_dot_SylkApi_dot_v1_dot_SylkApi__pb2.CreateProjectResponse.FromString,
             options, channel_credentials,
@@ -298,7 +298,7 @@ class Projects(object):
             wait_for_ready=None,
             timeout=None,
             metadata=None):
-        return grpc.experimental.unary_unary(request, target, '/Projects/DeleteProject',
+        return grpc.experimental.unary_unary(request, target, '/sylk.Projects.v1.Projects/DeleteProject',
             sylk_dot_SylkApi_dot_v1_dot_SylkApi__pb2.DeleteProjectRequest.SerializeToString,
             sylk_dot_SylkApi_dot_v1_dot_SylkApi__pb2.DeleteProjectResponse.FromString,
             options, channel_credentials,
@@ -315,7 +315,7 @@ class Projects(object):
             wait_for_ready=None,
             timeout=None,
             metadata=None):
-        return grpc.experimental.unary_stream(request, target, '/Projects/ListProjects',
+        return grpc.experimental.unary_stream(request, target, '/sylk.Projects.v1.Projects/ListProjects',
             sylk_dot_SylkApi_dot_v1_dot_SylkApi__pb2.ListProjectsRequest.SerializeToString,
             sylk_dot_SylkApi_dot_v1_dot_SylkApi__pb2.GetProjectResponse.FromString,
             options, channel_credentials,
@@ -332,7 +332,7 @@ class Projects(object):
             wait_for_ready=None,
             timeout=None,
             metadata=None):
-        return grpc.experimental.unary_unary(request, target, '/Projects/UpdateUserStatusProject',
+        return grpc.experimental.unary_unary(request, target, '/sylk.Projects.v1.Projects/UpdateUserStatusProject',
             sylk_dot_SylkApi_dot_v1_dot_SylkApi__pb2.UpdateUserStatusRequest.SerializeToString,
             sylk_dot_SylkApi_dot_v1_dot_SylkApi__pb2.UpdateUserStatusResponse.FromString,
             options, channel_credentials,

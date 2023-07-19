@@ -1,0 +1,67 @@
+{
+    "organization": null,
+    "packages": {
+        "google/protobuf": {
+            "name": "protobuf",
+            "package": "google.protobuf",
+            "messages": [
+                {
+                    "name": "Timestamp",
+                    "fullName": "google.protobuf.Timestamp",
+                    "type": "message",
+                    "tag": "timestamp"
+                },
+                {
+                    "name": "Empty",
+                    "fullName": "google.protobuf.Empty",
+                    "type": "message"
+                }
+            ],
+            "type": "package"
+        },
+        "google/analytics/admin/v1beta": {
+            "name": "v1beta",
+            "package": "google.analytics.admin.v1beta",
+            "type": "package"
+        },
+        "google/analytics/data/v1beta": {
+            "name": "v1beta",
+            "package": "google.analytics.data.v1beta",
+            "messages": [
+                {
+                    "name": "Metrics",
+                    "fullName": "google.analytics.data.v1beta.Metrics",
+                    "fields": [
+                        {
+                            "name": "Field1",
+                            "fullName": "google.analytics.data.v1beta.Metrics.Field1",
+                            "type": "field"
+                        },
+                        {
+                            "name": "Field2",
+                            "fullName": "google.analytics.data.v1beta.Metrics.Field2",
+                            "type": "field"
+                        }
+                    ],
+                    "type": "message"
+                },
+                {
+                    "name": "MessageType",
+                    "fullName": "google.analytics.data.v1beta.MessageType",
+                    "type": "message"
+                }
+            ],
+            "enums": [
+                {
+                    "name": "EnumType",
+                    "fullName": "google.analytics.data.v1beta.EnumType",
+                    "type": "enum"
+                }
+            ],
+            "type": "package"
+        }
+    },
+    "configs": null,
+    "sylk_version": "",
+    "project": null
+}

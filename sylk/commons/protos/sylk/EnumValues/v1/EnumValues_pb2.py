@@ -14,7 +14,7 @@ _sym_db = _symbol_database.Default()
 from sylk.commons.protos.sylk.SylkApi.v1 import SylkApi_pb2 as sylk_dot_SylkApi_dot_v1_dot_SylkApi__pb2
 
 
-DESCRIPTOR = _descriptor_pool.Default().AddSerializedFile(b'\n#sylk/EnumValues/v1/EnumValues.proto\x1a\x1dsylk/SylkApi/v1/SylkApi.proto2\x9b\x03\n\nEnumValues\x12[\n\x0cGetEnumValue\x12$.sylk.SylkApi.v1.GetEnumValueRequest\x1a%.sylk.SylkApi.v1.GetEnumValueResponse\x12\x64\n\x0f\x43reateEnumValue\x12\'.sylk.SylkApi.v1.CreateEnumValueRequest\x1a(.sylk.SylkApi.v1.CreateEnumValueResponse\x12\x64\n\x0f\x44\x65leteEnumValue\x12\'.sylk.SylkApi.v1.DeleteEnumValueRequest\x1a(.sylk.SylkApi.v1.DeleteEnumValueResponse\x12\x64\n\x0fUpdateEnumValue\x12\'.sylk.SylkApi.v1.UpdateEnumValueRequest\x1a(.sylk.SylkApi.v1.UpdateEnumValueResponseBDZBgithub.com/sylk-build/sylk-core/services/protos/sylk/EnumValues/v1b\x06proto3')
+DESCRIPTOR = _descriptor_pool.Default().AddSerializedFile(b'\n#sylk/EnumValues/v1/EnumValues.proto\x12\x12sylk.EnumValues.v1\x1a\x1dsylk/SylkApi/v1/SylkApi.proto2\x9b\x03\n\nEnumValues\x12[\n\x0cGetEnumValue\x12$.sylk.SylkApi.v1.GetEnumValueRequest\x1a%.sylk.SylkApi.v1.GetEnumValueResponse\x12\x64\n\x0f\x43reateEnumValue\x12\'.sylk.SylkApi.v1.CreateEnumValueRequest\x1a(.sylk.SylkApi.v1.CreateEnumValueResponse\x12\x64\n\x0f\x44\x65leteEnumValue\x12\'.sylk.SylkApi.v1.DeleteEnumValueRequest\x1a(.sylk.SylkApi.v1.DeleteEnumValueResponse\x12\x64\n\x0fUpdateEnumValue\x12\'.sylk.SylkApi.v1.UpdateEnumValueRequest\x1a(.sylk.SylkApi.v1.UpdateEnumValueResponseb\x06proto3')
 
 _globals = globals()
 _builder.BuildMessageAndEnumDescriptors(DESCRIPTOR, _globals)
@@ -22,7 +22,6 @@ _builder.BuildTopDescriptorsAndMessages(DESCRIPTOR, 'sylk.EnumValues.v1.EnumValu
 if _descriptor._USE_C_DESCRIPTORS == False:
 
   DESCRIPTOR._options = None
-  DESCRIPTOR._serialized_options = b'ZBgithub.com/sylk-build/sylk-core/services/protos/sylk/EnumValues/v1'
-  _globals['_ENUMVALUES']._serialized_start=71
-  _globals['_ENUMVALUES']._serialized_end=482
+  _globals['_ENUMVALUES']._serialized_start=91
+  _globals['_ENUMVALUES']._serialized_end=502
 # @@protoc_insertion_point(module_scope)

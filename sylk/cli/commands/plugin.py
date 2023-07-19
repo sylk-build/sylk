@@ -19,28 +19,44 @@
 # OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION
 # WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 
+from time import time
 import os
+import shutil
 import subprocess
 from sylk.architect import SylkArchitect
 from sylk.commons import file_system
 from sylk.commons.helpers import SylkJson
-from sylk.commons.pretty import print_info, print_warning
+from sylk.commons.pretty import print_info, print_warning, print_note
+
+
+def is_module_executable(module_name):
+    return shutil.which(module_name) is not None
 
 
 def run(args):
+    st = time()
+
     path = os.getcwd()
     plugs = []
     
     plug_path = ''
     for p in args.plugin:
-        if '.py' not in p:
+        # print(os.access(p, os.X_OK))
+        spec = is_module_executable(p)
+        if spec:
+            plug_name = p.split('protoc-gen-')[1]
+            plugs = plugs + [
+                f'--{plug_name}_out={args.out_dir}',
+                f'--{plug_name}_opt={args.opt}',
+            ]
+        elif '.py' not in p:
             if args.dir is not None:
                 plug_path = args.dir + '/' + p + '.py'
             else:
                 plug_path = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))) + f'/protoc/plugins/{p}.py'
             plugs = plugs + [
                 f'--plugin=protoc-gen-{p}={plug_path}',
-                f'--{p}_out=.'
+                f'--{p}_out={args.out_dir}'
             ]
         else:
             if args.dir is not None:
@@ -50,17 +66,16 @@ def run(args):
             plug_name = p.split('.')[0]
             plugs = plugs + [
                     f'--plugin=protoc-gen-{plug_name}={plug_path}',
-                    f'--{plug_name}_out=.',
+                    f'--{plug_name}_out={args.out_dir}',
 
             ]
-            
-        if file_system.is_file_executable(plug_path):
+        if file_system.is_file_executable(plug_path) or spec:
             print_info(f"🔌 Running plugin: {p}")
 
             # if len(args.protos) == 0:
                 # sylk = SylkArchitect('./sylk.json')
-
-            protoc_params = ['protoc'] + args.protos + plugs
+            proto_files = args.protos if args.protos is not None else []
+            protoc_params = ['protoc'] + proto_files + plugs
             process = subprocess.Popen(protoc_params,
                         stdout=subprocess.PIPE, 
                         stderr=subprocess.PIPE)
@@ -70,6 +85,7 @@ def run(args):
         else:
             print_warning(f'plugin {p} is not executable file')
             print_info(f'Make sure you have permissions to edit the file mode and make it excutable.')
-
-
+    et = time()
+    rt = et - st
+    print_note(f'Plugin time: {rt:.3f}s')
     exit(0)

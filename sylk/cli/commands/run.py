@@ -24,8 +24,8 @@ from sylk.commons.helpers import SylkJson
 from sylk.commons.pretty import print_warning
 
 
-def run_server(sylk_json:SylkJson,debug:bool):
-    commands = ['bash',sylk_json.path+'/bin/run-server.sh'] if debug == False else ['bash',sylk_json.path+'/bin/run-server.sh','debug']
+def run_server(sylk_json:SylkJson,level):
+    commands = ['bash',sylk_json.path+'/bin/run-server.sh'] if level is None else ['bash',sylk_json.path+'/bin/run-server.sh',level]
     try:
         subprocess.run(commands)
     except KeyboardInterrupt:

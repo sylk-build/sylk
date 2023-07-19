@@ -15,27 +15,27 @@ class ServicesStub(object):
             channel: A grpc.Channel.
         """
         self.CreateService = channel.unary_unary(
-                '/Services/CreateService',
+                '/sylk.Services.v1.Services/CreateService',
                 request_serializer=sylk_dot_SylkApi_dot_v1_dot_SylkApi__pb2.CreateServiceRequest.SerializeToString,
                 response_deserializer=sylk_dot_SylkApi_dot_v1_dot_SylkApi__pb2.CreateServiceResponse.FromString,
                 )
         self.GetService = channel.unary_unary(
-                '/Services/GetService',
+                '/sylk.Services.v1.Services/GetService',
                 request_serializer=sylk_dot_SylkApi_dot_v1_dot_SylkApi__pb2.GetServiceRequest.SerializeToString,
                 response_deserializer=sylk_dot_SylkApi_dot_v1_dot_SylkApi__pb2.GetServiceResponse.FromString,
                 )
         self.UpdateService = channel.unary_unary(
-                '/Services/UpdateService',
+                '/sylk.Services.v1.Services/UpdateService',
                 request_serializer=sylk_dot_SylkApi_dot_v1_dot_SylkApi__pb2.UpdateServiceRequest.SerializeToString,
                 response_deserializer=sylk_dot_SylkApi_dot_v1_dot_SylkApi__pb2.UpdateServiceResponse.FromString,
                 )
         self.ListServices = channel.unary_stream(
-                '/Services/ListServices',
+                '/sylk.Services.v1.Services/ListServices',
                 request_serializer=sylk_dot_SylkApi_dot_v1_dot_SylkApi__pb2.ListServicesRequest.SerializeToString,
                 response_deserializer=sylk_dot_SylkApi_dot_v1_dot_SylkApi__pb2.GetServiceResponse.FromString,
                 )
         self.DeleteService = channel.unary_unary(
-                '/Services/DeleteService',
+                '/sylk.Services.v1.Services/DeleteService',
                 request_serializer=sylk_dot_SylkApi_dot_v1_dot_SylkApi__pb2.DeleteServiceRequest.SerializeToString,
                 response_deserializer=sylk_dot_SylkApi_dot_v1_dot_SylkApi__pb2.DeleteServiceResponse.FromString,
                 )
@@ -109,7 +109,7 @@ def add_ServicesServicer_to_server(servicer, server):
             ),
     }
     generic_handler = grpc.method_handlers_generic_handler(
-            'Services', rpc_method_handlers)
+            'sylk.Services.v1.Services', rpc_method_handlers)
     server.add_generic_rpc_handlers((generic_handler,))
 
 
@@ -128,7 +128,7 @@ class Services(object):
             wait_for_ready=None,
             timeout=None,
             metadata=None):
-        return grpc.experimental.unary_unary(request, target, '/Services/CreateService',
+        return grpc.experimental.unary_unary(request, target, '/sylk.Services.v1.Services/CreateService',
             sylk_dot_SylkApi_dot_v1_dot_SylkApi__pb2.CreateServiceRequest.SerializeToString,
             sylk_dot_SylkApi_dot_v1_dot_SylkApi__pb2.CreateServiceResponse.FromString,
             options, channel_credentials,
@@ -145,7 +145,7 @@ class Services(object):
             wait_for_ready=None,
             timeout=None,
             metadata=None):
-        return grpc.experimental.unary_unary(request, target, '/Services/GetService',
+        return grpc.experimental.unary_unary(request, target, '/sylk.Services.v1.Services/GetService',
             sylk_dot_SylkApi_dot_v1_dot_SylkApi__pb2.GetServiceRequest.SerializeToString,
             sylk_dot_SylkApi_dot_v1_dot_SylkApi__pb2.GetServiceResponse.FromString,
             options, channel_credentials,
@@ -162,7 +162,7 @@ class Services(object):
             wait_for_ready=None,
             timeout=None,
             metadata=None):
-        return grpc.experimental.unary_unary(request, target, '/Services/UpdateService',
+        return grpc.experimental.unary_unary(request, target, '/sylk.Services.v1.Services/UpdateService',
             sylk_dot_SylkApi_dot_v1_dot_SylkApi__pb2.UpdateServiceRequest.SerializeToString,
             sylk_dot_SylkApi_dot_v1_dot_SylkApi__pb2.UpdateServiceResponse.FromString,
             options, channel_credentials,
@@ -179,7 +179,7 @@ class Services(object):
             wait_for_ready=None,
             timeout=None,
             metadata=None):
-        return grpc.experimental.unary_stream(request, target, '/Services/ListServices',
+        return grpc.experimental.unary_stream(request, target, '/sylk.Services.v1.Services/ListServices',
             sylk_dot_SylkApi_dot_v1_dot_SylkApi__pb2.ListServicesRequest.SerializeToString,
             sylk_dot_SylkApi_dot_v1_dot_SylkApi__pb2.GetServiceResponse.FromString,
             options, channel_credentials,
@@ -196,7 +196,7 @@ class Services(object):
             wait_for_ready=None,
             timeout=None,
             metadata=None):
-        return grpc.experimental.unary_unary(request, target, '/Services/DeleteService',
+        return grpc.experimental.unary_unary(request, target, '/sylk.Services.v1.Services/DeleteService',
             sylk_dot_SylkApi_dot_v1_dot_SylkApi__pb2.DeleteServiceRequest.SerializeToString,
             sylk_dot_SylkApi_dot_v1_dot_SylkApi__pb2.DeleteServiceResponse.FromString,
             options, channel_credentials,

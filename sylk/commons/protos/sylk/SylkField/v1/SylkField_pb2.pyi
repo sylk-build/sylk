@@ -64,15 +64,29 @@ LABEL_OPTIONAL: SylkFieldLabels
 LABEL_REQUIRED: SylkFieldLabels
 LABEL_REPEATED: SylkFieldLabels
 
-class SylkFieldDisplay(_message.Message):
-    __slots__ = ["created_at", "field", "updated_at"]
-    CREATED_AT_FIELD_NUMBER: _ClassVar[int]
-    FIELD_FIELD_NUMBER: _ClassVar[int]
-    UPDATED_AT_FIELD_NUMBER: _ClassVar[int]
-    created_at: _timestamp_pb2.Timestamp
-    field: SylkField
-    updated_at: _timestamp_pb2.Timestamp
-    def __init__(self, created_at: _Optional[_Union[_timestamp_pb2.Timestamp, _Mapping]] = ..., field: _Optional[_Union[SylkField, _Mapping]] = ..., updated_at: _Optional[_Union[_timestamp_pb2.Timestamp, _Mapping]] = ...) -> None: ...
+class SylkOneOfField(_message.Message):
+    __slots__ = ["enum_type", "full_name", "uri", "message_type", "field_type", "name", "description", "label", "index", "kind"]
+    ENUM_TYPE_FIELD_NUMBER: _ClassVar[int]
+    FULL_NAME_FIELD_NUMBER: _ClassVar[int]
+    URI_FIELD_NUMBER: _ClassVar[int]
+    MESSAGE_TYPE_FIELD_NUMBER: _ClassVar[int]
+    FIELD_TYPE_FIELD_NUMBER: _ClassVar[int]
+    NAME_FIELD_NUMBER: _ClassVar[int]
+    DESCRIPTION_FIELD_NUMBER: _ClassVar[int]
+    LABEL_FIELD_NUMBER: _ClassVar[int]
+    INDEX_FIELD_NUMBER: _ClassVar[int]
+    KIND_FIELD_NUMBER: _ClassVar[int]
+    enum_type: str
+    full_name: str
+    uri: str
+    message_type: str
+    field_type: SylkFieldTypes
+    name: str
+    description: str
+    label: SylkFieldLabels
+    index: int
+    kind: str
+    def __init__(self, enum_type: _Optional[str] = ..., full_name: _Optional[str] = ..., uri: _Optional[str] = ..., message_type: _Optional[str] = ..., field_type: _Optional[_Union[SylkFieldTypes, str]] = ..., name: _Optional[str] = ..., description: _Optional[str] = ..., label: _Optional[_Union[SylkFieldLabels, str]] = ..., index: _Optional[int] = ..., kind: _Optional[str] = ...) -> None: ...
 
 class SylkField(_message.Message):
     __slots__ = ["type", "uri", "oneof_fields", "name", "description", "enum_type", "field_type", "message_type", "kind", "full_name", "extensions", "index", "label", "key_type", "value_type"]
@@ -115,22 +129,14 @@ class SylkField(_message.Message):
     value_type: SylkFieldTypes
     def __init__(self, type: _Optional[str] = ..., uri: _Optional[str] = ..., oneof_fields: _Optional[_Iterable[_Union[SylkOneOfField, _Mapping]]] = ..., name: _Optional[str] = ..., description: _Optional[str] = ..., enum_type: _Optional[str] = ..., field_type: _Optional[_Union[SylkFieldTypes, str]] = ..., message_type: _Optional[str] = ..., kind: _Optional[str] = ..., full_name: _Optional[str] = ..., extensions: _Optional[_Mapping[str, _struct_pb2.Struct]] = ..., index: _Optional[int] = ..., label: _Optional[_Union[SylkFieldLabels, str]] = ..., key_type: _Optional[_Union[SylkFieldTypes, str]] = ..., value_type: _Optional[_Union[SylkFieldTypes, str]] = ...) -> None: ...
 
-class SylkOneOfField(_message.Message):
-    __slots__ = ["enum_type", "full_name", "uri", "message_type", "field_type", "name", "description", "label"]
-    ENUM_TYPE_FIELD_NUMBER: _ClassVar[int]
-    FULL_NAME_FIELD_NUMBER: _ClassVar[int]
-    URI_FIELD_NUMBER: _ClassVar[int]
-    MESSAGE_TYPE_FIELD_NUMBER: _ClassVar[int]
-    FIELD_TYPE_FIELD_NUMBER: _ClassVar[int]
-    NAME_FIELD_NUMBER: _ClassVar[int]
-    DESCRIPTION_FIELD_NUMBER: _ClassVar[int]
-    LABEL_FIELD_NUMBER: _ClassVar[int]
-    enum_type: str
-    full_name: str
-    uri: str
-    message_type: str
-    field_type: SylkFieldTypes
-    name: str
-    description: str
-    label: SylkFieldLabels
-    def __init__(self, enum_type: _Optional[str] = ..., full_name: _Optional[str] = ..., uri: _Optional[str] = ..., message_type: _Optional[str] = ..., field_type: _Optional[_Union[SylkFieldTypes, str]] = ..., name: _Optional[str] = ..., description: _Optional[str] = ..., label: _Optional[_Union[SylkFieldLabels, str]] = ...) -> None: ...
+class SylkFieldDisplay(_message.Message):
+    __slots__ = ["created_at", "field", "updated_at", "id"]
+    CREATED_AT_FIELD_NUMBER: _ClassVar[int]
+    FIELD_FIELD_NUMBER: _ClassVar[int]
+    UPDATED_AT_FIELD_NUMBER: _ClassVar[int]
+    ID_FIELD_NUMBER: _ClassVar[int]
+    created_at: _timestamp_pb2.Timestamp
+    field: SylkField
+    updated_at: _timestamp_pb2.Timestamp
+    id: str
+    def __init__(self, created_at: _Optional[_Union[_timestamp_pb2.Timestamp, _Mapping]] = ..., field: _Optional[_Union[SylkField, _Mapping]] = ..., updated_at: _Optional[_Union[_timestamp_pb2.Timestamp, _Mapping]] = ..., id: _Optional[str] = ...) -> None: ...

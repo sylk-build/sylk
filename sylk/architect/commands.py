@@ -90,4 +90,6 @@ class SaveSylkJson(ICommand):
         self._core = analayzer
 
     def execute(self,*args,**kwargs):
+        print(args)
+        print(kwargs)
         self._core.save_sylk_json(args,kwargs)

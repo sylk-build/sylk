@@ -15,22 +15,22 @@ class EnumsStub(object):
             channel: A grpc.Channel.
         """
         self.GetEnum = channel.unary_unary(
-                '/Enums/GetEnum',
+                '/sylk.Enums.v1.Enums/GetEnum',
                 request_serializer=sylk_dot_SylkApi_dot_v1_dot_SylkApi__pb2.GetEnumRequest.SerializeToString,
                 response_deserializer=sylk_dot_SylkApi_dot_v1_dot_SylkApi__pb2.GetEnumResponse.FromString,
                 )
         self.UpdateEnum = channel.unary_unary(
-                '/Enums/UpdateEnum',
+                '/sylk.Enums.v1.Enums/UpdateEnum',
                 request_serializer=sylk_dot_SylkApi_dot_v1_dot_SylkApi__pb2.UpdateEnumRequest.SerializeToString,
                 response_deserializer=sylk_dot_SylkApi_dot_v1_dot_SylkApi__pb2.UpdateEnumResponse.FromString,
                 )
         self.DeleteEnum = channel.unary_unary(
-                '/Enums/DeleteEnum',
+                '/sylk.Enums.v1.Enums/DeleteEnum',
                 request_serializer=sylk_dot_SylkApi_dot_v1_dot_SylkApi__pb2.DeleteEnumRequest.SerializeToString,
                 response_deserializer=sylk_dot_SylkApi_dot_v1_dot_SylkApi__pb2.DeleteEnumResponse.FromString,
                 )
         self.CreateEnum = channel.unary_unary(
-                '/Enums/CreateEnum',
+                '/sylk.Enums.v1.Enums/CreateEnum',
                 request_serializer=sylk_dot_SylkApi_dot_v1_dot_SylkApi__pb2.CreateEnumRequest.SerializeToString,
                 response_deserializer=sylk_dot_SylkApi_dot_v1_dot_SylkApi__pb2.CreateEnumResponse.FromString,
                 )
@@ -92,7 +92,7 @@ def add_EnumsServicer_to_server(servicer, server):
             ),
     }
     generic_handler = grpc.method_handlers_generic_handler(
-            'Enums', rpc_method_handlers)
+            'sylk.Enums.v1.Enums', rpc_method_handlers)
     server.add_generic_rpc_handlers((generic_handler,))
 
 
@@ -111,7 +111,7 @@ class Enums(object):
             wait_for_ready=None,
             timeout=None,
             metadata=None):
-        return grpc.experimental.unary_unary(request, target, '/Enums/GetEnum',
+        return grpc.experimental.unary_unary(request, target, '/sylk.Enums.v1.Enums/GetEnum',
             sylk_dot_SylkApi_dot_v1_dot_SylkApi__pb2.GetEnumRequest.SerializeToString,
             sylk_dot_SylkApi_dot_v1_dot_SylkApi__pb2.GetEnumResponse.FromString,
             options, channel_credentials,
@@ -128,7 +128,7 @@ class Enums(object):
             wait_for_ready=None,
             timeout=None,
             metadata=None):
-        return grpc.experimental.unary_unary(request, target, '/Enums/UpdateEnum',
+        return grpc.experimental.unary_unary(request, target, '/sylk.Enums.v1.Enums/UpdateEnum',
             sylk_dot_SylkApi_dot_v1_dot_SylkApi__pb2.UpdateEnumRequest.SerializeToString,
             sylk_dot_SylkApi_dot_v1_dot_SylkApi__pb2.UpdateEnumResponse.FromString,
             options, channel_credentials,
@@ -145,7 +145,7 @@ class Enums(object):
             wait_for_ready=None,
             timeout=None,
             metadata=None):
-        return grpc.experimental.unary_unary(request, target, '/Enums/DeleteEnum',
+        return grpc.experimental.unary_unary(request, target, '/sylk.Enums.v1.Enums/DeleteEnum',
             sylk_dot_SylkApi_dot_v1_dot_SylkApi__pb2.DeleteEnumRequest.SerializeToString,
             sylk_dot_SylkApi_dot_v1_dot_SylkApi__pb2.DeleteEnumResponse.FromString,
             options, channel_credentials,
@@ -162,7 +162,7 @@ class Enums(object):
             wait_for_ready=None,
             timeout=None,
             metadata=None):
-        return grpc.experimental.unary_unary(request, target, '/Enums/CreateEnum',
+        return grpc.experimental.unary_unary(request, target, '/sylk.Enums.v1.Enums/CreateEnum',
             sylk_dot_SylkApi_dot_v1_dot_SylkApi__pb2.CreateEnumRequest.SerializeToString,
             sylk_dot_SylkApi_dot_v1_dot_SylkApi__pb2.CreateEnumResponse.FromString,
             options, channel_credentials,

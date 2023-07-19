@@ -15,7 +15,7 @@ from google.protobuf import timestamp_pb2 as google_dot_protobuf_dot_timestamp__
 from google.protobuf import struct_pb2 as google_dot_protobuf_dot_struct__pb2
 
 
-DESCRIPTOR = _descriptor_pool.Default().AddSerializedFile(b'\n#sylk/SylkMethod/v1/SylkMethod.proto\x12\x12sylk.SylkMethod.v1\x1a\x1fgoogle/protobuf/timestamp.proto\x1a\x1cgoogle/protobuf/struct.proto\"\xa3\x01\n\x11SylkMethodDisplay\x12.\n\ncreated_at\x18\x02 \x01(\x0b\x32\x1a.google.protobuf.Timestamp\x12.\n\x06method\x18\x01 \x01(\x0b\x32\x1e.sylk.SylkMethod.v1.SylkMethod\x12.\n\nupdated_at\x18\x03 \x01(\x0b\x32\x1a.google.protobuf.Timestamp\"\xd8\x02\n\nSylkMethod\x12\x18\n\x10\x63lient_streaming\x18\x07 \x01(\x08\x12\x11\n\tfull_name\x18\x03 \x01(\t\x12\x0c\n\x04type\x18\t \x01(\t\x12\x0c\n\x04name\x18\x02 \x01(\t\x12\x18\n\x10server_streaming\x18\x08 \x01(\x08\x12\x13\n\x0b\x64\x65scription\x18\x04 \x01(\t\x12\x0c\n\x04kind\x18\n \x01(\t\x12\x42\n\nextensions\x18\x0b \x03(\x0b\x32..sylk.SylkMethod.v1.SylkMethod.ExtensionsEntry\x12\x12\n\ninput_type\x18\x05 \x01(\t\x12\x13\n\x0boutput_type\x18\x06 \x01(\t\x12\x0b\n\x03uri\x18\x01 \x01(\t\x1aJ\n\x0f\x45xtensionsEntry\x12\x0b\n\x03key\x18\x01 \x01(\t\x12&\n\x05value\x18\x02 \x01(\x0b\x32\x17.google.protobuf.Struct:\x02\x38\x01\x42\x44ZBgithub.com/sylk-build/sylk-core/services/protos/sylk/SylkMethod/v1b\x06proto3')
+DESCRIPTOR = _descriptor_pool.Default().AddSerializedFile(b'\n#sylk/SylkMethod/v1/SylkMethod.proto\x12\x12sylk.SylkMethod.v1\x1a\x1fgoogle/protobuf/timestamp.proto\x1a\x1cgoogle/protobuf/struct.proto\"\xd8\x02\n\nSylkMethod\x12\x18\n\x10\x63lient_streaming\x18\x07 \x01(\x08\x12\x11\n\tfull_name\x18\x03 \x01(\t\x12\x0c\n\x04type\x18\t \x01(\t\x12\x0c\n\x04name\x18\x02 \x01(\t\x12\x18\n\x10server_streaming\x18\x08 \x01(\x08\x12\x13\n\x0b\x64\x65scription\x18\x04 \x01(\t\x12\x0c\n\x04kind\x18\n \x01(\t\x12\x42\n\nextensions\x18\x0b \x03(\x0b\x32..sylk.SylkMethod.v1.SylkMethod.ExtensionsEntry\x12\x12\n\ninput_type\x18\x05 \x01(\t\x12\x13\n\x0boutput_type\x18\x06 \x01(\t\x12\x0b\n\x03uri\x18\x01 \x01(\t\x1aJ\n\x0f\x45xtensionsEntry\x12\x0b\n\x03key\x18\x01 \x01(\t\x12&\n\x05value\x18\x02 \x01(\x0b\x32\x17.google.protobuf.Struct:\x02\x38\x01\"\xaf\x01\n\x11SylkMethodDisplay\x12.\n\ncreated_at\x18\x02 \x01(\x0b\x32\x1a.google.protobuf.Timestamp\x12.\n\x06method\x18\x01 \x01(\x0b\x32\x1e.sylk.SylkMethod.v1.SylkMethod\x12.\n\nupdated_at\x18\x03 \x01(\x0b\x32\x1a.google.protobuf.Timestamp\x12\n\n\x02id\x18\x04 \x01(\tb\x06proto3')
 
 _globals = globals()
 _builder.BuildMessageAndEnumDescriptors(DESCRIPTOR, _globals)
@@ -23,13 +23,12 @@ _builder.BuildTopDescriptorsAndMessages(DESCRIPTOR, 'sylk.SylkMethod.v1.SylkMeth
 if _descriptor._USE_C_DESCRIPTORS == False:
 
   DESCRIPTOR._options = None
-  DESCRIPTOR._serialized_options = b'ZBgithub.com/sylk-build/sylk-core/services/protos/sylk/SylkMethod/v1'
   _SYLKMETHOD_EXTENSIONSENTRY._options = None
   _SYLKMETHOD_EXTENSIONSENTRY._serialized_options = b'8\001'
-  _globals['_SYLKMETHODDISPLAY']._serialized_start=123
-  _globals['_SYLKMETHODDISPLAY']._serialized_end=286
-  _globals['_SYLKMETHOD']._serialized_start=289
-  _globals['_SYLKMETHOD']._serialized_end=633
-  _globals['_SYLKMETHOD_EXTENSIONSENTRY']._serialized_start=559
-  _globals['_SYLKMETHOD_EXTENSIONSENTRY']._serialized_end=633
+  _globals['_SYLKMETHOD']._serialized_start=123
+  _globals['_SYLKMETHOD']._serialized_end=467
+  _globals['_SYLKMETHOD_EXTENSIONSENTRY']._serialized_start=393
+  _globals['_SYLKMETHOD_EXTENSIONSENTRY']._serialized_end=467
+  _globals['_SYLKMETHODDISPLAY']._serialized_start=470
+  _globals['_SYLKMETHODDISPLAY']._serialized_end=645
 # @@protoc_insertion_point(module_scope)

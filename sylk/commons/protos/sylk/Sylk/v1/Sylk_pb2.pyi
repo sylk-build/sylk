@@ -1,7 +1,7 @@
-from sylk.commons.protos.sylk.SylkProject.v1 import SylkProject_pb2 as _SylkProject_pb2
-from sylk.commons.protos.sylk.SylkOrganization.v1 import SylkOrganization_pb2 as _SylkOrganization_pb2
-from sylk.commons.protos.sylk.SylkService.v1 import SylkService_pb2 as _SylkService_pb2
-from sylk.commons.protos.sylk.SylkPackage.v1 import SylkPackage_pb2 as _SylkPackage_pb2
+from sylk.SylkProject.v1 import SylkProject_pb2 as _SylkProject_pb2
+from sylk.SylkOrganization.v1 import SylkOrganization_pb2 as _SylkOrganization_pb2
+from sylk.SylkService.v1 import SylkService_pb2 as _SylkService_pb2
+from sylk.SylkPackage.v1 import SylkPackage_pb2 as _SylkPackage_pb2
 from sylk.SylkConfigs.v1 import SylkConfigs_pb2 as _SylkConfigs_pb2
 from google.protobuf.internal import containers as _containers
 from google.protobuf import descriptor as _descriptor

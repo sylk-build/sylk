@@ -18,7 +18,7 @@ from sylk.commons.protos.sylk.SylkPackage.v1 import SylkPackage_pb2 as sylk_dot_
 from sylk.commons.protos.sylk.SylkConfigs.v1 import SylkConfigs_pb2 as sylk_dot_SylkConfigs_dot_v1_dot_SylkConfigs__pb2
 
 
-DESCRIPTOR = _descriptor_pool.Default().AddSerializedFile(b'\n\x17sylk/Sylk/v1/Sylk.proto\x12\x0csylk.Sylk.v1\x1a%sylk/SylkProject/v1/SylkProject.proto\x1a/sylk/SylkOrganization/v1/SylkOrganization.proto\x1a%sylk/SylkService/v1/SylkService.proto\x1a%sylk/SylkPackage/v1/SylkPackage.proto\x1a%sylk/SylkConfigs/v1/SylkConfigs.proto\"\xe5\x03\n\x08SylkJson\x12\x14\n\x0csylk_version\x18\x05 \x01(\t\x12\x31\n\x07project\x18\x06 \x01(\x0b\x32 .sylk.SylkProject.v1.SylkProject\x12@\n\x0corganization\x18\x01 \x01(\x0b\x32*.sylk.SylkOrganization.v1.SylkOrganization\x12\x36\n\x08services\x18\x03 \x03(\x0b\x32$.sylk.Sylk.v1.SylkJson.ServicesEntry\x12\x36\n\x08packages\x18\x02 \x03(\x0b\x32$.sylk.Sylk.v1.SylkJson.PackagesEntry\x12\x38\n\x07\x63onfigs\x18\x04 \x01(\x0b\x32\'.sylk.SylkConfigs.v1.SylkProjectConfigs\x1aQ\n\rServicesEntry\x12\x0b\n\x03key\x18\x01 \x01(\t\x12/\n\x05value\x18\x02 \x01(\x0b\x32 .sylk.SylkService.v1.SylkService:\x02\x38\x01\x1aQ\n\rPackagesEntry\x12\x0b\n\x03key\x18\x01 \x01(\t\x12/\n\x05value\x18\x02 \x01(\x0b\x32 .sylk.SylkPackage.v1.SylkPackage:\x02\x38\x01\x42>Z<github.com/sylk-build/sylk-core/services/protos/sylk/Sylk/v1b\x06proto3')
+DESCRIPTOR = _descriptor_pool.Default().AddSerializedFile(b'\n\x17sylk/Sylk/v1/Sylk.proto\x12\x0csylk.Sylk.v1\x1a%sylk/SylkProject/v1/SylkProject.proto\x1a/sylk/SylkOrganization/v1/SylkOrganization.proto\x1a%sylk/SylkService/v1/SylkService.proto\x1a%sylk/SylkPackage/v1/SylkPackage.proto\x1a%sylk/SylkConfigs/v1/SylkConfigs.proto\"\xe5\x03\n\x08SylkJson\x12\x14\n\x0csylk_version\x18\x05 \x01(\t\x12\x31\n\x07project\x18\x06 \x01(\x0b\x32 .sylk.SylkProject.v1.SylkProject\x12@\n\x0corganization\x18\x01 \x01(\x0b\x32*.sylk.SylkOrganization.v1.SylkOrganization\x12\x36\n\x08services\x18\x03 \x03(\x0b\x32$.sylk.Sylk.v1.SylkJson.ServicesEntry\x12\x36\n\x08packages\x18\x02 \x03(\x0b\x32$.sylk.Sylk.v1.SylkJson.PackagesEntry\x12\x38\n\x07\x63onfigs\x18\x04 \x01(\x0b\x32\'.sylk.SylkConfigs.v1.SylkProjectConfigs\x1aQ\n\rServicesEntry\x12\x0b\n\x03key\x18\x01 \x01(\t\x12/\n\x05value\x18\x02 \x01(\x0b\x32 .sylk.SylkService.v1.SylkService:\x02\x38\x01\x1aQ\n\rPackagesEntry\x12\x0b\n\x03key\x18\x01 \x01(\t\x12/\n\x05value\x18\x02 \x01(\x0b\x32 .sylk.SylkPackage.v1.SylkPackage:\x02\x38\x01\x62\x06proto3')
 
 _globals = globals()
 _builder.BuildMessageAndEnumDescriptors(DESCRIPTOR, _globals)
@@ -26,7 +26,6 @@ _builder.BuildTopDescriptorsAndMessages(DESCRIPTOR, 'sylk.Sylk.v1.Sylk_pb2', _gl
 if _descriptor._USE_C_DESCRIPTORS == False:
 
   DESCRIPTOR._options = None
-  DESCRIPTOR._serialized_options = b'Z<github.com/sylk-build/sylk-core/services/protos/sylk/Sylk/v1'
   _SYLKJSON_SERVICESENTRY._options = None
   _SYLKJSON_SERVICESENTRY._serialized_options = b'8\001'
   _SYLKJSON_PACKAGESENTRY._options = None
