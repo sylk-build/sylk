@@ -49,7 +49,6 @@ def post_build(sylk_json: helpers.SylkJson, sylk_context: helpers.SylkContext):
     # pretty.print_success("Finished sylk build process %s plugin" % (__name__))
     return (__name__, "OK")
 
-
 @builder.hookimpl
 def init_project_structure(
     sylk_json: helpers.SylkJson, sylk_context: helpers.SylkContext
@@ -100,7 +99,7 @@ def init_project_structure(
     if sylk_json.get_server_language() == "typescript":
         file_system.wFile(
             file_system.join_path(sylk_json.path, "bin", "run-server.sh"),
-            bash_run_server_script_ts,
+            bash_run_server_script_ts,overwrite=True
         )
 
     # file_system.wFile(file_system.join_path(sylk_json.path,'.webezy','contxt.json'),'{"files":[]}')
@@ -114,17 +113,21 @@ def init_project_structure(
 @builder.hookimpl
 def write_services(sylk_json: helpers.SylkJson, sylk_context: helpers.SylkContext):
     for svc in sylk_json.services:
-        svc_name = svc.split("/")[-1].split(".")[0]
-        svc_ver = svc.split("/")[-2]
+        svc_name = svc.get('name')
+        svc_ver = helpers.parse_version_component(svc.get('fullName'))
+        if svc_ver is not None:
+            svc_ver = f'v{svc_ver.get("version")}{svc_ver.get("channel") if svc_ver.get("channel") is not None else ""}{svc_ver.get("release") if svc_ver.get("release") is not None else ""}'
+        else:
+            svc_ver = ''
         svc_path = file_system.join_path(
             sylk_json.path, "services", svc_name, svc_ver, f"{svc_name}.ts"
         )
         if file_system.check_if_file_exists(svc_path) == False:
             service_code = helpers.SylkServiceTs(
                 sylk_json.project.get("packageName"),
+                svc_name,
+                svc.get("dependencies"),
                 svc,
-                sylk_json.services[svc].get("dependencies"),
-                sylk_json.services[svc],
                 context=sylk_context,
                 sylk_json=sylk_json,
             ).to_str()
@@ -354,8 +357,12 @@ def write_server(
                         pretty.print_warning(f"[{__name__}] `{hook}` missing command")
 
     for svc in sylk_json.services:
-        svc_name = svc.split("/")[-1].split(".")[0]
-        svc_ver = svc.split("/")[-2]
+        svc_name = svc.get('name')
+        pkg_ver = helpers.parse_version_component(svc.get('fullName'))
+        if pkg_ver is not None:
+            svc_ver = f'v{pkg_ver.get("version")}{pkg_ver.get("channel") if pkg_ver.get("channel") is not None else ""}{pkg_ver.get("release") if pkg_ver.get("release") is not None else ""}'
+        else:
+            svc_ver =  ''
         imports.append(
             f"import {_OPEN_BRCK} {svc_name} as {svc_name}{svc_ver}, {svc_name}Service as {svc_name}Service{svc_ver} {_CLOSING_BRCK} from './services/{svc_name}/{svc_ver}/{svc_name}';"
         )

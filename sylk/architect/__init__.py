@@ -72,7 +72,7 @@ class CommandMap(Enum):
 
 class SylkArchitect:
     def __init__(
-        self, path, domain="domain", project_name="project", save=None, base_protos="protos"
+        self, path, domain="domain", project_name="project", save=None, base_protos="protos", format="json"
     ) -> None:
         logging.debug("Starting sylk build architect process")
         if "sylk.json" not in path:
@@ -92,7 +92,8 @@ class SylkArchitect:
         self._add_resource = AddResource(self._builder)
         self._logger = Logger(self._builder)
         self._set_domain = SetDomain(self._builder)
-        self._sylk = Sylk(self._path, save)
+        self._format = format
+        self._sylk = Sylk(self._path, save, self._format)
         self._sylk.registerCommand(CommandMap._REMOVE_RESOURCE, self._remove_resource)
         self._sylk.registerCommand(CommandMap._EDIT_RESOURCE, self._edit_resource)
         self._sylk.registerCommand(CommandMap._ADD_RESOURCE, self._add_resource)
@@ -207,7 +208,10 @@ class SylkArchitect:
         version_component=None,
         order_pkg=[]
     ):
-        path_with_domain = self._domain + '.' + name
+        if name == self._domain:
+            path_with_domain = self._domain
+        else:
+            path_with_domain = self._domain + '.' + name
         dict = generate_package(
             self._path,
             path_with_domain,
@@ -389,8 +393,15 @@ class SylkArchitect:
         )
         return message
 
-    def EditEnum(self, package, name, enum_values):
-        enum = generate_enum(self._path, self._domain, package, name, enum_values)
+    def EditEnum(
+        self,
+        package,
+        name,
+        enum_values,
+        description=None,
+        tag=None,
+    ):
+        enum = generate_enum(self._path, self._domain, package, name, enum_values,tag=tag,description=description)
         self._sylk.execute(CommandMap._EDIT_RESOURCE, MessageToDict(enum))
 
     def EditRPC(

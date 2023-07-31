@@ -299,6 +299,7 @@ def write_clients(
             "before_init": before_init,
             "interceptors": interceptors,
         },
+        sylk_json=sylk_json
     )
     file_system.wFile(
         file_system.join_path(sylk_json.path, "services", "index.ts"),

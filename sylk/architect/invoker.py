@@ -67,9 +67,10 @@ class CoreInvoker:
 
 
 class Sylk(IUndoRedo):
-    def __init__(self, path=None, load=None):
+    def __init__(self, path=None, load=None, format="json"):
         log.debug("Architect class __init__ | path to project -> {0}".format(path))
         self._saves = 0
+        self._format = format
         self._load = load
         self._core = Core()
         self._core_invoker = CoreInvoker(path)
@@ -90,7 +91,7 @@ class Sylk(IUndoRedo):
         self._core_invoker.register("SaveSylkJson", SaveSylkJson(self._core))
 
     def _get_sylk_json(self):
-        self._core_invoker.execute("GetSylkJson",{'format': self.sylkJson.get('configs').get('format','json')})
+        self._core_invoker.execute("GetSylkJson",{'format': self.sylkJson.get('configs',{"format":self._format}).get('format','json')})
         self._sylk_json = self._core_invoker.history[-1][-1]
 
     def _get_saves(self):

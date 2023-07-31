@@ -272,7 +272,6 @@ then\n\
 \techo "Info Mode: $1"\n\
 \tGRPC_VERBOSITY=INFO GRPC_TRACE=all node ./server/server.js\n\
 else\n\
-else\n\
 \tnode ./server/server.js\n\
 fi'
 
@@ -285,14 +284,40 @@ const PROTOC_PATH = path.join(__dirname, "../node_modules/grpc-tools/bin/protoc"
 const PLUGIN_PATH = path.join(__dirname, "../node_modules/.bin/protoc-gen-ts_proto");\n\n\
 const pkgJson = require("../sylk.json");\n\
 let protos = [];\n\n\
+function getUniqueStrings(arr) {\n\
+  const uniqueSet = new Set(arr);\n\
+  return Array.from(uniqueSet);\n\
+}\n\n\
 for (const pkg in pkgJson.packages) {\n\
   if (Object.hasOwnProperty.call(pkgJson.packages, pkg)) {\n\
-    protos.push(`${pkg.split("/").slice(1).join("/")}`)\n\
-  }\n\
-}\n\
-for (const svc in pkgJson.services) {\n\
-  if (Object.hasOwnProperty.call(pkgJson.services, svc)) {\n\
-    protos.push(`${svc.split("/").slice(1).join("/")}`)\n\
+    let files = [];\n\
+    let standaloneFile = false;\n\
+    if(pkgJson.packages[pkg].services) {\n\
+      pkgJson.packages[pkg]?.services.map(s => s.tag).map(s => files.push(s))\n\
+      if(pkgJson.packages[pkg]?.services.map(s => !s.tag).includes(true)) {\n\
+        standaloneFile = true;\n\
+      }\n\
+    }\n\
+    if(pkgJson.packages[pkg].messages) {\n\
+      pkgJson.packages[pkg]?.messages.map(m => m.tag).map(m => files.push(m))\n\
+      if(pkgJson.packages[pkg]?.messages.map(m => !m.tag).includes(true)) {\n\
+        standaloneFile = true;\n\
+      }\n\
+    }\n\
+    if(pkgJson.packages[pkg].enums) {\n\
+      pkgJson.packages[pkg]?.enums.map(e => e.tag).map(e => files.push(e))\n\
+      if(pkgJson.packages[pkg]?.enums.map(e => !e.tag).includes(true)) {\n\
+        standaloneFile = true;\n\
+      }\n\
+    }\n\
+    if(files.length>0) {\n\
+      getUniqueStrings(files).map(f => protos.push(`${pkg}/${f}.proto`))\n\
+      if(standaloneFile) {\n\
+        protos.push(`${pkg}/${pkgJson.packages[pkg].name}.proto`)  \n\
+      }\n\
+    } else {\n\
+      protos.push(`${pkg}/${pkgJson.packages[pkg].name}.proto`)\n\
+    }\n\
   }\n\
 }\n\
 rimraf.sync(`${MODEL_DIR}/*.ts`, {\n\
@@ -642,8 +667,7 @@ then\n\
 \techo "Info Mode: $1"\n\
 \tGRPC_VERBOSITY=INFO GRPC_TRACE=all go run ./server/server.go\n\
 else\n\
-else\n\
-go run ./server/server.go\n\
+\tgo run ./server/server.go\n\
 fi'
 
 logger_js = ""

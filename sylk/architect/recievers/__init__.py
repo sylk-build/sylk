@@ -51,7 +51,6 @@ class Core:
             # destination_path = destination_path.replace('sylk.json','.sylk')
             # mkdir(destination_path)
         else:
-            print(args)
             log.debug("Getting sylk json {0}".format(args[0][0]))
             try:
                 sylkJson = rFile(args[0][0],json=True)
@@ -225,7 +224,6 @@ class Builder:
                                 field_index = m.get('fields').index(field)
                                 oneof_field = next((one_f for one_f in field.get('oneofFields') if one_f.get('fullName') == full_name),None)
                                 if oneof_field is not None:
-                                    print_info(f'{pkg_name=} | {index_msgs=} | {field_index=}')
                                     sylkJson['packages'][pkg_name]['messages'][index_msgs]['fields'][field_index]['oneofFields'].remove(oneof_field)
                                     removed = True
                                     break

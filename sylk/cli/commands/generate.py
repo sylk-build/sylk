@@ -99,7 +99,11 @@ def package(
     description = None
     if sylk_json.packages is not None:
         try:
-            if sylk_json.get_package(f'{sylk_json.domain}.{pkg}'):
+            if sylk_json.domain == pkg:
+                pkg_name = sylk_json.domain
+            else:
+                pkg_name = sylk_json.domain+'.'+pkg
+            if sylk_json.get_package(pkg_name):
                 print_error(
                     f'Package [{pkg}] is already defined under "{prj_name}" project'
                 )
@@ -140,19 +144,18 @@ def package(
 
     if verbose:
         print_note(pkg, True, "Adding package")
-    print(sylk_json._proto_tree.root.name)
-    sylk_json._proto_tree.add_node(sylk_json.domain+'.'+pkg,'package')
+    sylk_json._proto_tree.add_node(pkg_name,'package')
     new_pkg = sylk_json._proto_tree._find_node(pkg,sylk_json._proto_tree.root)
     if len(deps) > 0:
         for d in deps:
             temp_d_list.append(d)
             new_pkg.references.append(d)
     pkgs = sylk_json._proto_tree.topological_sort()[::-1]
-    if sylk_json.domain+'.'+pkg not in pkgs:
-        pkgs.append(sylk_json.domain+'.'+pkg)
+    if pkg_name not in pkgs:
+        pkgs.append(pkg_name)
     architect.AddPackage(pkg, temp_d_list, description=description, version_component=ver, order_pkg=pkgs)
     architect.Save()
-    print_success(f'Success !\n\t- Created new package "{sylk_json.domain}.{pkg}"')
+    print_success(f'Success !\n\t- Created new package "{pkg_name}"')
 
 
 def service(
@@ -251,7 +254,12 @@ def message(
     msg = results["message"].replace('/','.')
     msg_name = msg.split('.')[-1]
     description=None
-    pkg=results.get('package') if results.get('package') is not None else sylk_json.domain+'.'+'.'.join(msg.split('.')[:-1])
+    
+    if '.'.join(msg.split('.')[:-1]) == sylk_json.domain:
+        pkg_name = sylk_json.domain
+    else:
+        pkg_name = sylk_json.domain+'.'+'.'.join(msg.split('.')[:-1])
+    pkg=results.get('package') if results.get('package') is not None else pkg_name
     if msg_name.lower() == "message":
         print_error(
             "Do not name your message as 'message' it can cause issues down the road\n\t-> please choose another name for your message"
@@ -289,8 +297,11 @@ def message(
     for enum in pkg.enums:
         avail_enums.append((enum.name, enum.full_name))
     
-    pkg.dependencies.extend(deps)
-    for d in pkg.dependencies:
+    dependencies = pkg.dependencies
+    for d in deps:
+        if d not in dependencies:
+            dependencies.append(d)
+    for d in dependencies:
         if "google.protobuf" in d:
             for _,msgs in _WellMap:
                 for m in msgs:
@@ -839,7 +850,9 @@ def rpc(
             exit(1)
     
     avail = []
-    dependencies.extend(deps)
+    for d in deps:
+        if d not in dependencies:
+            dependencies.append(d)
     for d in dependencies:
         if "google.protobuf" in d:
             for _, msgs in _WellMap:
@@ -915,10 +928,14 @@ def enum(
     generate_package_func=None,
     tag = None
 ):
-    enum = results["enum"]
+    enum = results["enum"].replace('/','.')
     enum_name = enum.split('.')[-1]
     description=None
-    pkg=results.get('package') if results.get('package') is not None else sylk_json.domain+'.'+'.'.join(enum.split('.')[:-1])
+    if sylk_json.domain == '.'.join(enum.split('.')[:-1]):
+        pkg_name = sylk_json.domain
+    else:
+        pkg_name = sylk_json.domain + '.' + '.'.join(enum.split('.')[:-1])
+    pkg=results.get('package') if results.get('package') is not None else pkg_name
     # pkg = results['package'] if parent is None else parent
     try:
         package = sylk_json.get_package(

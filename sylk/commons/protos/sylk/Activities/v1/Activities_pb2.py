@@ -11,7 +11,7 @@ from google.protobuf.internal import builder as _builder
 _sym_db = _symbol_database.Default()
 
 
-from sylk.ActivityLog.v1 import ActivityLog_pb2 as sylk_dot_ActivityLog_dot_v1_dot_ActivityLog__pb2
+from sylk.commons.protos.sylk.ActivityLog.v1 import ActivityLog_pb2 as sylk_dot_ActivityLog_dot_v1_dot_ActivityLog__pb2
 
 
 DESCRIPTOR = _descriptor_pool.Default().AddSerializedFile(b'\n#sylk/Activities/v1/Activities.proto\x12\x12sylk.Activities.v1\x1a%sylk/ActivityLog/v1/ActivityLog.proto2\xe1\x01\n\nActivities\x12\x64\n\x10ListActivityLogs\x12,.sylk.ActivityLog.v1.ListActivityLogsRequest\x1a .sylk.ActivityLog.v1.ActivityLog0\x01\x12m\n\x0fGetActivityLogs\x12,.sylk.ActivityLog.v1.ListActivityLogsRequest\x1a,.sylk.ActivityLog.v1.GetActivityLogsResponseb\x06proto3')

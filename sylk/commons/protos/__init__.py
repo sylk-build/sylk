@@ -7,27 +7,27 @@ import logging
 from google.protobuf import empty_pb2
 from google.protobuf import any_pb2
 
-from .sylk.Packages.v1 import Packages_pb2_grpc as Packages_v1_service
-from .sylk.Methods.v1 import Methods_pb2_grpc as Methods_v1_service
-from .sylk.Users.v1 import Users_pb2_grpc as Users_v1_service
-from .sylk.Enums.v1 import Enums_pb2_grpc as Enums_v1_service
-from .sylk.Messages.v1 import Messages_pb2_grpc as Messages_v1_service
-from .sylk.Activities.v1 import Activities_pb2_grpc as Activities_v1_service
-from .sylk.Organizations.v1 import Organizations_pb2_grpc as Organizations_v1_service
-from .sylk.Fields.v1 import Fields_pb2_grpc as Fields_v1_service
-from .sylk.Projects.v1 import Projects_pb2_grpc as Projects_v1_service
-from .sylk.EnumValues.v1 import EnumValues_pb2_grpc as EnumValues_v1_service
-from .sylk.Services.v1 import Services_pb2_grpc as Services_v1_service
-from .sylk.Folders.v2 import Folders_pb2_grpc as Folders_v2_service
-from .sylk.Packages.v2 import Packages_pb2_grpc as Packages_v2_service
-from .sylk.Services.v2 import Services_pb2_grpc as Services_v2_service
-from .sylk.Messages.v2 import Messages_pb2_grpc as Messages_v2_service
-from .sylk.Tags.v2 import Tags_pb2_grpc as Tags_v2_service
-from .sylk.Enums.v2 import Enums_pb2_grpc as Enums_v2_service
+from .sylk.Packages.v1 import Packages_pb2_grpc as Packages_v1_service, Packages_pb2
+from .sylk.Methods.v1 import Methods_pb2_grpc as Methods_v1_service, Methods_pb2
+from .sylk.Users.v1 import Users_pb2_grpc as Users_v1_service, Users_pb2
+from .sylk.Enums.v1 import Enums_pb2_grpc as Enums_v1_service, Enums_pb2
+from .sylk.Messages.v1 import Messages_pb2_grpc as Messages_v1_service, Messages_pb2
+from .sylk.Activities.v1 import Activities_pb2_grpc as Activities_v1_service, Activities_pb2
+from .sylk.Organizations.v1 import Organizations_pb2_grpc as Organizations_v1_service, Organizations_pb2
+from .sylk.Fields.v1 import Fields_pb2_grpc as Fields_v1_service, Fields_pb2
+from .sylk.Projects.v1 import Projects_pb2_grpc as Projects_v1_service, Projects_pb2
+from .sylk.EnumValues.v1 import EnumValues_pb2_grpc as EnumValues_v1_service, EnumValues_pb2
+from .sylk.Services.v1 import Services_pb2_grpc as Services_v1_service, Services_pb2
+from .sylk.Folders.v2 import Folders_pb2_grpc as Folders_v2_service, Folders_pb2
+from .sylk.Packages.v2 import Packages_pb2_grpc as Packages_v2_service, Packages_pb2
+from .sylk.Services.v2 import Services_pb2_grpc as Services_v2_service, Services_pb2
+from .sylk.Messages.v2 import Messages_pb2_grpc as Messages_v2_service, Messages_pb2
+from .sylk.Tags.v2 import Tags_pb2_grpc as Tags_v2_service, Tags_pb2
+from .sylk.Enums.v2 import Enums_pb2_grpc as Enums_v2_service, Enums_pb2
 from .sylk.EnumValues.v2 import EnumValues_pb2_grpc as EnumValues_v2_service
 from .sylk.Methods.v2 import Methods_pb2_grpc as Methods_v2_service
 
-from .sylk.Fields.v2 import Fields_pb2_grpc as Fields_v2_service
+from .sylk.Fields.v2 import Fields_pb2_grpc as Fields_v2_service, Fields_pb2
 from .sylk.Integrations.v2 import Integrations_pb2_grpc as Integrations_v2_service
 from .sylk.ActivityLog.v1 import ActivityLog_pb2 as ActivityLog_v1
 from .sylk.SylkUser.v1 import SylkUser_pb2 as SylkUser_v1

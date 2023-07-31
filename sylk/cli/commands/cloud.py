@@ -29,10 +29,10 @@ from sylk.commons.protos import Projects_v1, Packages_v2, Messages_v2, Organizat
 import ast
 from sylk.commons.helpers import Graph, MessageToDict,MessageToJson, is_semver_less, read_to_parse_protos
 
-from sylk.commons.protos.sylk.SylkApi.v1.SylkApi_pb2 import GetAccessTokenRequest, GetProjectRequest, ListPackagesRequest, ListProjectsRequest, ListServicesRequest
+from sylk.commons.protos.sylk.SylkApi.v1.SylkApi_pb2 import GetAccessTokenRequest, GetOrganizationRequest, GetProjectRequest, ListPackagesRequest, ListProjectsRequest, ListServicesRequest
 from sylk.commons.protos.sylk.SylkConfigs.v1.SylkConfigs_pb2 import SylkProjectConfigs
 from sylk.commons.protos.sylk.SylkOrganization.v1.SylkOrganization_pb2 import SylkOrganization
-from sylk.commons.protos.sylk.Sylk.v1.Sylk_pb2 import SylkJson
+from sylk.commons.protos.sylk.Sylk.v2.Sylk_pb2 import SylkJson
 from datetime import datetime
 
 from sylk.tools.sylkprotoc import sylkprotoc, API as protocAPI
@@ -117,9 +117,10 @@ class SylkCloud:
         else:
             self._validate_token()
 
-    def pull_project(self,project_id=None,overwrite=False):
+    def pull_project(self,project_id=None,overwrite=False,domain=None) -> SylkJson:
         projectId = project_id if project_id is not None else self._org_id+'.'+self.sylkJson.project.get('packageName')
         try:
+            
             _md = (('sylk-build-token',self._token),)
 
             org_id = projectId.split('.')[0]
@@ -151,11 +152,13 @@ class SylkCloud:
                 _md
             )
 
-            for f in folders:
-                for p in f.packages:
-                    pkg_path = p.result.package.package.replace('.','/')
-                    packages[f'{pkg_path}'] = p.result.package
-
+            def parse_folder(folders,packages):
+                for f in folders:
+                    parse_folder(f.folders,packages=packages)
+                    for p in f.packages:
+                        pkg_path = p.package.replace('.','/')
+                        packages[f'{pkg_path}'] = p
+            parse_folder(folders=folders,packages=packages)
             # svcs = self._sylk_cloud._services.ListServices(
             #     ListServicesRequest(
             #         project_id=projectId
@@ -167,9 +170,12 @@ class SylkCloud:
             #     domain = s.result.service.full_name.split('.')[0]
             #     s_ver = s.result.service.full_name.split('.')[2]
             #     services[f'protos/{domain}/{s.result.service.name}/{s_ver}/{s.result.service.name}.proto'] = s.result.service
+            org = None
+            if domain is None:
+                org = self._sylk_cloud._organizations.GetOrganization(GetOrganizationRequest(org_id=org_id))
 
             sylk_org = SylkOrganization(
-                domain="sylk",
+                domain=domain if org is None else org.result.organization.domain,
                 orgId=org_id
             )
             project.result.project.uri = _fs.get_current_location()
@@ -178,10 +184,10 @@ class SylkCloud:
                 organization=sylk_org,
                 project=project.result.project,
                 packages=packages,
-                services=services,
                 configs=SylkProjectConfigs(
                     host='localhost',
-                    port=48800
+                    port=48800,
+                    proto_base_path='protos'
                 ),
                 sylk_version=__version__.__version__
             )
@@ -190,17 +196,25 @@ class SylkCloud:
             sylkDict = MessageToDict(sylk)
             for pkg in sylkDict['packages']:
                 resources.append(sylkDict['packages'][pkg])
-                try:
-                    sort_topological = Graph(sylkDict['packages'][pkg]['messages']).topologicalSort()
-                    temp_messages = []
-                    for m in sort_topological[::-1]:
-                        temp_messages.append(next((tmpM for tmpM in sylkDict['packages'][pkg]['messages'] if tmpM.get('fullName') == m),None))
-                    sylkDict['packages'][pkg]['messages'] = temp_messages
-                except KeyError as e:
-                    # _pretty.print_warning("Error while sorting the dependencies graph of package messages\n\t- If this error appeared right after making rename of message then ignore it...\n\t- Else please issue a bug report !")
-                    raise Exception('Seems like your project is nor ready to be built locally.. missing fields maybe?')
+                # try:
+                #     sort_topological = Graph(sylkDict['packages'][pkg]['messages']).topologicalSort()
+                #     temp_messages = []
+                #     for m in sort_topological[::-1]:
+                #         temp_messages.append(next((tmpM for tmpM in sylkDict['packages'][pkg]['messages'] if tmpM.get('fullName') == m),None))
+                #     sylkDict['packages'][pkg]['messages'] = temp_messages
+                # except KeyError as e:
+                #     # _pretty.print_warning("Error while sorting the dependencies graph of package messages\n\t- If this error appeared right after making rename of message then ignore it...\n\t- Else please issue a bug report !")
+                #     raise Exception('Seems like your project is not ready to be built locally.. missing fields maybe?')
                 
             
+            
+
+            # temp_json = _helpers.SylkJson(sylkDict)
+            # for p in sylkDict['packages']:
+            #     pkg = sylkDict['packages'][p]
+            #     msgs = temp_json._proto_tree.resolve_dependency_order(pkg['messages'])
+            #     p['messages'] = msgs
+            #     sylkDict['packages'][p]['messages'] = msgs
             if overwrite:
                 _fs.wFile('sylk.json',sylkDict,True,True)
             return sylk

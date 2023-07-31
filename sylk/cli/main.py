@@ -266,6 +266,12 @@ def main(args=None):
         help="The project id from sylk.build cloud platform",
     )
     parser_new.add_argument(
+        "--token",
+        default=None,
+        required=False,
+        help="The access token for sylk platform needed if used with --project-id",
+    )
+    parser_new.add_argument(
         "--base-protos", default="protos", required=False, help="The base sub-directory under root project which will hold all protobuf files"
     )
     parser_new.add_argument(
@@ -304,6 +310,12 @@ def main(args=None):
         default=None,
         required=False,
         help="The project id from sylk.build cloud platform",
+    )
+    parser_n.add_argument(
+        "--token",
+        default=None,
+        required=False,
+        help="The access token for sylk platform needed if used with --project-id",
     )
     parser_n.add_argument(
         "--base-protos", default="protos", required=False, help="The base sub-directory under root project which will hold all protobuf files"
@@ -579,6 +591,12 @@ def main(args=None):
         default="",
         help="The plugin options, in a text format e.g: some_key=somevalue,some_other_key=2",
     )
+    run_plugin_parser.add_argument(
+        "-I",
+        nargs='*',
+        default=[],
+        help="Include directories",
+    )
 
 
     # Utils
@@ -653,7 +671,7 @@ def main(args=None):
 
     if hasattr(args, "project"):
         """New command process"""
-        sylk_project_config = prj_conf.parse_project_config(os.getcwd())
+        sylk_project_config = prj_conf.parse_project_config(os.getcwd(),proto=True)
         # print_info(args,True)
         new.create_new_project(
             args.project,
@@ -667,6 +685,8 @@ def main(args=None):
             project_id=args.project_id,
             configs=sylk_project_config,
             base_proto_path=args.base_protos,
+            format=args.format,
+            token=args.token
         )
         exit(0)
     else:
@@ -1281,7 +1301,6 @@ def parse_namespace_resource(name, path: str, sylk_json: helpers.SylkJson):
         has_package = False
         if parent is not None:
             for _,p in temp_p:
-                print(p)
                 if parent in p:
                     has_package = True
             if has_package == False:
@@ -1301,7 +1320,7 @@ def parse_namespace_resource(name, path: str, sylk_json: helpers.SylkJson):
                 prompter.QList(
                     name="package",
                     message="Choose a package to attach the message",
-                    choices=temp_p,
+                    choices=sorted(temp_p,key=lambda x: x[1]),
                 )
             )
 

@@ -94,7 +94,7 @@ def get_readme(sylk_json: helpers.SylkJson):
         package_name = package["package"]
         msgs = []
         index["packages"].append(package_name)
-        for msg in package["messages"]:
+        for msg in package.get("messages",[]):
             msg_name = msg["name"]
             fields = []
             for f in msg["fields"]:
@@ -143,7 +143,7 @@ def get_readme(sylk_json: helpers.SylkJson):
         elif client_lang == "Go":
             go_package_name = sylk_json.project.get("goPackage")
             clients_usage.append(
-                f'### Go\n\n```go\npackage main\nimport (\n\t"fmt"\n\n\tclient "{go_package_name}/clients/go"\n)\n\nfunc main() {_OPEN_BRCK}\n\t//Init the client\n\tc := client.Default()\n\n\t// Construct a message\n\tmsg :=  <SomePackage>.<SomeMessage>{_OPEN_BRCK}{_CLOSING_BRCK}\n\n\t// Send unary\n\tres := c.<SomeRpc>(&msg)\n\tfm.tPrintf("Got server unary response: %v",res)\n\n\t// Client Stream\n\tListMessages := []*<Package>.<Message>{_OPEN_BRCK}\n\t\t{_OPEN_BRCK}{_CLOSING_BRCK},\n\t{_CLOSING_BRCK}\n\tclientStream := c.<ClientStreamingRPC>(ListMessages)\n\tfmt.Printf("Got response for client stream: %v", clientStream)\n\n\t// Server stream\n\tresponse_stream := c.<SomeServerStreamRPC>(&msg)\n\tfmt.Prontf("Got server stream response: %v", response_stream)\n\n{_CLOSING_BRCK}\n```\n'
+                f'### Go\n\n```go\npackage main\nimport (\n\t"fmt"\n\n\tclient "{go_package_name}/clients/go/<path-to-service>"\n)\n\nfunc main() {_OPEN_BRCK}\n\t//Init the client\n\tc := client.Default()\n\n\t// Construct a message\n\tmsg :=  <SomePackage>.<SomeMessage>{_OPEN_BRCK}{_CLOSING_BRCK}\n\n\t// Send unary\n\tres, _, _ := c.<SomeRpc>(&msg)\n\tfmt.Printf("Got server unary response: %v",res)\n\n\t// Client Stream\n\tListMessages := []*<Package>.<Message>{_OPEN_BRCK}\n\t\t{_OPEN_BRCK}{_CLOSING_BRCK},\n\t{_CLOSING_BRCK}\n\tclientStream := c.<ClientStreamingRPC>(ListMessages)\n\tfmt.Printf("Got response for client stream: %v", clientStream)\n\n\t// Server stream\n\tresponse_stream := c.<SomeServerStreamRPC>(&msg)\n\tfmt.Printf("Got server stream response: %v", response_stream)\n\n{_CLOSING_BRCK}\n```\n'
             )
     temp_index = []
     for k in index:

@@ -154,9 +154,9 @@ def parse_sylk_project_json_configs_proto(root_path):
 
 def parse_sylk_json_configs_proto(root_path):
     SYLK_JSON = None
+    if 'sylk.json' not in root_path:
+        root_path = root_path +'/sylk.json'
     if _fs.check_if_file_exists(root_path):
-        if 'sylk.json' not in root_path:
-            root_path = root_path +'/sylk.json'
         print_note(f'Loading sylk.build project from: {root_path}')
 
         SYLK_JSON = _fs.rFile(root_path, json=True)

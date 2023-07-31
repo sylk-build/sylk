@@ -106,7 +106,6 @@ def edit_message(resource,action,sub_actions,sylk_json:helpers.SylkJson,architec
             display_dependencies(dependencies,resource,'rename')
             rename_message(resource,sylk_json,architect,dependencies)
         elif sub_actions[0] == 'tag':
-            # Getting dependencies for resources
             tag_message(resource,sylk_json,architect)
         # Not supporting option
         else:
@@ -158,10 +157,12 @@ def edit_enum(resource,action,sub_actions,sylk_json:helpers.SylkJson,architect:S
     else:
         # Prompting for sub-action
         if sub_actions is None:
-            sub_actions = modify_resource([('Add values','values'),('Rename','name')])
+            sub_actions = modify_resource([('Add values','values'),('Tag enum','tag'),('Rename','name')])
         # Add values
         if sub_actions[0] == 'values' :
             add_values(resource,sylk_json,architect=architect,expand=expand)
+        elif sub_actions[0] == 'tag':
+            tag_enum(resource,sylk_json,architect)
         # Not supported option for enum editing
         else:
             print_error('{} Not supported yet !'.format(sub_actions[0]))
@@ -978,6 +979,21 @@ def display_dependencies(dependencies,resource,action):
                 print_warning('- {0} -> {1} [{2}]'.format(depend[0],depend[1].get('name'),depend[1].get('kind')))
     print('')
 
+def tag_enum(resource,sylk_json:helpers.SylkJson,architect:SylkArchitect):
+    tag_name = inquirer.prompt([inquirer.Text('tag_name','Enter tag name for enum',validate=tag_name_validator)],theme=SylkTheme())
+    if tag_name is None:
+        print_warning("Exiting editing process for message {}".format(resource.get('fullName')))
+        exit(1)
+    else:
+        tag_name = tag_name['tag_name']
+        _pkg = sylk_json._resolve_path_backwards(resource.get('fullName'))
+        pkg = sylk_json.get_package(_pkg.get('package'),False)
+        old_name = resource.get('name')
+        print_success("Tagging {} -> {}".format(resource.get('fullName'),tag_name))
+        resource['tag'] = tag_name
+        architect.EditEnum(pkg, resource.get('name'),
+                            resource.get('values'),description=resource.get('description'),tag=resource.get('tag'))
+        architect.Save()
 
 def tag_message(resource,sylk_json:helpers.SylkJson,architect:SylkArchitect):
     tag_name = inquirer.prompt([inquirer.Text('tag_name','Enter tag name for message',validate=tag_name_validator)],theme=SylkTheme())

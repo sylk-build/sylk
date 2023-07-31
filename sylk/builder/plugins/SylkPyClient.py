@@ -181,7 +181,7 @@ def init_project_structure(
 
 @builder.hookimpl
 def pre_compile_protos(sylk_json: helpers.SylkJson, sylk_context: helpers.SylkContext):
-    pretty.print_info("Running pre compile protos - python")
+    pretty.print_info("Running pre compile protos - python client")
     file_system.removeDir(file_system.join_path(sylk_json.path, 'clients', 'python', sylk_json._root_protos, sylk_json.domain))
     return {
         "sylk.builder.plugins.SylkProto:compile_protos():commands": [

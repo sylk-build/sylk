@@ -108,14 +108,56 @@ def create_new_project(
     project_id=None,
     configs=None,
     base_proto_path=None,
+    format='json',
+    token=None
 ):
     domain_name = "domain"
 
     if project_id is not None:
+
         sylkCloud = SylkCloud(
-            token=configs.get("token") if configs is not None else None,
+            token=token if token is not None else configs.token if configs is not None else None,
             org_id=project_id.split(".")[0],
         )
+
+        # If no options passed
+        if server_language is None and clients == None and domain is None:
+            results = ask_user_question(questions=sylk_neq_q)
+
+            if results is None:
+                print_warning("Must answer project creation questions")
+                exit(1)
+        # If someof the options has passed
+        elif server_language is not None or clients is not None or domain is not None:
+            questions = []
+
+            if server_language is None:
+                questions.append(server_language_q)
+            else:
+                print_note(f"Passed server language: {server_language}")
+
+            if clients is None:
+                questions.append(clients_languages_q)
+            else:
+                clients_display = ", ".join(clients)
+                print_note(f"Passed client languages: {clients_display}")
+
+            results = ask_user_question(questions=questions)
+
+            if results is None:
+                print_warning("Must answer project creation questions")
+                exit(1)
+            else:
+                if results.get("server") is None:
+                    results["server"] = server_language
+                if results.get("clients") is None:
+                    results["clients"] = clients
+
+        else:
+            results = {}
+            results["server"] = server_language
+            results["clients"] = clients
+
         project = sylkCloud.pull_project(project_id)
         if path is None:
             try:
@@ -164,11 +206,14 @@ def create_new_project(
         mkdir(result_path)
         # print_info(MessageToDict(project),True,'JSON:')
         wFile(project_path, MessageToDict(project), overwrite=True, json=True)
+        print_info(f'saved sylk schema into: {project_path}')
         ARCHITECT = SylkArchitect(
-            path=project_path, domain=domain_name, project_name=project_name
+            path=project_path, domain=domain_name, project_name=project_name, format=format
         )
+        print_info(clients)
+        print_info(server_language)
         ARCHITECT.AddProject(
-            project_name, project.project.server.language, project.project.clients
+            project_name, project.project.server.language if server_language is None else server_language, project.project.clients if len(clients) == 0 else list(map(lambda c: {"language": c}, clients))
         )
         # ARCHITECT._sylk = project
         ARCHITECT.SetConfig({"host": host, "port": int(port)})

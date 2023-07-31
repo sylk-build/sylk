@@ -62,9 +62,17 @@ _WELL_KNOWN_PY_IMPORTS = [
 ]
 
 _WELL_KNOWN_TS_IMPORTS = [
-    "import { \n\thandleUnaryCall,\n\thandleClientStreamingCall,\n\thandleServerStreamingCall,\n\thandleBidiStreamingCall,\n\tsendUnaryData,\n\tServerDuplexStream,\n\tServerReadableStream,\n\tServerUnaryCall,\n\tServerWritableStream,\n\tstatus,\n\tUntypedHandleCall,\n\tMetadata\n } from '@grpc/grpc-js';",
+    "import { \n\thandleUnaryCall,\n\thandleClientStreamingCall,\n\thandleServerStreamingCall,\n\thandleBidiStreamingCall,\n\tsendUnaryData,\n\tServerDuplexStream,\n\tServerReadableStream,\n\tServerUnaryCall,\n\tServerWritableStream,\n\tstatus,\n\tUntypedHandleCall,\n\tMetadata,\n\tInterceptor,\n\tcredentials\n } from '@grpc/grpc-js';",
     "import { ServiceError } from '../../utils/error';",
     "import { ApiType } from '../../utils/interfaces';",
+]
+
+_WELL_KNOWN_TS_CLIENT_IMPORTS = [
+    "import { \n\thandleUnaryCall\n\t,ClientUnaryCall\n\t,ClientReadableStream,\n\thandleClientStreamingCall,\n\thandleServerStreamingCall,\n\thandleBidiStreamingCall,\n\tsendUnaryData,\n\tServerDuplexStream,\n\tServerReadableStream,\n\tServerUnaryCall,\n\tServerWritableStream,\n\tstatus,\n\tUntypedHandleCall,\n\tMetadata,\n\tInterceptor,\n\tcredentials,\n\tChannelCredentials,\n\tServiceError as _service_error\n } from '@grpc/grpc-js';",
+    "import { ServiceError } from './utils/error';",
+    "import { ApiType } from './utils/interfaces';",
+    "import { promisify } from 'util';",
+    "import { Observable } from 'rxjs';",
 ]
 
 _WELL_KNOWN_GO_IMPORTS = ['"context"', '"io"', '"google.golang.org/grpc/metadata"']
@@ -143,7 +151,8 @@ def SylkJsonCacheToMessage(path) -> SylkCore.SylkJson:
 
 def SylkJsonToMessage(sylk_json, validate: bool = False) -> SylkCore.SylkJson:
     if validate:
-        pretty.print_info("Validating sylk.json", True)
+        pass
+        # pretty.print_info("Validating sylk.json", True)
         # assert(sylk_json.get('project') is not None)
         # assert(sylk_json.get('config') is not None)
         # assert(sylk_json.get('packages') is not None)
@@ -658,6 +667,24 @@ class SylkJson:
         self._parse_json()
         self._parse_proto_tree()
 
+    def _topological_sort(self,packages):
+        def dfs(package, visited, stack):
+            if self.packages.get(package) is not None:
+                visited.add(package)
+                for dependency in [dep for dep in self.packages.get(package,{}).get('dependencies',[]) if 'google.' not in dep]:
+                    if dependency not in visited and dependency not in self.packages[package].get('package'):
+                        dfs(dependency.replace('.','/'), visited, stack)
+                if package not in stack:
+                    stack.append(package)
+
+        visited = set()
+        stack = []
+
+        for package in packages:
+            if package not in visited:
+                dfs(package, visited, stack)
+        return stack
+
     def _parse_proto_tree(self):
         self._proto_tree = SylkTree(self.domain,self.project.get('name'))
         self._proto_tree.load_module(google())
@@ -667,13 +694,14 @@ class SylkJson:
             inline = f'{inline}.' if inline is not None else ''
             enm_path = pkg_path + '.' + inline + enm_name
             self._proto_tree.add_node(enm_path,'enum',enum)
-            if e.get('values') is not None:
-                for v in e.get('values'):
+            if enum.get('values') is not None:
+                for v in enum.get('values'):
                     self._proto_tree.add_node(enm_path + '.' + v.get('name'),'value',v)
 
         def _process_msg(self, msg, inline: str = None):
             msg_name = msg.get('name')
-            msg_path = pkg_path + '.' + msg_name
+            inline = '' if inline is None else inline+'.'
+            msg_path = pkg_path + '.' + inline + msg_name
             self._proto_tree.add_node(msg_path,'message',m)
             if msg.get('inlines') is not None:
                 for inline in msg.get('inlines'):
@@ -693,9 +721,16 @@ class SylkJson:
                             self._proto_tree.add_field_reference(msg_path, f.get('name'), f.get('enumType'))
                         elif f.get('valueType') == "TYPE_MESSAGE":
                             self._proto_tree.add_field_reference(msg_path, f.get('name'), f.get('messageType'))
+                    elif f.get('fieldType') == "TYPE_ONEOF":
+                        for oneof in f.get('oneofFields'):
+                            if oneof.get('fieldType') == "TYPE_ENUM":
+                                self._proto_tree.add_field_reference(msg_path+'.'+f.get('name'), oneof.get('name'), oneof.get('enumType'))
+                            elif oneof.get('fieldType') == "TYPE_MESSAGE":
+                                self._proto_tree.add_field_reference(msg_path+'.'+f.get('name'), oneof.get('name'), oneof.get('messageType'))
 
         if self.packages is not None:
-            for pkg in self.packages:
+            for pkg in self._topological_sort(self.packages):
+                print(pkg)
                 p = self.packages[pkg]
                 pkg_path = p.get('package')
                 self._proto_tree.add_node(pkg_path,'package',p)
@@ -703,9 +738,9 @@ class SylkJson:
                 if p.get('enums') is not None:
                     for e in p.get('enums'):
                         _process_enum(self,e)
-
                 if p.get('messages') is not None:
-                    for m in p.get('messages'):
+                    sorted = self._proto_tree.resolve_dependency_order(p.get('messages'))
+                    for m in sorted:
                         _process_msg(self,m)
                         
                 if p.get('services') is not None:
@@ -1043,10 +1078,12 @@ class SylkJson:
 
     def get_service_dependencies(self, service):
         deps = []
-        svc_deps = [ref for ref in self._proto_tree.get_references(service.full_name) if '.'.join(service.full_name.split('.')[:-1]) not in ref]
+        service_node = self._proto_tree._find_node(service,self._proto_tree.root)
+        svc_deps = [ref for ref in self._proto_tree.get_references(service)]
         files = self._proto_tree._get_file_paths(svc_deps)
         for f in files:
-            deps.append(f'import "{f}";')
+            if service_node.properties.get('tag') != f.split('/')[-1].split('.')[0]:
+                deps.append(f'import "{f}";')
         return deps
 
     def get_message_dependencies(self, message_name):
@@ -1164,9 +1201,10 @@ def load_sylk_json(path: str):
 
 
 class SylkProtoFile:
-    def __init__(self, file_name, package, sylk_json: SylkJson = None) -> None:
+    def __init__(self, file_name, package, sylk_json: SylkJson = None, is_tag: bool = False) -> None:
         self._file_name = file_name
         self._package = package
+        self._is_tag = is_tag
         self._sylk_json = sylk_json
         self._file_path = self._set_file_path()
 
@@ -1175,23 +1213,47 @@ class SylkProtoFile:
         return f"{self._sylk_json.path}/{self._sylk_json._root_protos}/{pkg_path}/{self._file_name}.proto"
 
     def get_metadata(self):
-        return "package {};".format(self._package.package)
+        pkg_path = self._package.package.replace(".", "/")
+        base_protos = self._sylk_json._root_protos +'/' if self._sylk_json._root_protos is not None and self._sylk_json._root_protos != '' else ''
+        file_ver = parse_version_component(self._package.package.split('.')[-1])
+        if file_ver is not None:
+            file_ver = f";{self._package.name}v{file_ver.get('version')}{file_ver.get('channel') if file_ver.get('channel') is not None else ''}{file_ver.get('release') if file_ver.get('release') is not None else ''}"
+        else:
+            file_ver = ''
+        go_package = f'\noption go_package = "{self._sylk_json.project.get("goPackage")}/services/{base_protos}{pkg_path}{file_ver}";' if self._sylk_json.project.get("goPackage") is not None else ''
+        return "package {};{}".format(self._package.package,go_package)
 
     def get_imports(self):
         dependencies = []
-        
-        if self._file_name != self._package.name:
+        current_file_path = self._file_path.split(self._sylk_json.path + '/' +self._sylk_json._root_protos + '/')[1]
+        if self._file_name != self._package.name or self._is_tag == True:
             refs = []
             msgs = [m.full_name for m in self._package.messages if m.tag == self._file_name]
             enms = [e.full_name for e in self._package.enums if e.tag == self._file_name]
             svcs = [s.full_name for s in self._package.services if s.tag == self._file_name]
             refs = msgs + enms + svcs
-            files = self._sylk_json._proto_tree._get_file_paths(refs)
-            for f in files:
-                current_file = self._package.package.replace('.','/') + '/' + self._file_name + '.proto'
-                imp_path = f'import "{f}";'
-                if imp_path not in dependencies and f != current_file:
-                    dependencies.append(imp_path)
+            file_refs = []
+            for m in msgs:
+                deps = self._sylk_json.get_message_dependencies(m)
+                for d in deps:
+                    if d not in dependencies and current_file_path not in d:
+                        dependencies.append(d)
+            for s in svcs:
+                deps = self._sylk_json.get_service_dependencies(s)
+                for d in deps:
+                    if d not in dependencies and  current_file_path not in d:
+                        dependencies.append(d)
+            # for i in refs:
+            #     references = self._sylk_json._proto_tree.get_references(i)
+            #     for r in references:
+            #         if r not in file_refs:
+            #             file_refs.append(r)
+            # files = self._sylk_json._proto_tree._get_file_paths(file_refs)
+            # for f in files:
+            #     # current_file = self._package.package.replace('.','/') + '/' + self._file_name + '.proto'
+            #     imp_path = f'import "{f}";'
+            #     if imp_path not in dependencies and f != current_file_path:
+            #         dependencies.append(imp_path)
              
             # for m in msgs:
             #     deps = self._sylk_json.get_message_dependencies(m.full_name)
@@ -1203,21 +1265,23 @@ class SylkProtoFile:
             #     for d in deps:
             #         if d not in dependencies:
             #             dependencies.append(d)
+
         else:
-            msgs = [m for m in self._package.messages if m.tag == ""]
-            enms = [e for e in self._package.enums if e.tag == ""]
-            svcs = [s for s in self._package.services if s.tag == ""]
+            msgs = [m.full_name for m in self._package.messages if m.tag == "" or m.tag == self._file_name]
+            enms = [e.full_name for e in self._package.enums if e.tag == "" or e.tag == self._file_name]
+            svcs = [s.full_name for s in self._package.services if s.tag == "" or s.tag == self._file_name]
             for m in msgs:
-                deps = self._sylk_json.get_message_dependencies(m.full_name)
+                deps = self._sylk_json.get_message_dependencies(m)
                 for d in deps:
-                    if d not in dependencies:
+                    if d not in dependencies and current_file_path not in d:
                         dependencies.append(d)
             for s in svcs:
                 deps = self._sylk_json.get_service_dependencies(s)
                 for d in deps:
-                    if d not in dependencies:
+                    if d not in dependencies and  current_file_path not in d:
                         dependencies.append(d)
-
+                        
+            
         return "\n\n" + "\n".join(dependencies) if len(dependencies) > 0 else ""
 
     def get_services(self):
@@ -1225,7 +1289,8 @@ class SylkProtoFile:
         if self._file_name != self._package.name:
             svcs = [s for s in self._package.services if s.tag == self._file_name]
         else:
-            svcs = [s for s in self._package.services if s.tag == ""]
+            svcs = [s for s in self._package.services if s.tag == "" or s.tag == self._file_name]
+        
         for s in svcs:
             methods = []
             for rpc in s.methods:
@@ -1249,7 +1314,9 @@ class SylkProtoFile:
     def get_messages(self):
         temp_msgs = []
 
-        def _process_field(self,f):
+        def _process_field(self,f,inline=False):
+            inline_fields = []
+
             field_label = (
                 ""
                 if (
@@ -1289,23 +1356,99 @@ class SylkProtoFile:
                 if f.field_type == SylkField_pb2.TYPE_MAP
                 else "oneof"
             )
+
             field_extensions = ""
             format_desc =  f.description.split('\n') if f.description.split('\n')[-1]!='' else f.description.split('\n')[:-1]
-            fields.append(
-                "\t// [{}] - {}".format(
-                    f.full_name, '\n\t//'.join(format_desc)
+            if inline == False:
+                fields.append(
+                    "\t// [{}] - {}".format(
+                        f.full_name, '\n\t//'.join(format_desc)
+                    )
                 )
-            )
-            fields.append(
-                "\t{}{} {} = {}{};".format(
-                    field_label, field_type, f.name, f.index, field_extensions
+            else:
+                inline_fields.append(
+                    "\t\t// [{}] - {}".format(
+                        f.full_name, '\n\t//'.join(format_desc)
+                    )
                 )
-            )
 
-        if self._file_name != self._package.name:
+            if f.field_type == SylkField_pb2.TYPE_ONEOF:
+                oneofs = []
+                for oneof in f.oneof_fields:
+
+                    oneof_field_type = (
+                        SylkField_pb2.SylkFieldTypes.Name(oneof.field_type)
+                        .split("_")[1]
+                        .lower()
+                        if oneof.field_type
+                        not in [
+                            SylkField_pb2.TYPE_MESSAGE,
+                            SylkField_pb2.TYPE_ENUM,
+                        ]
+                        else oneof.message_type
+                        if oneof.field_type == SylkField_pb2.TYPE_MESSAGE
+                        else oneof.enum_type
+                        if oneof.field_type == SylkField_pb2.TYPE_ENUM
+                        else "map<{}, {}>".format(
+                            SylkField_pb2.SylkFieldTypes.Name(oneof.key_type)
+                            .split("_")[1]
+                            .lower(),
+                            SylkField_pb2.SylkFieldTypes.Name(oneof.value_type)
+                            .split("_")[1]
+                            .lower()
+                            if oneof.value_type
+                            not in [SylkField_pb2.TYPE_MESSAGE, SylkField_pb2.TYPE_ENUM]
+                            else oneof.message_type
+                            if oneof.value_type == SylkField_pb2.TYPE_MESSAGE
+                            else oneof.enum_type,
+                        )
+                        if oneof.field_type == SylkField_pb2.TYPE_MAP
+                        else "NONE"
+                    )
+                    oneof_field_extensions = ""
+                    format_desc = oneof.description.split('\n') if oneof.description.split('\n')[-1]!='' else oneof.description.split('\n')[:-1]
+                    oneofs.append(
+                        "{}\t\t// [{}] - {}".format(
+                            '\t' if inline == True else '' ,oneof.full_name, '\n\t\t//'.join(format_desc)
+                        )
+                    )
+                    oneofs.append(
+                        "{}\t\t{} {} = {}{};".format(
+                           '\t' if inline == True else '' ,oneof_field_type, oneof.name, oneof.index, oneof_field_extensions
+                        )
+                    )
+                    field_extensions = '{\n'+'\n'.join(oneofs)+'\n\t}'
+                if inline == False:
+                    fields.append(
+                        "\t{} {} {};".format(
+                            field_type, f.name, field_extensions
+                        )
+                    )
+                else:
+                    inline_fields.append(
+                        "\t\t{} {} {};".format(
+                            field_type, f.name, field_extensions
+                        )
+                    )
+            else:
+                if inline == False:
+                    fields.append(
+                       "\t{}{} {} = {}{};".format(
+                        field_label, field_type, f.name, f.index, field_extensions
+                        )
+                    )
+                else:
+                    inline_fields.append(
+                        "\t\t{}{} {} = {}{};".format(
+                        field_label, field_type, f.name, f.index, field_extensions
+                        )
+                    )
+            return inline_fields
+
+        if self._file_name != self._package.name or self._is_tag == True:
             msgs = [m for m in self._package.messages if m.tag == self._file_name]
         else:
-            msgs = [m for m in self._package.messages if m.tag == ""]
+            msgs = [m for m in self._package.messages if m.tag == "" or m.tag == self._file_name]
         for m in msgs:
             fields = []
             temp_inlines = []
@@ -1313,8 +1456,15 @@ class SylkProtoFile:
                 if 'SylkMessage' in inline.type_url:
                     msg = SylkMessage_pb2.SylkMessage()
                     inline.Unpack(msg)
+                    inline_fields = []
                     for f in msg.fields:
-                        _process_field(self,f)
+                        inline_fields = inline_fields + _process_field(self,f,True)
+                    format_desc =  m.description.split('\n') if m.description.split('\n')[-1]!='' else m.description.split('\n')[:-1]
+                    temp_inlines.append(
+                        "\n\t// [{4}] - {5}\n\tmessage {0} {2}\n{1}\n\t{3}\n".format(
+                            msg.name, "\n".join(inline_fields), _OPEN_BRCK, _CLOSING_BRCK, msg.full_name, '\n//'.join(format_desc)
+                        )
+                    )
                 else:
                     enm = SylkEnum_pb2.SylkEnum()
                     inline.Unpack(enm)
@@ -1340,18 +1490,18 @@ class SylkProtoFile:
     
     def _process_enum(self,e):
         values = []
-        for v in e.values:
+        for v in sorted(e.values, key=lambda x: x.number):
             format_desc =  v.description.split('\n') if v.description.split('\n')[-1]!='' else v.description.split('\n')[:-1]
             values.append('\t// [{}] - {}'.format(v.full_name, '\n//'.join(format_desc)))
-            values.append('\t{} = {};'.format(v.name, v.index))
+            values.append('\t{} = {};'.format(v.name, v.number))
         return values
     
     def get_enums(self):
         temp_enums = []
-        if self._file_name != self._package.name:
+        if self._file_name != self._package.name or self._is_tag == True:
             enums = [e for e in self._package.enums if e.tag == self._file_name]
         else:
-            enums = [e for e in self._package.enums if e.tag == ""]
+            enums = [e for e in self._package.enums if e.tag == "" or e.tag == self._file_name]
         for e in enums:
             values = "\n".join(self._process_enum(e))
             format_desc =  e.description.split('\n') if e.description.split('\n')[-1]!='' else e.description.split('\n')[:-1]
@@ -1613,7 +1763,6 @@ class SylkProto:
                 if m.extensions is not None:
                     for ext_key in m.extensions:
                         if "google.protobuf" in ext_key:
-                            print(self._sylk_json.get_well_known_message(ext_key))
                             fields.append(
                                 "{}".format(
                                     parse_extension_to_proto(
@@ -1880,7 +2029,6 @@ class SylkProto:
         #     )
 
         for t in self._tags:
-            print(t, self._tags[t])
             svcs = [s for s in self._services if s.tag == t]
             msgs = [m for m in self._messages if m.tag == t]
             enms = [e for e in self._enums if e.tag == t]
@@ -1890,9 +2038,9 @@ class SylkProto:
                     f'// sylk.build Generated proto DO NOT EDIT\nsyntax = "proto3";{self.write_package()}{self.write_imports(t)}\n\n{options}{self.write_service(svcs)}{self.write_messages(msgs)}{self.write_enums(enms)}',
                 )
             )
-        svcs = [s for s in self._services if s.tag == ""]
-        msgs = [m for m in self._messages if m.tag == ""]
-        enms = [e for e in self._enums if e.tag == ""]
+        svcs = [s for s in self._services if s.tag == "" or s.tag == pkg_name]
+        msgs = [m for m in self._messages if m.tag == ""  or m.tag == pkg_name]
+        enms = [e for e in self._enums if e.tag == "" or e.tag == pkg_name]
 
         if len(enms) > 0 or len(msgs) > 0 or len(svcs) > 0:
             ver = parse_version_component(self._package)
@@ -1969,11 +2117,20 @@ class SylkClientPy:
         init_func = f"def __init__(self, host=\"{host}\", port={port}, timeout=10, log_level='ERROR'):\n\t\tlogging.root.setLevel(log_level)\n\t\tself._sylk_global_auth_key = _GLOBAL_AUTH_KEY\n\t\tchannel = grpc.insecure_channel('{_OPEN_BRCK}0{_CLOSING_BRCK}:{_OPEN_BRCK}1{_CLOSING_BRCK}'.format(host, port),_CHANNEL_OPTIONS)\n\t\ttry:\n\t\t\tgrpc.channel_ready_future(channel).result(timeout=timeout)\n\t\texcept grpc.FutureTimeoutError:\n\t\t\tlogging.error('Timed out: Server seems to be offline. Verify your connection configs.')\n\t\t\tsys.exit(1)\n\t\t{self.init_stubs()}"
         return init_func
 
+    
     def write_imports(self):
+        adding_protos_module_path = f'# Adding protos module path if needed\n\
+script_dir = os.path.dirname(os.path.abspath(__file__))\n\
+proto_module = os.path.join(script_dir, "{self._sylk_json._root_protos}")\n\
+if proto_module not in sys.path:\n\
+    # Insert the protos modules path at the beginning of sys.path (to give it higher priority)\n\
+    sys.path.insert(0, proto_module)'
         imports = [
             "from typing import Tuple, Iterator, Any",
             "import grpc",
+            "import os",
             "import sys",
+            adding_protos_module_path,
             "from functools import partial",
             "from sylk.commons.interceptors import sylk_client_pre_rpc, SylkSimpleAuth",
             "import logging",
@@ -1995,61 +2152,6 @@ class SylkClientPy:
                 base_protos = f'.{self._sylk_json._root_protos}.' if self._sylk_json._root_protos is not None and self._sylk_json._root_protos != '' else '.'
                 imports.append(f"from {base_protos}{mod_path} import {mod_name}_pb2 as {mod_name}_{version}, {mod_name}_pb2_grpc as {mod_name}_{version}_grpc" )
 
-        # for pkg in self._packages:
-        #     pkg_name = self._packages[pkg].get("name")
-        #     pkg_path = self._packages[pkg].get('package')
-        #     ver = parse_version_component(pkg_path)
-        #     service_paths = []
-        #     pb_paths = []
-        #     tags = []
-         
-        #     if ver is not None:
-        #         formatted_version = "v{}".format(ver.get("version"))
-        #         if ver.get("channel"):
-        #             formatted_version += ver.get("channel")
-        #             if ver.get("release"):
-        #                 formatted_version += ver.get("release")
-        #     if self._packages[pkg].get("services") is not None:
-        #         for s in self._packages[pkg].get("services"):
-        #             if s.get("tag") is not None and s.get("tag") not in service_paths:
-        #                 service_paths.append(s.get("tag"))
-        #         if len(service_paths) == 0:
-        #             if ver is not None:
-        #                 pb_paths.append(
-        #                     f"{pkg_name}_pb2_grpc as {pkg_name}_{formatted_version}_service"
-        #                 )
-        #             else:
-        #                 pb_paths.append(f"{pkg_name}_pb2_grpc as {pkg_name}_service")
-        #         else:
-        #             for p in service_paths:
-        #                 if ver is not None:
-        #                     pb_paths.append(
-        #                         f"{p}_pb2_grpc as {p}_{formatted_version}_service"
-        #                     )
-        #                 else:
-        #                     pb_paths.append(f"{p}_pb2_grpc as {p}_service")
-        #     if self._packages[pkg].get("messages") is not None:
-        #         for m in self._packages[pkg].get("messages"):
-        #             if m.get("tag") is not None and m.get("tag") not in tags:
-        #                 tags.append(m.get("tag"))
-        #     if self._packages[pkg].get("enums") is not None:
-        #         for e in self._packages[pkg].get("enums"):
-        #             if e.get("tag") is not None and e.get("tag") not in tags:
-        #                 tags.append(e.get("tag"))
-        #     if len(tags) == 0:
-        #         if ver is not None:
-        #             pb_paths.append(f"{pkg_name} as {pkg_name}_{formatted_version}")
-
-        #         else:
-        #             pb_paths.append(f"{pkg_name}_pb2 as {pkg_name}")
-        #     else:
-        #         for t in tags:
-        #             if ver is not None:
-        #                 pb_paths.append(f"{t}_pb2 as {t}_{formatted_version}")
-        #             else:
-        #                 pb_paths.append(f"{t}_pb2 as {t}")
-        #     imports.append(f"from .{pkg_path} import " + ",".join(pb_paths))
-
         # Pre data parsing
         if self._pre_data is not None:
             if self._pre_data.get("imports") is not None:
@@ -2060,6 +2162,7 @@ class SylkClientPy:
         return "\n".join(imports)
 
     def write_services_classes(self):
+        defualt_port = self._sylk_json._config.get('port')
         if self._services is not None:
             svcs = []
             for svc in self._services:
@@ -2158,11 +2261,11 @@ class SylkClientPy:
                 rpcs = "\n\n\t".join(rpcs)
                 if svc_ver is not None:
                     svcs.append(
-                        f"\nclass {svc_name}_{formatted_version}:\n\t\"\"\"\n\tservice class generated by sylk.build\n\n\tFile: {svc.get('fullName')}\n\tService: {svc_name}\n\tVersion: {formatted_version}\n\t\"\"\"\n\n\tdef __init__(self,channel: grpc.ChannelCredentials = None, client_opt = {_OPEN_BRCK}{_CLOSING_BRCK}):\n\t\tlogging.root.setLevel(client_opt.get('log_level','ERROR'))\n\t\tif channel is None:\n\t\t\tself.channel = grpc.insecure_channel('{_OPEN_BRCK}0{_CLOSING_BRCK}:{_OPEN_BRCK}1{_CLOSING_BRCK}'.format(client_opt.get('host','localhost'), client_opt.get('port',44880)),_CHANNEL_OPTIONS)\n\t\t\ttry:\n\t\t\t\tgrpc.channel_ready_future(self.channel).result(timeout=client_opt.get('timeout',10))\n\t\t\texcept grpc.FutureTimeoutError:\n\t\t\t\tlogging.error('Timedout: server seems to be offline. verify your connection configs.')\n\t\t\t\tsys.exit(1)\n\t\telse:\n\t\t\tself.channel = channel\n\t\tself.{svc_name}_{formatted_version}_stub = {svc_pkg_name}_{formatted_version}_grpc.{svc_name}Stub(self.channel)\n{rpcs}"
+                        f"\nclass {svc_name}_{formatted_version}:\n\t\"\"\"\n\tservice class generated by sylk.build\n\n\tFile: {svc.get('fullName')}\n\tService: {svc_name}\n\tVersion: {formatted_version}\n\t\"\"\"\n\n\tdef __init__(self,channel: grpc.ChannelCredentials = None, client_opt = {_OPEN_BRCK}{_CLOSING_BRCK}):\n\t\tlogging.root.setLevel(client_opt.get('log_level','ERROR'))\n\t\tif channel is None:\n\t\t\tself.channel = grpc.insecure_channel('{_OPEN_BRCK}0{_CLOSING_BRCK}:{_OPEN_BRCK}1{_CLOSING_BRCK}'.format(client_opt.get('host','localhost'), client_opt.get('port',{defualt_port})),_CHANNEL_OPTIONS)\n\t\t\ttry:\n\t\t\t\tgrpc.channel_ready_future(self.channel).result(timeout=client_opt.get('timeout',10))\n\t\t\texcept grpc.FutureTimeoutError:\n\t\t\t\tlogging.error('Timedout: server seems to be offline. verify your connection configs.')\n\t\t\t\tsys.exit(1)\n\t\telse:\n\t\t\tself.channel = channel\n\t\tself.{svc_name}_{formatted_version}_stub = {svc_pkg_name}_{formatted_version}_grpc.{svc_name}Stub(self.channel)\n{rpcs}"
                     )
                 else:
                     svcs.append(
-                        f"\nclass {svc_name}:\n\t\"\"\"\n\tservice class generated by sylk.build\n\n\tFile: {svc}\n\tService: {svc_name}\n\tVersion: {formatted_version}\n\t\"\"\"\n\n\tdef __init__(self,channel: grpc.ChannelCredentials = None, client_opt = {_OPEN_BRCK}{_CLOSING_BRCK}):\n\t\tlogging.root.setLevel(client_opt.get('log_level','ERROR'))\n\t\tif channel is None:\n\t\t\tself.channel = grpc.insecure_channel('{_OPEN_BRCK}0{_CLOSING_BRCK}:{_OPEN_BRCK}1{_CLOSING_BRCK}'.format(client_opt.get('host','localhost'), client_opt.get('port',44880)),_CHANNEL_OPTIONS)\n\t\t\ttry:\n\t\t\t\tgrpc.channel_ready_future(self.channel).result(timeout=client_opt.get('timeout',10))\n\t\t\texcept grpc.FutureTimeoutError:\n\t\t\t\tlogging.error('Timedout: server seems to be offline. verify your connection configs.')\n\t\t\t\tsys.exit(1)\n\t\telse:\n\t\t\tself.channel = channel\n\t\tself.{svc_name}_{formatted_version}_stub = {svc_pkg_name}_{formatted_version}_grpc.{svc_name}Stub(self.channel)\n{rpcs}"
+                        f"\nclass {svc_name}:\n\t\"\"\"\n\tservice class generated by sylk.build\n\n\tFile: {svc}\n\tService: {svc_name}\n\tVersion: {formatted_version}\n\t\"\"\"\n\n\tdef __init__(self,channel: grpc.ChannelCredentials = None, client_opt = {_OPEN_BRCK}{_CLOSING_BRCK}):\n\t\tlogging.root.setLevel(client_opt.get('log_level','ERROR'))\n\t\tif channel is None:\n\t\t\tself.channel = grpc.insecure_channel('{_OPEN_BRCK}0{_CLOSING_BRCK}:{_OPEN_BRCK}1{_CLOSING_BRCK}'.format(client_opt.get('host','localhost'), client_opt.get('port',{defualt_port})),_CHANNEL_OPTIONS)\n\t\t\ttry:\n\t\t\t\tgrpc.channel_ready_future(self.channel).result(timeout=client_opt.get('timeout',10))\n\t\t\texcept grpc.FutureTimeoutError:\n\t\t\t\tlogging.error('Timedout: server seems to be offline. verify your connection configs.')\n\t\t\t\tsys.exit(1)\n\t\telse:\n\t\t\tself.channel = channel\n\t\tself.{svc_name}_{formatted_version}_stub = {svc_pkg_name}_{formatted_version}_grpc.{svc_name}Stub(self.channel)\n{rpcs}"
                     )
             svcs = "\n\n".join(svcs)
         return "".join(svcs)
@@ -2205,7 +2308,7 @@ class SylkServicePy:
             pkg_name = parent.full_path.split('.')[-2]
         else:
             pkg_name = parent.name
-        module_name = pkg_name if self._service.get('tag') is None else self._service.get('tag')
+        module_name = pkg_name if self._service.get('tag') is None and self._service.get('tag') != '' else self._service.get('tag')
         base_protos = self._sylk_json._root_protos.replace('/','.')
         for d in deps:
             if d.split('.')[0] == self._sylk_json._proto_tree.root.name:
@@ -2213,13 +2316,21 @@ class SylkServicePy:
                 dep_parent = self._sylk_json._proto_tree.get_parent(d)
                 base_path = 'services.' if self._sylk_json._root_protos is None or self._sylk_json._root_protos == '' else f'services.{base_protos}.'
                 msg_dep =self._sylk_json._proto_tree._find_node(d,root) 
-                dep_mod_name = dep_parent.name if msg_dep.properties.get('tag') is None else msg_dep.properties.get('tag')
+                if parse_version_component(dep_parent.full_path) is not None:
+                    temp_name = dep_parent.full_path.split('.')[-2]
+                else:
+                    temp_name = dep_parent.name
+                dep_mod_name = temp_name if msg_dep.properties.get('tag') is None or msg_dep.properties.get('tag') == '' else msg_dep.properties.get('tag')
                 imp_path = f"from {base_path}{dep_parent.full_path} import {dep_mod_name}_pb2_grpc, {dep_mod_name}_pb2"
             else:
                 root = self._sylk_json._proto_tree.proto_modules[d.split('.')[0]].root
                 dep_parent = self._sylk_json._proto_tree.proto_modules[d.split('.')[0]].get_parent(d)
                 msg_dep =self._sylk_json._proto_tree._find_node(d,root) 
-                dep_mod_name = dep_parent.name if msg_dep.properties.get('tag') is None else msg_dep.properties.get('tag')
+                if parse_version_component(dep_parent.full_path) is not None:
+                    temp_name = dep_parent.full_path.split('.')[-2]
+                else:
+                    temp_name = dep_parent.name
+                dep_mod_name = temp_name if msg_dep.properties.get('tag') is None or msg_dep.properties.get('tag') == '' else msg_dep.properties.get('tag')
                 imp_path = f"from {dep_parent.full_path} import {dep_mod_name}_pb2"
             if imp_path not in list_d:
                 list_d.append(
@@ -2355,53 +2466,111 @@ class SylkServiceTs:
 
     def write_imports(self):
         list_d = list(map(lambda i: i, _WELL_KNOWN_TS_IMPORTS))
-        if self._imports is not None:
-            pkg = self._sylk_json.get_package(
-                self._service.get("name"),
-                version=self._service.get("fullName").split(".")[-1],
-                json=False,
-            )
-            list_d.append(
-                f"import {_OPEN_BRCK} {self._import_name}Server, {self._import_name}Service {_CLOSING_BRCK} from '../../{self._import_path}';"
-            )
-            for d in self._imports:
-                if "google.protobuf." in d:
-                    pass
-                    # wellknown_message = d.split('.')[-1]
-                    # list_d.append(f'from google.protobuf import {wellknown_message.lower()}_pb2')
-                else:
-                    name = d.split(".")[1]
-                    d_name = "{0}".format(name)
-                    d_ver = d.split(".")[-1]
-                    pkg = "/".join(
-                        self._sylk_json.get_path(
-                            d.split(".")[0], d.split(".")[1], d.split(".")[2]
-                        ).split("/")[:-1]
-                    )
-                    list_d.append(
-                        f"import * as {d_name}{d_ver} from '../../{pkg}/{d_name}';"
-                    )
-
-            list_d = "\n".join(list_d)
-            return f"{list_d}"
+        parent = self._sylk_json._proto_tree.get_parent(self._service.get('fullName'))
+        refs = self._sylk_json._proto_tree.get_parents_refs([self._service.get('fullName')])
+        
+        deps = self._sylk_json._proto_tree.get_references(self._service.get('fullName'))
+       
+        pkg_ver = self._sylk_json._proto_tree._parse_version_component(parent.full_path)
+        if pkg_ver is not None:
+            pkg_name = parent.full_path.split('.')[-2]
         else:
-            pkg = self._sylk_json.get_package(
-                self._service.get("name"),
-                version=self._service.get("fullName").split(".")[-1],
-                json=False,
-            )
-            msgs = []
-            for m in pkg.messages:
-                msgs.append(m.name)
-            msgs = ", ".join(msgs)
+            pkg_name = parent.name
+        module_name = pkg_name if self._service.get('tag') is None and self._service.get('tag') != '' else self._service.get('tag')
+        base_protos = self._sylk_json._root_protos.replace('/','.')
+        for d in list(set(deps)):
+
+            if d.split('.')[0] == self._sylk_json._proto_tree.root.name:
+                root = self._sylk_json._proto_tree.root
+                dep_parent = self._sylk_json._proto_tree.get_parent(d)
+                
+                base_path = '../../' if self._sylk_json._root_protos is None or self._sylk_json._root_protos == '' else f'../../{base_protos}/'
+                msg_dep =self._sylk_json._proto_tree._find_node(d,root) 
+                if parse_version_component(dep_parent.full_path) is not None:
+                    temp_name = dep_parent.full_path.split('.')[-2]
+                else:
+                    temp_name = dep_parent.name
+                dep_mod_name = temp_name if msg_dep.properties.get('tag') is None or msg_dep.properties.get('tag') == '' else msg_dep.properties.get('tag')
+                imp_path = f"import * as {dep_mod_name} from '{base_path}{dep_parent.full_path.replace('.','/')}/{dep_mod_name}';"
+                # f"from {base_path}{dep_parent.full_path} import {dep_mod_name}_pb2_grpc, {dep_mod_name}_pb2"
+            else:
+                root = self._sylk_json._proto_tree.proto_modules[d.split('.')[0]].root
+                dep_parent = self._sylk_json._proto_tree.proto_modules[d.split('.')[0]].get_parent(d)
+                msg_dep =self._sylk_json._proto_tree._find_node(d,root) 
+                base_path = '../../' if self._sylk_json._root_protos is None or self._sylk_json._root_protos == '' else f'../../{base_protos}/'
+                if parse_version_component(dep_parent.full_path) is not None:
+                    temp_name = dep_parent.full_path.split('.')[-2]
+                else:
+                    temp_name = dep_parent.name
+                dep_mod_name = temp_name if msg_dep.properties.get('tag') is None or msg_dep.properties.get('tag') == '' else msg_dep.properties.get('tag')
+                imp_path = f"import * as {dep_mod_name} from '{base_path}{dep_parent.full_path.replace('.','/')}/{dep_mod_name}';"
+            if imp_path not in list_d:
+                list_d.append(
+                    imp_path
+                )
+        base_path = '../../' if self._sylk_json._root_protos is None or self._sylk_json._root_protos == '' else f'../../{base_protos}/'
+        imp_path = f"import {_OPEN_BRCK} {self._service.get('name')}Service {_CLOSING_BRCK} from '{base_path}{parent.full_path.replace('.','/')}/{module_name}';"
+        if imp_path not in list_d:
             list_d.append(
-                f"import {_OPEN_BRCK} {self._import_name}Server, {self._import_name}Service, {msgs} {_CLOSING_BRCK} from '../../{self._import_path}';"
-            )
-            list_d = "\n".join(list_d)
-            return f"{list_d}"
+                    imp_path
+                )
+        list_d = "\n".join(list_d)
+        return f"{list_d}"
+
+        # if self._imports is not None:
+        #     pkg = self._sylk_json.get_package(
+        #         self._service.get("name"),
+        #         version=self._service.get("fullName").split(".")[-1],
+        #         json=False,
+        #     )
+        #     list_d.append(
+        #         f"import {_OPEN_BRCK} {self._import_name}Server, {self._import_name}Service {_CLOSING_BRCK} from '../../{self._import_path}';"
+        #     )
+        #     for d in self._imports:
+        #         if "google.protobuf." in d:
+        #             pass
+        #             # wellknown_message = d.split('.')[-1]
+        #             # list_d.append(f'from google.protobuf import {wellknown_message.lower()}_pb2')
+        #         else:
+        #             name = d.split(".")[1]
+        #             d_name = "{0}".format(name)
+        #             d_ver = d.split(".")[-1]
+        #             pkg = "/".join(
+        #                 self._sylk_json.get_path(
+        #                     d.split(".")[0], d.split(".")[1], d.split(".")[2]
+        #                 ).split("/")[:-1]
+        #             )
+        #             list_d.append(
+        #                 f"import * as {d_name}{d_ver} from '../../{pkg}/{d_name}';"
+        #             )
+
+        #     list_d = "\n".join(list_d)
+        #     return f"{list_d}"
+        # else:
+        #     pkg = self._sylk_json.get_package(
+        #         self._service.get("name"),
+        #         version=self._service.get("fullName").split(".")[-1],
+        #         json=False,
+        #     )
+        #     msgs = []
+        #     for m in pkg.messages:
+        #         msgs.append(m.name)
+        #     msgs = ", ".join(msgs)
+        #     list_d.append(
+        #         f"import {_OPEN_BRCK} {self._import_name}Server, {self._import_name}Service, {msgs} {_CLOSING_BRCK} from '../../{self._import_path}';"
+        #     )
+        #     list_d = "\n".join(list_d)
+        #     return f"{list_d}"
 
     def write_class(self):
         rpcs = []
+        svc_node = self._sylk_json._proto_tree.get_parent(self._service.get('fullName'))
+        ver = self._sylk_json._proto_tree._parse_version_component(self._service.get('fullName'))
+        if ver is not None:
+            pkg_name = svc_node.full_path.split('.')[-2]
+        else:
+            pkg_name = svc_node.full_path.split('.')[-1]
+        mod_name = self._service.get('tag') if self._service.get('tag') is not None else pkg_name
         if self._context is not None:
             functions = self._context.get_functions(self._name)
             if functions is not None:
@@ -2411,23 +2580,23 @@ class SylkServiceTs:
 
         for rpc in self._service.get("methods"):
             rpc_name = rpc.get("name")
-            rpc_in_pkg = rpc.get("inputType").split(".")[1]
-            rpc_in_pkg_ver = rpc.get("inputType").split(".")[2]
+            # rpc_in_pkg = rpc.get("inputType").split(".")[1]
+            # rpc_in_pkg_ver = rpc.get("inputType").split(".")[2]
             # Case the service holds the messages we remove the prefix of package
             # since the service imports pb generated classes and grpc classes from single a file
-            if rpc_in_pkg == self._service.get("name"):
-                rpc_in_pkg = ""
+            if "google.protobuf." in rpc.get("inputType"):
+                in_mod_name = rpc.get("inputType").split(".")[-1].lower()
             else:
-                # We add the '.' as this will be the prefix for namespace and adding the package version to avoid confilcts
-                rpc_in_pkg += f"{rpc_in_pkg_ver}."
+                files = self._sylk_json._proto_tree._get_file_paths([rpc.get("inputType")])
+                in_mod_name = files[0].split('/')[-1].split('.')[0]
+            
             rpc_in_name = rpc.get("inputType").split(".")[-1]
-            rpc_out_pkg = rpc.get("outputType").split(".")[1]
-            rpc_out_pkg_ver = rpc.get("outputType").split(".")[2]
             # Same as we done for inputs prefixes we do for output prefixes
-            if rpc_out_pkg == self._service.get("name"):
-                rpc_out_pkg = ""
+            if "google.protobuf." in rpc.get("outputType"):
+                out_mod_name = rpc.get("outputType").split(".")[-1].lower()
             else:
-                rpc_out_pkg += f"{rpc_out_pkg_ver}."
+                files = self._sylk_json._proto_tree._get_file_paths([rpc.get("outputType")])
+                out_mod_name = files[0].split('/')[-1].split('.')[0]
             rpc_out_name = rpc.get("outputType").split(".")[-1]
             rpc_type_in = (
                 rpc.get("clientStreaming")
@@ -2441,17 +2610,17 @@ class SylkServiceTs:
             )
 
             handleType = "handleUnaryCall"
-            args = f"call: ServerUnaryCall<{rpc_in_pkg}{rpc_in_name}, {rpc_out_pkg}{rpc_out_name}>,\n\t\tcallback: sendUnaryData<{rpc_out_pkg}{rpc_out_name}>"
+            args = f"call: ServerUnaryCall<{in_mod_name}.{rpc_in_name}, {out_mod_name}.{rpc_out_name}>,\n\t\tcallback: sendUnaryData<{out_mod_name}.{rpc_out_name}>"
 
             if rpc_type_in and rpc_type_out:
                 handleType = "handleBidiStreamingCall"
-                args = f"call: ServerDuplexStream<{rpc_in_pkg}{rpc_in_name}, {rpc_out_pkg}{rpc_out_name}>"
+                args = f"call: ServerDuplexStream<{in_mod_name}.{rpc_in_name}, {out_mod_name}.{rpc_out_name}>"
             elif rpc_type_in and rpc_type_out == False:
                 handleType = "handleClientStreamingCall"
-                args = f"call: ServerReadableStream<{rpc_in_pkg}{rpc_in_name}, {rpc_out_pkg}{rpc_out_name}>,\n\t\tcallback: sendUnaryData<{rpc_out_pkg}{rpc_out_name}>"
+                args = f"call: ServerReadableStream<{in_mod_name}.{rpc_in_name}, {out_mod_name}.{rpc_out_name}>,\n\t\tcallback: sendUnaryData<{out_mod_name}.{rpc_out_name}>"
             elif rpc_type_in == False and rpc_type_out:
                 handleType = "handleServerStreamingCall"
-                args = f"call: ServerWritableStream<{rpc_in_pkg}{rpc_in_name}, {rpc_out_pkg}{rpc_out_name}>"
+                args = f"call: ServerWritableStream<{in_mod_name}.{rpc_in_name}, {out_mod_name}.{rpc_out_name}>"
             code = ""
             if self._context is not None:
                 code = self._context.get_rpc(self._name, rpc_name)
@@ -2459,10 +2628,10 @@ class SylkServiceTs:
                     code = code.get("code")
             temp_name = rpc_name[0].lower() + rpc_name[1:]
             rpcs.append(
-                f"\t// @rpc @@sylk - DO NOT REMOVE\n\tpublic {temp_name}: {handleType}<{rpc_in_pkg}{rpc_in_name}, {rpc_out_pkg}{rpc_out_name}> = (\n\t\t{args}\n\t) => {_OPEN_BRCK}\n{code}\n\t{_CLOSING_BRCK}\n"
+                f"\t// @rpc @@sylk - DO NOT REMOVE\n\tpublic {temp_name}: {handleType}<{in_mod_name}.{rpc_in_name}, {out_mod_name}.{rpc_out_name}> = (\n\t\t{args}\n\t) => {_OPEN_BRCK}\n{code}\n\t{_CLOSING_BRCK}\n"
             )
         rpcs = "".join(rpcs)
-        return f"\nclass {self._import_name} implements {self._import_name}Server, ApiType<UntypedHandleCall> {_OPEN_BRCK}\n\t[method: string]: any;\n\n{rpcs}\n\n{_CLOSING_BRCK}\n\nexport {_OPEN_BRCK}\n\t{self._import_name},\n\t{self._import_name}Service\n{_CLOSING_BRCK};"
+        return f"\nclass {self._import_name} implements {mod_name}.{self._import_name}Server, ApiType<UntypedHandleCall> {_OPEN_BRCK}\n\t[method: string]: any;\n\n{rpcs}\n\n{_CLOSING_BRCK}\n\nexport {_OPEN_BRCK}\n\t{self._import_name},\n\t{self._import_name}Service\n{_CLOSING_BRCK};"
 
     def to_str(self):
         return self.__str__()
@@ -2482,6 +2651,7 @@ class SylkClientTs:
         context: SylkContext = None,
         config=None,
         pre_data=None,
+        sylk_json: SylkJson = None
     ):
         self._services = services
         self._project_package = project_package
@@ -2489,6 +2659,7 @@ class SylkClientTs:
         self._packages = packages
         self._config = config
         self._pre_data = pre_data
+        self._sylk_json = sylk_json
 
     def __str__(self):
         return f"{self.write_imports()}\n{self.write_client_wrapper()}\n\n{self.write_services_classes()}"
@@ -2540,10 +2711,14 @@ class SylkClientTs:
             if self._pre_data.get("stubs") is not None:
                 temp_stubs = self._pre_data.get("stubs")
 
-        svc_name = svc.split("/")[-1].split(".")[0]
-        svc_ver = svc.split("/")[-2]
-        if svc in temp_stubs:
-            stub = temp_stubs[svc]
+        svc_name = svc.get("name")
+        svc_ver = parse_version_component(svc.get('fullName'))
+        if svc_ver is not None:
+            svc_ver = f"v{svc_ver.get('version')}{svc_ver.get('channel') if svc_ver.get('channel') is not None else ''}{svc_ver.get('release') if svc_ver.get('release') is not None else ''}"
+        else:
+            svc_ver = ""
+        if svc.get('name') in temp_stubs:
+            stub = temp_stubs[svc.get('name')]
             stub_target = (
                 stub.get("target")
                 if stub.get("target") is not None
@@ -2558,19 +2733,23 @@ class SylkClientTs:
                 stub.get("opts") if stub.get("opts") is not None else "_DEFAULT_OPTION"
             )
             stubs.append(
-                f"this.{svc_name}_{svc_ver}_client = new {svc_name}_{svc_ver}_client(`{stub_target}`, {stub_creds}, {stub_opts});"
+                f"this.{svc_name}{svc_ver}Client = new {svc_name}{svc_ver}Client(`{stub_target}`, {stub_creds}, {stub_opts});"
             )
         else:
             stubs.append(
-                f"this.{svc_name}_{svc_ver}_client = new {svc_name}_{svc_ver}_client(`${_OPEN_BRCK}this.host{_CLOSING_BRCK}:${_OPEN_BRCK}this.port{_CLOSING_BRCK}`, <ChannelCredentials>channelCreds,_DEFAULT_OPTION);"
+                f"this.{svc_name}{svc_ver}Client = new {svc_name}{svc_ver}Client(`${_OPEN_BRCK}this.host{_CLOSING_BRCK}:${_OPEN_BRCK}this.port{_CLOSING_BRCK}`, <ChannelCredentials>channelCreds,_DEFAULT_OPTION);"
             )
 
         return "\n\t\t".join(stubs)
 
     def args_stubs(self, svc):
-        svc_name = svc.split("/")[-1].split(".")[0]
-        svc_ver = svc.split("/")[-2]
-        return f"private readonly {svc_name}_{svc_ver}_client: {svc_name}_{svc_ver}_client;"
+        svc_name = svc.get('name')
+        svc_ver = parse_version_component(svc.get('fullName'))
+        if svc_ver is not None:
+            svc_ver = f"v{svc_ver.get('version')}{svc_ver.get('channel') if svc_ver.get('channel') is not None else ''}{svc_ver.get('release') if svc_ver.get('release') is not None else ''}"
+        else:
+            svc_ver = ""
+        return f"private readonly {svc_name}{svc_ver}Client: {svc_name}{svc_ver}Client;"
 
     def init_wrapper(self, svc):
         if self._config is not None:
@@ -2585,68 +2764,114 @@ class SylkClientTs:
         return init_func
 
     def write_imports(self):
-        imports = [
-            "import { credentials, Metadata, ServiceError as _service_error, ClientUnaryCall, ClientDuplexStream, ClientReadableStream, ClientWritableStream, InterceptingCall, Interceptor, ChannelCredentials } from '@grpc/grpc-js';",
-            "import { promisify } from 'util';",
-            "import { Observable } from 'rxjs';",
-        ]
+
         for svc in self._services:
-            if self._services[svc].get("dependencies") is not None:
-                for dep in self._services[svc].get("dependencies"):
-                    if "google.protobuf." in dep:
-                        wellknown_message = dep.split(".")[-1]
-                        wk_path = f"import {_OPEN_BRCK} {wellknown_message} {_CLOSING_BRCK} from './protos/google/protobuf/{wellknown_message.lower()}';"
-                        if wk_path not in imports:
-                            imports.append(wk_path)
-            svc_path = svc.split(".")[0]
-            svc_name = svc.split("/")[-1].split(".")[0]
-            svc_ver = svc.split("/")[-2]
-            imp_path = f"import {_OPEN_BRCK} {svc_name}Client as {svc_name}_{svc_ver}_client {_CLOSING_BRCK} from './{svc_path}';"
-            if imp_path not in imports:
-                imports.append(imp_path)
-        for pkg in self._packages:
-            pkg_name = pkg.split("/")[-1].split(".")[0]
-            pkg_path = pkg.split(".")[0]
-            pkg_ver = pkg.split("/")[-2]
-            imp_path = f"import * as {pkg_name}_{pkg_ver} from './{pkg_path}';"
-            if imp_path not in imports:
-                imports.append(imp_path)
+            list_d = list(map(lambda i: i, _WELL_KNOWN_TS_CLIENT_IMPORTS))
+            parent = self._sylk_json._proto_tree.get_parent(svc.get('fullName'))
+            refs = self._sylk_json._proto_tree.get_parents_refs([svc.get('fullName')])
+            
+            deps = self._sylk_json._proto_tree.get_references(svc.get('fullName'))
+        
+            pkg_ver = self._sylk_json._proto_tree._parse_version_component(parent.full_path)
+            if pkg_ver is not None:
+                pkg_ver = f'v{pkg_ver.get("version")}{pkg_ver.get("channel") if pkg_ver.get("channel") is not None else ""}{pkg_ver.get("release") if pkg_ver.get("release") is not None else ""}'
+                pkg_name = parent.full_path.split('.')[-2]
+            else:
+                pkg_name = parent.name
+            module_name = pkg_name if svc.get('tag') is None and svc.get('tag') != '' else svc.get('tag')
+            base_protos = self._sylk_json._root_protos.replace('/','.')
+            for d in list(set(deps)):
+
+                if d.split('.')[0] == self._sylk_json._proto_tree.root.name:
+                    root = self._sylk_json._proto_tree.root
+                    dep_parent = self._sylk_json._proto_tree.get_parent(d)
+                    
+                    base_path = './' if self._sylk_json._root_protos is None or self._sylk_json._root_protos == '' else f'./{base_protos}/'
+                    msg_dep =self._sylk_json._proto_tree._find_node(d,root) 
+                    dep_mode_ver = parse_version_component(dep_parent.full_path)
+                    if dep_mode_ver is not None:
+                        dep_mode_ver = f'v{dep_mode_ver.get("version")}{dep_mode_ver.get("channel") if dep_mode_ver.get("channel") is not None else ""}{dep_mode_ver.get("release") if dep_mode_ver.get("release") is not None else ""}'
+                        temp_name = dep_parent.full_path.split('.')[-2]
+                    else:
+                        dep_mode_ver = ''
+                        temp_name = dep_parent.name
+                    dep_mod_name = temp_name if msg_dep.properties.get('tag') is None or msg_dep.properties.get('tag') == '' else msg_dep.properties.get('tag')
+                    imp_path = f"import * as {dep_mod_name}{dep_mode_ver} from '{base_path}{dep_parent.full_path.replace('.','/')}/{dep_mod_name}';"
+                    # f"from {base_path}{dep_parent.full_path} import {dep_mod_name}_pb2_grpc, {dep_mod_name}_pb2"
+                else:
+                    root = self._sylk_json._proto_tree.proto_modules[d.split('.')[0]].root
+                    dep_parent = self._sylk_json._proto_tree.proto_modules[d.split('.')[0]].get_parent(d)
+                    msg_dep =self._sylk_json._proto_tree._find_node(d,root) 
+                    base_path = './' if self._sylk_json._root_protos is None or self._sylk_json._root_protos == '' else f'./{base_protos}/'
+                    dep_mode_ver = parse_version_component(dep_parent.full_path)
+                    if dep_mode_ver is not None:
+                        dep_mode_ver = f'v{dep_mode_ver.get("version")}{dep_mode_ver.get("channel") if dep_mode_ver.get("channel") is not None else ""}{dep_mode_ver.get("release") if dep_mode_ver.get("release") is not None else ""}'
+                        temp_name = dep_parent.full_path.split('.')[-2]
+                    else:
+                        dep_mode_ver = ''
+                        temp_name = dep_parent.name
+                    dep_mod_name = temp_name if msg_dep.properties.get('tag') is None or msg_dep.properties.get('tag') == '' else msg_dep.properties.get('tag')
+                    imp_path = f"import * as {dep_mod_name}{dep_mode_ver} from '{base_path}{dep_parent.full_path.replace('.','/')}/{dep_mod_name}';"
+                if imp_path not in list_d:
+                    list_d.append(
+                        imp_path
+                    )
+            base_path = './' if self._sylk_json._root_protos is None or self._sylk_json._root_protos == '' else f'./{base_protos}/'
+            imp_path = f"import {_OPEN_BRCK} {svc.get('name')}Service, {svc.get('name')}Client as {svc.get('name')}{pkg_ver}Client  {_CLOSING_BRCK} from '{base_path}{parent.full_path.replace('.','/')}/{module_name}';"
+            if imp_path not in list_d:
+                list_d.append(
+                        imp_path
+                    )
 
         # Pre data parsing
         if self._pre_data is not None:
             if self._pre_data.get("imports") is not None:
                 for imp in self._pre_data.get("imports"):
-                    if imp not in imports:
-                        imports.append(imp)
-
-        return "\n".join(imports)
+                    if imp not in list_d:
+                        list_d.append(imp)
+        
+        list_d = "\n".join(list_d)
+        return list_d
 
     def write_services_classes(self):
         if self._services is not None:
             svcs = []
             for svc in self._services:
-                svc_name = svc.split("/")[-1].split(".")[0]
-                svc_ver = svc.split("/")[-2]
+                svc_name = svc.get("name")
+                svc_ver = parse_version_component(svc.get('fullName'))
+                if svc_ver is not None:
+                    svc_ver = f"v{svc_ver.get('version')}{svc_ver.get('channel') if svc_ver.get('channel') is not None else ''}{svc_ver.get('release') if svc_ver.get('release') is not None else ''}"
+                else:
+                    svc_ver = ""
                 rpcs = []
-                for rpc in self._services[svc]["methods"]:
+                for rpc in svc.get("methods",[]):
                     rpc_name = rpc["name"]
-                    rpc_in_type_pkg = rpc["inputType"].split(".")[1]
+                    rpc_in_pkg = self._sylk_json._proto_tree.get_parent(rpc["inputType"])
+                    rpc_in_type_pkg = self._sylk_json._proto_tree._get_file_paths([rpc["inputType"]])
+                    rpc_in_type_pkg = rpc_in_type_pkg[0].split('/')[-1].split('.')[0]
                     rpc_in_type = rpc["inputType"].split(".")[-1]
-                    if rpc_in_type_pkg == "protobuf":
-                        rpc_in_type = rpc_in_type
-                    else:
-                        rpc_in_type_pkg_ver = rpc["inputType"].split(".")[2]
+                    if rpc_in_type_pkg != "protobuf":
+                        rpc_in_ver = self._sylk_json._proto_tree._parse_version_component(rpc["inputType"])
+                        if rpc_in_ver is not None:
+                            rpc_in_type_pkg_ver = rpc_in_pkg.full_path.split(".")[-1]
+                        else:
+                            rpc_in_type_pkg_ver = ""
                         rpc_in_type = (
-                            f"{rpc_in_type_pkg}_{rpc_in_type_pkg_ver}.{rpc_in_type}"
+                            f"{rpc_in_type_pkg}{rpc_in_type_pkg_ver}.{rpc_in_type}"
                         )
-                    rpc_out_type_pkg = rpc["outputType"].split(".")[1]
+                    rpc_out_pkg = self._sylk_json._proto_tree.get_parent(rpc["outputType"])
+                    rpc_out_type_pkg = self._sylk_json._proto_tree._get_file_paths([rpc["outputType"]])
+                    rpc_out_type_pkg = rpc_out_type_pkg[0].split('/')[-1].split('.')[0]
                     rpc_out_type = rpc["outputType"].split(".")[-1]
-                    if rpc_out_type_pkg == "protobuf":
-                        rpc_out_type = rpc_out_type
-                    else:
-                        rpc_out_type_pkg_ver = rpc["outputType"].split(".")[2]
+                    rpc_out_ver = self._sylk_json._proto_tree._parse_version_component(rpc["outputType"])
+                    if rpc_out_type_pkg != "protobuf":
+                        rpc_out_ver = self._sylk_json._proto_tree._parse_version_component(rpc["outputType"])
+                        if rpc_out_ver is not None:
+                            rpc_out_type_pkg_ver = rpc_out_pkg.full_path.split(".")[-1]
+                        else:
+                            rpc_out_type_pkg_ver = ""
                         rpc_out_type = (
-                            f"{rpc_out_type_pkg}_{rpc_out_type_pkg_ver}.{rpc_out_type}"
+                            f"{rpc_out_type_pkg}{rpc_out_type_pkg_ver}.{rpc_out_type}"
                         )
                     rpc_output_type = (
                         rpc.get("serverStreaming")
@@ -2689,13 +2914,13 @@ class SylkClientTs:
                     temp_rpc_name = rpc_name[0].lower() + rpc_name[1:]
                     temp_rpc_name = to_camel_case(temp_rpc_name)
                     rpc_impl = (
-                        f"if (callback === undefined) {_OPEN_BRCK}\n\t\t\treturn promisify<{rpc_in_type}, Metadata, {rpc_out_type}>(this.{svc_name}_{svc_ver}_client.{temp_rpc_name}.bind(this.{svc_name}_{svc_ver}_client))({rpc_in_type}.fromJSON(request), metadata);\n\t\t{_CLOSING_BRCK} else {_OPEN_BRCK}\n\t\t return this.{svc_name}_{svc_ver}_client.{temp_rpc_name}({rpc_in_type}.fromJSON(request), metadata, callback);\n\t\t{_CLOSING_BRCK}"
+                        f"if (callback === undefined) {_OPEN_BRCK}\n\t\t\treturn promisify<{rpc_in_type}, Metadata, {rpc_out_type}>(this.{svc_name}{svc_ver}Client.{temp_rpc_name}.bind(this.{svc_name}{svc_ver}Client))({rpc_in_type}.fromJSON(request), metadata);\n\t\t{_CLOSING_BRCK} else {_OPEN_BRCK}\n\t\t return this.{svc_name}{svc_ver}Client.{temp_rpc_name}({rpc_in_type}.fromJSON(request), metadata, callback);\n\t\t{_CLOSING_BRCK}"
                         if rpc_output_type == False and rpc_input_type == False
-                        else f"return this.{svc_name}_{svc_ver}_client.{temp_rpc_name}(metadata);"
+                        else f"return this.{svc_name}{svc_ver}Client.{temp_rpc_name}(metadata);"
                         if rpc_output_type == True and rpc_input_type == True
-                        else f"if (callback === undefined) {_OPEN_BRCK}\n\t\t\tcallback = (_error:_service_error | null , _response:{rpc_out_type}) => {_OPEN_BRCK}if (_error) throw _error; return _response{_CLOSING_BRCK}\n\t\t{_CLOSING_BRCK}\n\t\treturn this.{svc_name}_{svc_ver}_client.{temp_rpc_name}(metadata, callback);"
+                        else f"if (callback === undefined) {_OPEN_BRCK}\n\t\t\tcallback = (_error:_service_error | null , _response:{rpc_out_type}) => {_OPEN_BRCK}if (_error) throw _error; return _response{_CLOSING_BRCK}\n\t\t{_CLOSING_BRCK}\n\t\treturn this.{svc_name}{svc_ver}Client.{temp_rpc_name}(metadata, callback);"
                         if rpc_output_type == False and rpc_input_type == True
-                        else f"return new Observable(subscriber => {_OPEN_BRCK}\n\t\tconst stream = this.{svc_name}_{svc_ver}_client.{temp_rpc_name}({rpc_in_type}.fromJSON(request), metadata);\n\t\t\tstream.on('data', (res: {rpc_out_type}) => {_OPEN_BRCK}\n\t\t\t\tsubscriber.next(res)\n\t\t\t{_CLOSING_BRCK}).on('end', () => {_OPEN_BRCK}\n\t\t\t\tsubscriber.complete()\n\t\t\t{_CLOSING_BRCK}).on('error', (err: any) => {_OPEN_BRCK}\n\t\t\t\tsubscriber.error(err)\n\t\t\t\tsubscriber.complete()\n\t\t\t{_CLOSING_BRCK});\n\t\t{_CLOSING_BRCK})"
+                        else f"return new Observable(subscriber => {_OPEN_BRCK}\n\t\tconst stream = this.{svc_name}{svc_ver}Client.{temp_rpc_name}({rpc_in_type}.fromJSON(request), metadata);\n\t\t\tstream.on('data', (res: {rpc_out_type}) => {_OPEN_BRCK}\n\t\t\t\tsubscriber.next(res)\n\t\t\t{_CLOSING_BRCK}).on('end', () => {_OPEN_BRCK}\n\t\t\t\tsubscriber.complete()\n\t\t\t{_CLOSING_BRCK}).on('error', (err: any) => {_OPEN_BRCK}\n\t\t\t\tsubscriber.error(err)\n\t\t\t\tsubscriber.complete()\n\t\t\t{_CLOSING_BRCK});\n\t\t{_CLOSING_BRCK})"
                     )
                     # Client streaming
                     if rpc_output_type == False and rpc_input_type == True:
@@ -3035,6 +3260,7 @@ class SylkClientGo:
         context: SylkContext = None,
         config=None,
         sylk_json: SylkJson = None,
+        pre_data=None
     ):
         self._services = services
         self._project_package = project_package
@@ -3043,70 +3269,124 @@ class SylkClientGo:
         self._config = config
         self._sylk_json = sylk_json
         for s in self._services:
-            svc_name = s.split("/")[-1].split(".")[0]
-            svc_ver = s.split("/")[-2]
+            svc_name = s.get('name')
             svc_code = f"{self.write_imports(s)}{self.write_struct(s)}{self.write_new(s)}{self.write_methods(s)}"
-            file_system.wFile(
-                file_system.join_path(
-                    self._sylk_json.path,
-                    "clients",
-                    "go",
-                    svc_name,
-                    svc_ver,
-                    f"{svc_name}.go",
-                ),
-                svc_code,
-                overwrite=True,
-                force=True,
-            )
+            svc_ver = parse_version_component(s.get('fullName'))
+            if svc_ver is not None:
+                svc_ver = f"v{svc_ver.get('version')}{svc_ver.get('channel') if svc_ver.get('channel') is not None else ''}{svc_ver.get('release') if svc_ver.get('release') is not None else ''}"
+                file_system.wFile(
+                    file_system.join_path(
+                        sylk_json.path,
+                        "clients",
+                        "go",
+                        svc_name,
+                        svc_ver,
+                        f"{svc_name}.go",
+                    ),
+                    svc_code,
+                    overwrite=True,
+                    force=True,
+                )
+            else:
+                file_system.wFile(
+                    file_system.join_path(
+                        self._sylk_json.path,
+                        "clients",
+                        "go",
+                        svc_name,
+                        f"{svc_name}.go",
+                    ),
+                    svc_code,
+                    overwrite=True,
+                    force=True,
+                )
 
     def write_imports(self, s):
         list_of_services = ["// Importing services"]
         list_of_packages = ["// Importing packages"]
-        svc_domain = self._services[s].get("fullName").split(".")[0]
-        svc_name = self._services[s].get("fullName").split(".")[1]
-        svc_ver = self._services[s].get("fullName").split(".")[2]
-        svc_path = '{4} "{0}/services/protos/{1}/{2}/{3}"'.format(
-            self._sylk_json.project.get("goPackage"),
-            svc_domain,
-            svc_name,
-            svc_ver,
-            svc_name + svc_ver,
-        )
-        list_of_services.append(svc_path)
-        if self._services[s].get("dependencies") is not None:
-            for dep in self._services[s].get("dependencies"):
-                if "google.protobuf" in dep:
-                    dep_name = dep.split(".")[-1].lower()
-                    list_of_services.append(
-                        f'{dep_name}pb "google.golang.org/protobuf/types/known/{dep_name}pb"'
-                    )
 
-        for p in self._packages:
-            pkg_domain = self._packages[p].get("package").split(".")[0]
-            pkg_name = self._packages[p].get("package").split(".")[1]
-            pkg_ver = self._packages[p].get("package").split(".")[2]
-            pkg_path = '{4} "{0}/services/protos/{1}/{2}/{3}"'.format(
-                self._sylk_json.project.get("goPackage"),
-                pkg_domain,
-                pkg_name,
-                pkg_ver,
-                pkg_name + pkg_ver,
-            )
-            if pkg_path not in list_of_services:
-                list_of_packages.append(pkg_path)
-            if self._packages[p].get("dependencies") is not None:
-                for dep in self._packages[p].get("dependencies"):
-                    if "google.protobuf" in dep:
-                        dep_name = dep.split(".")[-1].lower()
-                        list_of_packages.append(
-                            f'{dep_name}pb "google.golang.org/protobuf/types/known/{dep_name}pb"'
-                        )
+        files = self._sylk_json._proto_tree.get_all_file_paths()
+        imports = []
+        go_package_path = self._sylk_json.project.get("goPackage")
+        for mod in files:
+            mod_path = '.'.join(mod.split('/')[:-1])
+            mod_name = mod.split('/')[-1].split('.')[0]
+            ver = self._sylk_json._proto_tree._parse_version_component(mod_path)
+            if ver is not None:
+                version = mod_path.split('.')[-1]
+            else:
+                version = ''
+            if mod_path.split('.')[0] != self._sylk_json._proto_tree.root.name:
+                base_protos = ''
+                root = self._sylk_json._proto_tree.proto_modules[mod_path.split('.')[0]].root
+                dep_parent = self._sylk_json._proto_tree.proto_modules[mod_path.split('.')[0]].get_parent(mod_path)
+                msg_dep =self._sylk_json._proto_tree._find_node(mod_path,root) 
+                if parse_version_component(dep_parent.full_path) is not None:
+                    temp_name = dep_parent.full_path.split('.')[-2]
+                else:
+                    temp_name = dep_parent.name
+                dep_mod_name = temp_name if msg_dep.properties.get('tag') is None or msg_dep.properties.get('tag') == '' else msg_dep.properties.get('tag')
+                if "google.protobuf" in mod_path:
+                    imp_path = f'{dep_mod_name}pb "google.golang.org/protobuf/types/known/{dep_mod_name}pb"'
+                    if imp_path not in imports:
+                        imports.append(imp_path)
+                else:
+                    imp_path = f'"{base_protos}{mod_path.replace(".","/")}"' 
+                    if imp_path not in imports:
+                        imports.append(imp_path)
+            else:
+                base_protos = f'{self._sylk_json._root_protos}/' if self._sylk_json._root_protos is not None and self._sylk_json._root_protos != '' else ''
+                imp_path = f'"{go_package_path}/services/{base_protos}{mod_path.replace(".","/")}"' 
+                if imp_path not in imports:
+                    imports.append(imp_path)
+
+        # svc_domain = self._services[s].get("fullName").split(".")[0]
+        svc_name = s.get("name")
+        svc_ver = parse_version_component(s.get("fullName"))
+        if svc_ver is not None:
+            svc_ver = f'v{svc_ver.get("version")}{svc_ver.get("channel") if svc_ver.get("channel") is not None else ""}{svc_ver.get("release") if svc_ver.get("release") is not None else ""}'
+        else:
+            svc_ver = ''
+        # svc_path = '{4} "{0}/services/protos/{1}/{2}/{3}"'.format(
+        #     self._sylk_json.project.get("goPackage"),
+        #     svc_domain,
+        #     svc_name,
+        #     svc_ver,
+        #     svc_name + svc_ver,
+        # )
+        # list_of_services.append(svc_path)
+        # if s.get("dependencies") is not None:
+        #     for dep in s.get("dependencies"):
+        #         if "google.protobuf" in dep:
+        #             dep_name = dep.split(".")[-1].lower()
+        #             list_of_services.append(
+        #                 f'{dep_name}pb "google.golang.org/protobuf/types/known/{dep_name}pb"'
+        #             )
+
+        # for p in self._packages:
+        #     pkg_domain = self._packages[p].get("package").split(".")[0]
+        #     pkg_name = self._packages[p].get("package").split(".")[1]
+        #     pkg_ver = self._packages[p].get("package").split(".")[2]
+        #     pkg_path = '{4} "{0}/services/protos/{1}/{2}/{3}"'.format(
+        #         self._sylk_json.project.get("goPackage"),
+        #         pkg_domain,
+        #         pkg_name,
+        #         pkg_ver,
+        #         pkg_name + pkg_ver,
+        #     )
+        #     if pkg_path not in list_of_services:
+        #         list_of_packages.append(pkg_path)
+        #     if self._packages[p].get("dependencies") is not None:
+        #         for dep in self._packages[p].get("dependencies"):
+        #             if "google.protobuf" in dep:
+        #                 dep_name = dep.split(".")[-1].lower()
+        #                 list_of_packages.append(
+        #                     f'{dep_name}pb "google.golang.org/protobuf/types/known/{dep_name}pb"'
+        #                 )
 
         _sylk_conn_builder = '\tsylkChannel "{}/clients/go/utils"'.format(
             self._sylk_json.project.get("goPackage")
         )
-
         _default_imports = [
             '"fmt"',
             '"io"',
@@ -3120,6 +3400,7 @@ class SylkClientGo:
             _sylk_conn_builder,
             "\n\t".join(list_of_services),
             "\n\t".join(list_of_packages),
+            "\n\t".join(imports)
         ]
 
         return "package {}\n\nimport (\n\t{}\n)".format(
@@ -3156,15 +3437,21 @@ class SylkClientGo:
             "ctx context.Context // Global context",
             "conn *grpc.ClientConn // A client connection object",
         ]
-
+        s_name = s.get('name')
         temp_svc = (
-            s.split("/")[-1].split(".")[0][0].upper()
-            + s.split("/")[-1].split(".")[0][1:]
+            s_name[0].upper()
+            + s_name[1:]
         )
-        temp_lower_svc = s.split("/")[-1].split(".")[0].lower()
-        svc_name = s.split("/")[-1].split(".")[0]
-        svc_ver = s.split("/")[-2]
-        client_options.append(f"{temp_lower_svc} {svc_name}{svc_ver}.{temp_svc}Client")
+        temp_lower_svc = s_name.lower()
+        svc_name = s_name
+        svc_ver = parse_version_component(s.get('fullName'))
+        if svc_ver is not None: 
+            svc_ver = f"v{svc_ver.get('version')}{svc_ver.get('channel') if svc_ver.get('channel') is not None else ''}{svc_ver.get('release') if svc_ver.get('release') is not None else ''}"
+            pkg_name = s.get('fullName').split('.')[-3]
+        else:
+            pkg_name = s.get('fullName').split('.')[-2]
+            svc_ver = ''
+        client_options.append(f"{temp_lower_svc} {pkg_name}{svc_ver}.{temp_svc}Client")
         return "\n\n// '{0}' represents the project services facing client side\ntype {0} struct {1}\n\t{2}\n{3}\n\n".format(
             svc_name, _OPEN_BRCK, "\n\t".join(client_options), _CLOSING_BRCK
         )
@@ -3185,28 +3472,34 @@ class SylkClientGo:
         for i in _list_of_client_opts:
             _list_of_client_opts_none_types.append(i.split()[0])
 
-        svc_name = s.split("/")[-1].split(".")[0]
+        svc_name = s.get('name')
         temp_service = svc_name[0].upper() + svc_name[1:]
-        svc_ver = s.split("/")[-2]
+        svc_ver = parse_version_component(s.get('fullName'))
+        if svc_ver is not None: 
+            pkg_name = s.get('fullName').split('.')[-3]
+            svc_ver = f"v{svc_ver.get('version')}{svc_ver.get('channel') if svc_ver.get('channel') is not None else ''}{svc_ver.get('release') if svc_ver.get('release') is not None else ''}"
+        else:
+            pkg_name = s.get('fullName').split('.')[-2]
+            svc_ver = ''
         _list_of_services_clients.append(
             "{0}Client := {1}{3}.New{2}Client(conn)".format(
-                svc_name.lower(), svc_name, temp_service, svc_ver
+                svc_name.lower(), pkg_name, temp_service, svc_ver
             )
         )
         _temp_svc_list.append("{0}Client".format(svc_name.lower()))
 
         _new_client_init = [
-            "\n\n\tif len(dialOpts) == 0 {\n\t\tdialOpts = defaultDialOpts\n\t}",
-            '\n\n\tif host == "" {}\n\t\thost = defaultHost\n\t{}'.format(
+            "\n\n\tif len(dialOpts) == 0 {\n\t\tdialOpts = DefaultDialOpts\n\t}",
+            '\n\n\tif host == "" {}\n\t\thost = DefaultHost\n\t{}'.format(
                 _OPEN_BRCK, _CLOSING_BRCK
             ),
-            "\n\n\tif port == 0 {}\n\t\tport = defaultPort\n\t{}".format(
+            "\n\n\tif port == 0 {}\n\t\tport = DefaultPort\n\t{}".format(
                 _OPEN_BRCK, _CLOSING_BRCK
             ),
-            "\n\n\tif md == nil {0}\n\t\tmd = defaultMetadata\n\t{1} else {0}\n\t\tmd = metadata.Join(md, defaultMetadata)\n\t{1}".format(
+            "\n\n\tif md == nil {0}\n\t\tmd = DefaultMetadata\n\t{1} else {0}\n\t\tmd = metadata.Join(md, DefaultMetadata)\n\t{1}".format(
                 _OPEN_BRCK, _CLOSING_BRCK
             ),
-            "\n\n\tif ctx == nil {}\n\t\tctx = defaultCtx\n\t{}".format(
+            "\n\n\tif ctx == nil {}\n\t\tctx = DefaultCtx\n\t{}".format(
                 _OPEN_BRCK, _CLOSING_BRCK
             ),
             "\n\tctx = metadata.NewOutgoingContext(ctx, md)",
@@ -3234,7 +3527,7 @@ class SylkClientGo:
         default_client = "// Default returns the standard client used by the project-level services RPC's.\nfunc Defualt() *{} {} return std {}".format(
             svc_name, _OPEN_BRCK, _CLOSING_BRCK
         )
-        return '// Initalize default constants\n\nvar (\n\tdefaultMsgSize  = 1024 * 1024 * 50 // Max Recv / Send message 50MB as default\n\tdefaultHost = "localhost"\n\tdefaultPort = 44880\n\tdefaultDialOpts = []grpc.DialOption{2}\n\t\tgrpc.WithTransportCredentials(insecure.NewCredentials()),\n\t\tgrpc.WithDefaultCallOptions(\n\t\t\tgrpc.MaxCallRecvMsgSize(defaultMsgSize),\n\t\t\tgrpc.MaxCallSendMsgSize(defaultMsgSize)),\n\t{4}\n\tdefaultCallOpts = []grpc.CallOption{2}{4}\n\tdefaultMetadata = metadata.Pairs("sylk-version","{6}",)\n\tdefaultCtx = context.Background()\n\tstd = New(defaultHost, defaultPort, defaultDialOpts, defaultCallOpts, defaultMetadata, defaultCtx)\n)\n\n{5}\n// Create new client stub\nfunc New({0}) *{1} {2}\n{3}\n{4}'.format(
+        return '// Initalize default constants\n\nvar (\n\tDefaultMsgSize  = 1024 * 1024 * 50 // Max Recv / Send message 50MB as default\n\tDefaultHost = "localhost"\n\tDefaultPort = 44880\n\tDefaultDialOpts = []grpc.DialOption{2}\n\t\tgrpc.WithTransportCredentials(insecure.NewCredentials()),\n\t\tgrpc.WithDefaultCallOptions(\n\t\t\tgrpc.MaxCallRecvMsgSize(DefaultMsgSize),\n\t\t\tgrpc.MaxCallSendMsgSize(DefaultMsgSize)),\n\t{4}\n\tDefaultCallOpts = []grpc.CallOption{2}{4}\n\tDefaultMetadata = metadata.Pairs("sylk-version","{6}",)\n\tDefaultCtx = context.Background()\n\tstd = New(DefaultHost, DefaultPort, DefaultDialOpts, DefaultCallOpts, DefaultMetadata, DefaultCtx)\n)\n\n{5}\n// Create new client stub\nfunc New({0}) *{1} {2}\n{3}\n{4}'.format(
             ", ".join(_list_of_client_opts),
             svc_name,
             _OPEN_BRCK,
@@ -3246,12 +3539,18 @@ class SylkClientGo:
 
     def write_methods(self, s):
         list_of_rpcs = []
-        svc = self._services[s]
-        svc_name = s.split("/")[-1].split(".")[0]
+        svc = s
+        svc_name = s.get('name')
         for r in svc.get("methods"):
-            rpc_msg_in_pkg = (
-                r.get("inputType").split(".")[1] + r.get("inputType").split(".")[2]
-            )
+            ref_node = self._sylk_json._proto_tree._find_node(r.get("inputType"),self._sylk_json._proto_tree.root)
+            ref_node_parent = self._sylk_json._proto_tree.get_parent(ref_node.full_path)
+            pkg_ver = parse_version_component(ref_node_parent.full_path)
+            if pkg_ver is not None:
+                ref_node_parent = self._sylk_json._proto_tree.get_parent(ref_node_parent.full_path)
+                rpc_msg_in_pkg = ref_node_parent.name + f'v{pkg_ver.get("version")}{pkg_ver.get("channel") if pkg_ver.get("channel") is not None else ""}{pkg_ver.get("release") if pkg_ver.get("release") is not None else ""}'
+            else:
+                rpc_msg_in_pkg = ref_node_parent.full_path.split('.')[-1]
+            
             rpc_msg_input_type = (
                 r.get("inputType").split(".")[-1][0].upper()
                 + r.get("inputType").split(".")[-1][1:]
@@ -3259,9 +3558,15 @@ class SylkClientGo:
             if "google.protobuf" in r.get("inputType"):
                 well_known = r.get("inputType").split(".")[-1].lower()
                 rpc_msg_in_pkg = f"{well_known}pb"
-            rpc_msg_out_pkg = (
-                r.get("outputType").split(".")[1] + r.get("outputType").split(".")[2]
-            )
+            ref_node = self._sylk_json._proto_tree._find_node(r.get("outputType"),self._sylk_json._proto_tree.root)
+            ref_node_parent = self._sylk_json._proto_tree.get_parent(ref_node.full_path)
+            pkg_ver = parse_version_component(ref_node_parent.full_path)
+            if pkg_ver is not None:
+                ref_node_parent = self._sylk_json._proto_tree.get_parent(ref_node_parent.full_path)
+                rpc_msg_out_pkg = ref_node_parent.name + f'v{pkg_ver.get("version")}{pkg_ver.get("channel") if pkg_ver.get("channel") is not None else ""}{pkg_ver.get("release") if pkg_ver.get("release") is not None else ""}'
+            else:
+                rpc_msg_out_pkg = ref_node_parent.full_path.split('.')[-1]
+            
             rpc_msg_output_type = (
                 r.get("outputType").split(".")[-1][0].upper()
                 + r.get("outputType").split(".")[-1][1:]
@@ -3294,7 +3599,7 @@ class SylkClientGo:
                         rpc_msg_out_pkg,
                         rpc_msg_output_type,
                         r.get("description"),
-                        s,
+                        s.get('fullName'),
                     )
                 )
             # Client stream
@@ -3311,7 +3616,7 @@ class SylkClientGo:
                         rpc_msg_out_pkg,
                         rpc_msg_output_type,
                         r.get("description"),
-                        s,
+                        s.get('fullName'),
                     )
                 )
             # Server stream
@@ -3328,7 +3633,7 @@ class SylkClientGo:
                         rpc_msg_out_pkg,
                         rpc_msg_output_type,
                         r.get("description"),
-                        s,
+                        s.get('fullName'),
                     )
                 )
             # BidiStream
@@ -3345,7 +3650,7 @@ class SylkClientGo:
                         rpc_msg_out_pkg,
                         rpc_msg_output_type,
                         r.get("description"),
-                        s,
+                        s.get('fullName'),
                     )
                 )
 
@@ -3373,55 +3678,120 @@ class SylkServiceGo:
         self._project_package = project_package
         self._context = context
         self._sylk_json = sylk_json
+        self._service_name = self._name.split("/")[-1].split(".")[0]
+        self._service_path = ".".join(self._name.split("/")[:-1])
 
     def write_imports(self):
         list_d = list(map(lambda i: i, _WELL_KNOWN_GO_IMPORTS))
-        if self._imports is not None:
-            go_package_name = self._sylk_json.project.get("goPackage")
-            # list_d.append('codes "google.golang.org/grpc/codes"')
-            # list_d.append('status "google.golang.org/grpc/status"')
-            name = self._name.split("/")[-1].split(".")[0]
-            path = "/".join(self._name.split("/")[:-1])
-            ver = self._name.split("/")[-2]
-            list_d.append(f'{name}{ver} "{go_package_name}/services/{path}"')
-            list_d.append(f'"{go_package_name}/services/utils"')
-
-            for d in self._imports:
-                if "google.protobuf." in d:
-                    name = d.split(".")[-1]
-                    d_name = "{0}".format(name).lower()
-                    list_d.append(
-                        f'"google.golang.org/protobuf/types/known/{d_name}pb"'
-                    )
-                else:
-                    name = d.split(".")[1]
-                    d_name = "{0}".format(name)
-                    d_path = self._sylk_json.get_path(
-                        d.split(".")[0], d.split(".")[1], d.split(".")[2]
-                    )
-                    path = "/".join(d_path.split("/")[:-1])
-                    d_ver = d.split(".")[2]
-                    list_d.append(
-                        f'{d_name}{d_ver} "{go_package_name}/services/{path}"'
-                    )
-
-            list_d = "\n\t".join(list_d)
-            return f"{list_d}"
+        parent = self._sylk_json._proto_tree.get_parent(self._service.get('fullName'))
+        refs = self._sylk_json._proto_tree.get_parents_refs([self._service.get('fullName')])
+        
+        deps = self._sylk_json._proto_tree.get_references(self._service.get('fullName'))
+       
+        pkg_ver = self._sylk_json._proto_tree._parse_version_component(parent.full_path)
+        if pkg_ver is not None:
+            pkg_ver = f'v{pkg_ver.get("version")}{pkg_ver.get("channel","") if pkg_ver.get("channel","") is not None else ""}{pkg_ver.get("release","") if pkg_ver.get("release","") is not None else ""}'
+            pkg_name = parent.full_path.split('.')[-2]
         else:
-            # When service is standalone we need to make sure that the defaults packages are imported
-            go_package_name = self._sylk_json.project.get("goPackage")
-            name = self._name.split("/")[-1].split(".")[0]
-            path = "/".join(self._name.split("/")[:-1])
-            ver = self._name.split("/")[-2]
-            list_d.append(f'{name}{ver} "{go_package_name}/services/{path}"')
-            list_d.append(f'"{go_package_name}/services/utils"')
-            list_d = "\n\t".join(list_d)
-            return f"{list_d}"
+            pkg_ver = ''
+            pkg_name = parent.name
+        module_name = pkg_name if self._service.get('tag') is None and self._service.get('tag') != '' else self._service.get('tag')
+        base_protos = self._sylk_json._root_protos.replace('/','.')
+        go_package_name = self._sylk_json.project.get("goPackage")
+        
+        for d in deps:
+            if d.split('.')[0] == self._sylk_json._proto_tree.root.name:
+                root = self._sylk_json._proto_tree.root
+                dep_parent = self._sylk_json._proto_tree.get_parent(d)
+                base_path = f'{go_package_name}/services/' if self._sylk_json._root_protos is None or self._sylk_json._root_protos == '' else f'{go_package_name}/services/{base_protos}/'
+                msg_dep =self._sylk_json._proto_tree._find_node(d,root) 
+                dep_mod_version = parse_version_component(dep_parent.full_path)
+                if dep_mod_version is not None:
+                    channel = dep_mod_version.get("channel","") if dep_mod_version.get("channel") is not None else ''
+                    release = dep_mod_version.get("release","") if dep_mod_version.get("release") is not None else ''
+                    dep_mod_version = f'v{dep_mod_version.get("version")}{channel}{release}'
+                    temp_name = dep_parent.full_path.split('.')[-2]
+                else:
+                    temp_name = dep_parent.name
+                    dep_mod_version = ''
+                dep_mod_name = temp_name if msg_dep.properties.get('tag') is None or msg_dep.properties.get('tag') == '' else msg_dep.properties.get('tag')
+                imp_path = f'{dep_mod_name}{dep_mod_version} "{base_path}{dep_parent.full_path.replace(".","/")}"'
+            else:
+                root = self._sylk_json._proto_tree.proto_modules[d.split('.')[0]].root
+                dep_parent = self._sylk_json._proto_tree.proto_modules[d.split('.')[0]].get_parent(d)
+                msg_dep =self._sylk_json._proto_tree._find_node(d,root) 
+                dep_parent_version = parse_version_component(dep_parent.full_path)
+                if dep_parent_version is not None:
+                    channel = dep_mod_version.get("channel","") if dep_mod_version.get("channel") is not None else ''
+                    release = dep_mod_version.get("release","") if dep_mod_version.get("release") is not None else ''
+                    dep_mod_version = f'v{dep_mod_version.get("version")}{channel}{release}'
+                    temp_name = dep_parent.full_path.split('.')[-2]
+                else:
+                    temp_name = dep_parent.name
+                    dep_mod_version = ""
+                dep_mod_name = temp_name if msg_dep.properties.get('tag') is None or msg_dep.properties.get('tag') == '' else msg_dep.properties.get('tag')
+                imp_path = f'{dep_mod_name}{dep_parent_version} "{dep_parent.full_path.replace(".","/")}"'
+            if imp_path not in list_d:
+                list_d.append(
+                    imp_path
+                )
+        base_path = f'{go_package_name}/services/' if self._sylk_json._root_protos is None or self._sylk_json._root_protos == '' else f'{go_package_name}/services/{base_protos}/'
+        imp_path = f'{module_name}{pkg_ver} "{base_path}{parent.full_path.replace(".","/")}"'
+        if imp_path not in list_d:
+            list_d.append(
+                    imp_path
+                )
+        list_d = "\n".join(list_d)
+        return f"{list_d}"
+        # # 
+        # if self._imports is not None:
+        #     go_package_name = self._sylk_json.project.get("goPackage")
+        #     name = self._name.split("/")[-1].split(".")[0]
+        #     path = "/".join(self._name.split("/")[:-1])
+        #     ver = self._name.split("/")[-2]
+        #     list_d.append(f'{name}{ver} "{go_package_name}/services/{path}"')
+        #     list_d.append(f'"{go_package_name}/services/utils"')
+
+        #     for d in self._imports:
+        #         if "google.protobuf." in d:
+        #             name = d.split(".")[-1]
+        #             d_name = "{0}".format(name).lower()
+        #             list_d.append(
+        #                 f'"google.golang.org/protobuf/types/known/{d_name}pb"'
+        #             )
+        #         else:
+        #             name = d.split(".")[1]
+        #             d_name = "{0}".format(name)
+        #             d_path = self._sylk_json.get_path(
+        #                 d.split(".")[0], d.split(".")[1], d.split(".")[2]
+        #             )
+        #             path = "/".join(d_path.split("/")[:-1])
+        #             d_ver = d.split(".")[2]
+        #             list_d.append(
+        #                 f'{d_name}{d_ver} "{go_package_name}/services/{path}"'
+        #             )
+
+        #     list_d = "\n\t".join(list_d)
+        #     return f"{list_d}"
+        # else:
+        #     # When service is standalone we need to make sure that the defaults packages are imported
+        #     go_package_name = self._sylk_json.project.get("goPackage")
+        #     name = self._name.split("/")[-1].split(".")[0]
+        #     path = "/".join(self._name.split("/")[:-1])
+        #     ver = self._name.split("/")[-2]
+        #     list_d.append(f'{name}{ver} "{go_package_name}/services/{path}"')
+        #     list_d.append(f'"{go_package_name}/services/utils"')
+        #     list_d = "\n\t".join(list_d)
+        #     return f"{list_d}"
 
     def write_struct(self):
-        name = self._name.split("/")[-1].split(".")[0]
+        ver = parse_version_component(self._service.get('fullName'))
+        if ver is not None:
+            ver = f'v{ver.get("version")}{ver.get("channel") if ver.get("channel") is not None else ""}{ver.get("release") if ver.get("release") is not None else ""}'
+        else:
+            ver = ''
+        name = self._name
         temp_name = name[0].capitalize() + name[1:]
-        ver = self._name.split("/")[-2]
         return "type {0} struct {1}\n\t{3}{4}.Unimplemented{0}Server\n{2}".format(
             temp_name, _OPEN_BRCK, _CLOSING_BRCK, name, ver
         )

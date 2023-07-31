@@ -38,8 +38,11 @@ def run(args):
 
     path = os.getcwd()
     plugs = []
-    
+    includes = ['-I']
     plug_path = ''
+    for i in args.I:
+        includes.append(i)
+    print(includes)
     for p in args.plugin:
         # print(os.access(p, os.X_OK))
         spec = is_module_executable(p)
@@ -75,7 +78,8 @@ def run(args):
             # if len(args.protos) == 0:
                 # sylk = SylkArchitect('./sylk.json')
             proto_files = args.protos if args.protos is not None else []
-            protoc_params = ['protoc'] + proto_files + plugs
+            protoc_params = ['protoc'] + proto_files + plugs + includes
+            print(protoc_params)
             process = subprocess.Popen(protoc_params,
                         stdout=subprocess.PIPE, 
                         stderr=subprocess.PIPE)

@@ -130,6 +130,54 @@ class SylkTree:
     def load_module(self, module):
         self.proto_modules[module.root.name] = module
 
+    def resolve_dependency_order(self,messages: List[Dict]):
+        def topological_sort(nodes):
+            sorted_nodes = []
+            visited = set()
+            def dfs(node):
+                if node["node"] in visited:
+                    return
+                visited.add(node["node"])
+                for ref_node in node["refs"]:
+                    ref = next((n for n in nodes if n["node"] == ref_node), None)
+                    if ref:
+                        dfs(ref)
+                sorted_nodes.append(node["node"])
+
+            for node in nodes:
+                dfs(node)
+
+            sorted_nodes
+            return sorted_nodes
+        # Create a dictionary to store the mapping of message name to message object
+        message_map = {message.get('fullName'): message for message in messages}
+
+        # Create a list of nodes where each node is a message name with its references being the field types
+        nodes = []
+        for message in messages:
+            refs = [
+                field.get('messageType')
+                for field in message.get('fields')
+                if field.get('fieldType') is not None
+                and (field.get('fieldType') == SylkField_pb2.SylkFieldTypes.Name(SylkField_pb2.TYPE_MESSAGE)
+                or field.get('valueType') == SylkField_pb2.SylkFieldTypes.Name(SylkField_pb2.TYPE_ENUM))
+            ] + [
+                field.get('enumType')
+                for field in message.get('fields')
+                if field.get('fieldType') is not None
+                and (field.get('fieldType') == SylkField_pb2.SylkFieldTypes.Name(SylkField_pb2.TYPE_ENUM)
+                or field.get('valueType') == SylkField_pb2.SylkFieldTypes.Name(SylkField_pb2.TYPE_ENUM))
+            ]
+            nodes.append({"node": message.get('fullName'), "refs": refs})
+
+        # Perform topological sorting
+        sorted_message_names = topological_sort(nodes)
+
+        # Reorder the messages based on the sorted names
+        sorted_messages = [message_map[name] for name in sorted_message_names]
+
+        return sorted_messages
+
     def add_node(self, path, type=None, properties=None):
         current_node = self.root
 
@@ -150,6 +198,7 @@ class SylkTree:
             else:
                 # Create a new node and add it as a child of the current node
                 new_node = Node(name, type, properties, current_node)
+
                 current_node.add_child(new_node)
                 current_node = new_node
                 # Validate the parent hierarchy based on node types
@@ -235,11 +284,14 @@ class SylkTree:
         # logger.debug(f"Properties: {node.properties}")
         # logger.debug(f"References: {node.references}")
 
-    def _find_parent(self, node_path, current_node):
+    def _find_parent(self, node_path, current_node, recursive=False):
         path_parts = node_path.split(".")
         if len(path_parts) > 1:
             parent_path = ".".join(path_parts[:-1])
             parent_node = self._find_node(parent_path, current_node)
+            if recursive:
+                if parent_node.type != 'package':
+                    parent_node = self._find_parent(parent_node.full_path,current_node,recursive)
             return parent_node
 
         return None
@@ -312,7 +364,6 @@ class SylkTree:
     def add_node_with_validated_properties(self, path, type=None, properties=None):
         if properties and not self.validate_properties(type):
             raise ValueError("Invalid properties")
-
         self.add_node(path, type, properties)
 
     def get_all_file_paths(self):
@@ -410,7 +461,7 @@ class SylkTree:
                 )
             else:
                 n = self._find_node(ref, self.root)
-                p = self._find_parent(n.full_path, self.root)
+                p = self._find_parent(n.full_path, self.root, True)
             tag = None
             if n.properties is not None:
                 tag = n.properties.get("tag")
@@ -441,6 +492,9 @@ class SylkTree:
             for child in node.children:
                 node.references.extend(self._get_references_helper(child))
         elif node.type == "package":
+            for child in node.children:
+                node.references.extend(self._get_references_helper(child))
+        elif node.type == "field":
             for child in node.children:
                 node.references.extend(self._get_references_helper(child))
         elif node.type == "root":
@@ -492,13 +546,15 @@ class SylkTree:
         for n in [
             pkg
             for pkg in self._bfs(self.root)
-            if pkg.type == "package"
-            and len([c for c in pkg.children if c.type != "package"]) > 0
+            
         ]:  
-            refs = [
-                self.get_parent(c) for c in self.get_references(n.full_path)
-            ]
-            nodes.append({"node": n.full_path, "refs": [r.full_path for r in refs if r is not None]})
+            if n.type == "package" and len([c for c in n.children if c.type != "package"]) > 0:
+                refs = [
+                    self.get_parent(c) for c in self.get_references(n.full_path)
+                ]
+                nodes.append({"node": n.full_path, "refs": [r.full_path for r in refs if r is not None]})
+            else:
+                nodes.append({"node": n.full_path, "refs": []})
         # Calculate the in-degree for each node
         sorted_nodes = []
         visited = set()
@@ -573,17 +629,22 @@ class SylkTree:
             self._calculate_in_degree(child, in_degree)
 
     def add_field_reference(self, message_path, field_name, ref_path):
+        root_module = self.root
         message_node = self._find_node(message_path, self.root)
         if ref_path.split(".")[0] != self.root.name:
-            ref_node = self._find_node(
-                ref_path, self.proto_modules[ref_path.split(".")[0]].root
-            )
-        else:
-            ref_node = self._find_node(ref_path, self.root)
+            root_module = self.proto_modules[ref_path.split(".")[0]].root
+        ref_node = self._find_node(ref_path, root_module)
         if message_node and ref_node:
             field = [field for field in message_node.children if field.name == field_name]
             if message_node.type == "message":
                 ref_node_name = ref_node.full_path
+                if len(field) == 1:
+                    field[0].references.append(ref_node_name)
+                if ref_node_name not in message_node.references:
+                    message_node.references.append(ref_node_name)
+            elif message_node.type == "field":
+                ref_node_name = ref_node.full_path
+                message_node = self._find_parent(message_node.full_path, self.root)
                 if len(field) == 1:
                     field[0].references.append(ref_node_name)
                 if ref_node_name not in message_node.references:
@@ -699,8 +760,7 @@ class SylkTree:
             for m in msgs:
                 child_dict = self._node_to_dict(self._find_node(m,self.root))
                 childrens.append(child_dict)
-            # if pkg.package not in pkgs:
-                # pkgs.append(pkg.package)
+
             for child in node.children:
                 if child.full_path not in msgs:
                     child_dict = self._node_to_dict(child)

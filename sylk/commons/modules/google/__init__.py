@@ -23,4 +23,37 @@ def google():
     tree.add_node(
         "google.protobuf.ListValue", "message", {"tag": "struct"}
     )
+    tree.add_node(
+        "google.protobuf.NullValue", "message", {"tag": "struct"}
+    )
+    tree.add_node(
+        "google.protobuf.BoolValue", "message", {"tag": "wrappers"}
+    )
+    tree.add_node(
+        "google.protobuf.StringValue", "message", {"tag": "wrappers"}
+    )
+    tree.add_node(
+        "google.protobuf.BytesValue", "message", {"tag": "wrappers"}
+    )
+    tree.add_node(
+        "google.protobuf.DoubleValue", "message", {"tag": "wrappers"}
+    )
+    tree.add_node(
+        "google.protobuf.FloatValue", "message", {"tag": "wrappers"}
+    )
+    tree.add_node(
+        "google.protobuf.Int64Value", "message", {"tag": "wrappers"}
+    )
+    tree.add_node(
+        "google.protobuf.UInt64Value", "message", {"tag": "wrappers"}
+    )
+    tree.add_node(
+        "google.protobuf.Int32Value", "message", {"tag": "wrappers"}
+    )
+    tree.add_node(
+        "google.protobuf.UInt32Value", "message", {"tag": "wrappers"}
+    )
+    tree.add_node(
+        "google.protobuf.FieldMask", "message", {"tag": "field_mask"}
+    )
     return tree

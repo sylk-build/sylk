@@ -141,30 +141,30 @@ def compile_protos(
             + include_dirs
             + [f for f in files if 'google/' not in f]
         )
-        print_note(protoc_params)
-        run_protoc(protoc_params)
-        protoc_params = ["protoc"] + [
-                c
-                for c in list(
-                    map(
-                        lambda f: f
-                        if "--plugin" in f
-                        or "--custom" in f
-                        or "--proto_path" in f
-                        or "-I" in f
-                        else None,
-                        commands,
-                    )
-                )
-                if c is not None
-            ] + include_dirs + [f for f in files if 'google/' not in f]
         # print_note(protoc_params)
-        process = subprocess.Popen(
-            protoc_params, stdout=subprocess.PIPE, stderr=subprocess.PIPE
-        )
-        _, stderr = process.communicate()
-        if stderr:
-            print_info(stderr.decode("utf-8"))
+        run_protoc(protoc_params)
+        # protoc_params = ["protoc"] + [
+        #         c
+        #         for c in list(
+        #             map(
+        #                 lambda f: f
+        #                 if "--plugin" in f
+        #                 or "--custom" in f
+        #                 or "--proto_path" in f
+        #                 or "-I" in f
+        #                 else None,
+        #                 commands,
+        #             )
+        #         )
+        #         if c is not None
+        #     ] + include_dirs + [f for f in files if 'google/' not in f]
+        # # print_note(protoc_params)
+        # process = subprocess.Popen(
+        #     protoc_params, stdout=subprocess.PIPE, stderr=subprocess.PIPE
+        # )
+        # _, stderr = process.communicate()
+        # if stderr:
+        #     print_info(stderr.decode("utf-8"))
     else:
         protoc_params = ["protoc"] + commands + include_dirs + [f for f in files if 'google/' not in f]
         # print_note(protoc_params)
@@ -193,7 +193,6 @@ def compile_protos(
             + include_dirs
             + [f for f in files if 'google/' not in f]
         )
-        # print_note(protoc_params)
         process = subprocess.Popen(
             protoc_params, stdout=subprocess.PIPE, stderr=subprocess.PIPE
         )
@@ -204,7 +203,7 @@ def compile_protos(
 
 @builder.hookimpl
 def write_protos(sylk_json: helpers.SylkJson):
-    file_system.removeDir(file_system.join_path(sylk_json.path, sylk_json._root_protos, sylk_json.domain))
+    file_system.removeDir(file_system.join_path(sylk_json.path, sylk_json._root_protos if sylk_json._root_protos is not None else '', sylk_json.domain))
     if sylk_json.packages is None:
         print_error(
             "Not supporting building project without any packages",
@@ -250,8 +249,9 @@ def write_protos(sylk_json: helpers.SylkJson):
 
         if len(tags.keys()) > 0:
             for t in tags:
-                proto = helpers.SylkProtoFile(t,pkg,sylk_json)
+                proto = helpers.SylkProtoFile(t,pkg,sylk_json,True)
                 proto._set_file_path()
+                print(proto._file_path)
                 file_system.wFile(
                     proto._file_path,
                     proto.to_str(),
@@ -273,6 +273,7 @@ def write_protos(sylk_json: helpers.SylkJson):
                 msgs = [
                     m.full_name for m in pkg.messages if m.tag == ''
                 ]
+            
             if len(enums) > 0 or len(msgs) > 0 or len(svcs) > 0:
                 proto = helpers.SylkProtoFile(pkg.name,pkg,sylk_json)
                 file_system.wFile(
