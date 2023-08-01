@@ -1055,6 +1055,8 @@ def main(args=None):
                 if args.token is not None:
                     # print(args.token)
                     config_command.refresh_global_token()
+            elif args.version:
+                print_version(__version__.__version__)
             else:
                 print_warning(
                     "Not under valid sylk.build project !\n\tMake sure you are on the root directory of your project"
