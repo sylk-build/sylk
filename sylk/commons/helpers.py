@@ -2170,6 +2170,7 @@ if proto_module not in sys.path:\n\
                 
                 svc_ver = parse_version_component(svc.get("fullName"))
                 svc_name = svc.get("name")
+                formatted_version = ''
                 if svc_ver is not None:
                     svc_pkg_name = svc_pkg.full_path.split('.')[-2] if svc.get('tag') is None else svc.get('tag')
                     formatted_version = "v{}".format(svc_ver.get("version"))
