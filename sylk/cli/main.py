@@ -138,18 +138,6 @@ field_label = [
     SylkField_pb2.SylkFieldLabels.Name(SylkField_pb2.LABEL_REPEATED),
 ]
 
-
-# sylk_new_q = [
-#     inquirer.List("server", message="Choose server language", choices=[
-#                   ('Python', Language.python), ('Typescript', Language.typescript)], default=Language.python),
-#     inquirer.Checkbox("clients", message="Choose clients languages (Use arrows keys to enable disable a language)", choices=[
-#                       ('Python', Language.python), ('Typescript', Language.typescript)], default=[Language.python]),
-#     inquirer.Text("domain", message="Enter domain name", default='domain'),
-# ]
-
-# sylk_g_p_q = [
-#     prompter.QText(name="package", message="Enter package name", validate=validation)
-# ]
 sylk_g_s_q = [
     prompter.QText(name="service", message="Enter service name", validate=validation)
 ]
@@ -351,13 +339,6 @@ def main(args=None):
     parser_generate.add_argument(
         "--build", action="store_true", required=False, help="Auto build resources"
     )
-    # parser_generate.add_argument(
-    #     "-v",
-    #     "--version",
-    #     default="v1",
-    #     choices=["v1beta", "v1", "v2", "v3"],
-    #     help="Version of the created resource",
-    # )
 
     parser_g = subparsers.add_parser("g", help="A shortand for generate commands")
     parser_g.add_argument(
@@ -382,13 +363,6 @@ def main(args=None):
     parser_g.add_argument(
         "--build", action="store_true", required=False, help="Auto build resources"
     )
-    # parser_g.add_argument(
-    #     "-v",
-    #     "--version",
-    #     default="v1",
-    #     choices=["v1beta", "v1", "v2", "v3"],
-    #     help="Version of the created resource",
-    # )
 
     """List command"""
 
@@ -1104,105 +1078,7 @@ def parse_name_to_resource(full_name, sylk_json: helpers.SylkJson):
         resource = sylk_json.get_message(full_name)
         if resource is not None:
             return resource
-    # if len(full_name.split(".")) > 4:
-    #     log.debug("Searching for fields / enum values")
-    #     # Field / Enum Value
-    #     domain = full_name.split(".")[0]
-    #     pkg_name = full_name.split(".")[1]
-    #     pkg_v = full_name.split(".")[2]
-    #     pkg_path = f"protos/{domain}/{pkg_name}/{pkg_v}/{pkg_name}.proto"
-    #     if sylk_json.packages[pkg_path].get("messages") is not None:
-    #         msg_name = ".".join(full_name.split(".")[:-1])
-    #         search_msg = next(
-    #             (
-    #                 m
-    #                 for m in sylk_json.packages[pkg_path].get("messages")
-    #                 if m.get("fullName") == msg_name
-    #             ),
-    #             None,
-    #         )
-    #         if search_msg is not None:
-    #             search_field = next(
-    #                 (
-    #                     f
-    #                     for f in search_msg.get("fields")
-    #                     if f.get("fullName") == full_name
-    #                 ),
-    #                 None,
-    #             )
-    #             if search_field is not None:
-    #                 resource = search_field
 
-    # elif len(full_name.split(".")) == 4:
-    #     #  Message / Enum
-    #     log.debug("Searching for Messages / enum")
-    #     domain = full_name.split(".")[0]
-    #     pkg_name = full_name.split(".")[1]
-    #     pkg_v = full_name.split(".")[2]
-    #     pkg_path = f"protos/{domain}/{pkg_name}/{pkg_v}/{pkg_name}.proto"
-    #     if sylk_json.packages.get(pkg_path) is None:
-    #         if (
-    #             sylk_json.services.get(pkg_name).get("methods") is not None
-    #             and resource is None
-    #         ):
-    #             log.debug("Searching for RPC")
-    #             rpc_name = full_name.split(".")[-1]
-    #             search_rpc = next(
-    #                 (
-    #                     e
-    #                     for e in sylk_json.services[pkg_name].get("methods")
-    #                     if e.get("name") == rpc_name
-    #                 ),
-    #                 None,
-    #             )
-    #             if search_rpc is not None:
-    #                 resource = search_rpc
-    #         else:
-    #             print_error(f"Resource cant be found as {pkg_path} does not exists")
-    #             exit(1)
-    #     else:
-    #         if sylk_json.packages.get(pkg_path).get("messages") is not None:
-    #             search_msg = next(
-    #                 (
-    #                     m
-    #                     for m in sylk_json.packages[pkg_path].get("messages")
-    #                     if m.get("fullName") == full_name
-    #                 ),
-    #                 None,
-    #             )
-    #             if search_msg is not None:
-    #                 resource = search_msg
-
-    #         if (
-    #             sylk_json.packages.get(pkg_path).get("enums") is not None
-    #             and resource is None
-    #         ):
-    #             search_enum = next(
-    #                 (
-    #                     e
-    #                     for e in sylk_json.packages[pkg_path].get("enums")
-    #                     if e.get("fullName") == full_name
-    #                 ),
-    #                 None,
-    #             )
-    #             if search_enum is not None:
-    #                 resource = search_enum
-
-    # elif len(full_name.split(".")) == 3:
-    #     # Package
-    #     log.debug("Searching for Package")
-    #     domain = full_name.split(".")[0]
-    #     pkg_name = full_name.split(".")[1]
-    #     pkg_v = full_name.split(".")[2]
-    #     pkg_path = f"protos/{domain}/{pkg_name}/{pkg_v}/{pkg_name}.proto"
-    #     if sylk_json.packages.get(pkg_path) is not None:
-    #         resource = sylk_json.packages.get(pkg_path)
-    # elif len(full_name.split(".")) == 1:
-    #     # Service / Project
-    #     if sylk_json.services.get(full_name) is not None:
-    #         resource = sylk_json.services.get(full_name)
-
-    
     print_error(
         f"Can not find any resource by the name -> {full_name}\n\t-> Try running: $ sylk ls"
     )

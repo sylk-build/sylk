@@ -177,7 +177,7 @@ class SylkArchitect:
             )
         return service
 
-    def AddRPC(self, package, service, name, *args):
+    def AddRPC(self, package, service, name, order_pkg=[], *args):
         # service_name = service.name
         # service_ver = service.full_name.split(".")[2]
         package_path = (
@@ -185,6 +185,7 @@ class SylkArchitect:
         )
         _IN = args[0][0]
         _OUT = args[0][1]
+        print(args)
         RPC = generate_rpc(self._path, name, _IN[0], _OUT[0], _IN[1], _OUT[1], args[1])
         service.methods.append(RPC)
         
@@ -195,7 +196,12 @@ class SylkArchitect:
         
         self._sylk.execute(
             CommandMap._ADD_RESOURCE,
-            {"packages": {package_path: MessageToDict(package)}},
+            {
+                "packages": {
+                    package_path: MessageToDict(package)
+                }
+            },
+            order_pkg
         )
 
     def AddPackage(

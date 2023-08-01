@@ -91,17 +91,20 @@ After you are under the new project directory you can go ahead and [create sylk.
 
 ```sh
 # Generate new package to hold messages
-sylk generate package
+sylk generate package foo.bar.v1
 # Generate new service to hold RPC's (Methods)
-sylk generate service
+sylk generate service foo.bar.v1.SomeService
 # Generate message under specified package
-sylk generate message
+sylk generate message foo.bar.v1.SomeMessage
 # Generate RPC (Method) under specified service
-# Same as running `sylk g r`
-sylk generate rpc
+# Same as running `sylk g r foo/bar/v1/SomeService/GetSomething`
+sylk generate rpc foo.bar.v1.SomeService.GetSomething
 ```
-> __Note__ Make sure before creating new RPC on service that you have imported at least 1 package to be used by the service. for more information visit -> [Package Docs](https://docs.sylk.build/cli/resources/package)
+<!-- > __Note__ Make sure before creating new RPC on service that you have imported at least 1 package to be used by the service. for more information visit -> [Package Docs](https://docs.sylk.build/cli/resources/package) -->
 
+> __Note__ Passing full resource paths can be used with __'/'__ to resamble the filesystem paths or __'.'__ seperators as native protobuf syntax, both act the same.
+
+> __Note__ You can create resource with thier full paths or just with passing the resource name itself, the CLI prompter will ask you which parent you want to attach the new resource.
 
 After you had generated your resources for the project and modified the code (See the docs for more explanation on how to develop your project and make changes [Sample Project](https://docs.sylk.build/cli/quick-start)).
 

@@ -730,7 +730,6 @@ class SylkJson:
 
         if self.packages is not None:
             for pkg in self._topological_sort(self.packages):
-                print(pkg)
                 p = self.packages[pkg]
                 pkg_path = p.get('package')
                 self._proto_tree.add_node(pkg_path,'package',p)
@@ -1270,6 +1269,7 @@ class SylkProtoFile:
             msgs = [m.full_name for m in self._package.messages if m.tag == "" or m.tag == self._file_name]
             enms = [e.full_name for e in self._package.enums if e.tag == "" or e.tag == self._file_name]
             svcs = [s.full_name for s in self._package.services if s.tag == "" or s.tag == self._file_name]
+            
             for m in msgs:
                 deps = self._sylk_json.get_message_dependencies(m)
                 for d in deps:
@@ -1280,8 +1280,7 @@ class SylkProtoFile:
                 for d in deps:
                     if d not in dependencies and  current_file_path not in d:
                         dependencies.append(d)
-                        
-            
+
         return "\n\n" + "\n".join(dependencies) if len(dependencies) > 0 else ""
 
     def get_services(self):

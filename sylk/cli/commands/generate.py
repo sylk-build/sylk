@@ -144,7 +144,7 @@ def package(
 
     if verbose:
         print_note(pkg, True, "Adding package")
-    sylk_json._proto_tree.add_node(pkg_name,'package')
+    sylk_json._proto_tree.add_node(sylk_json.domain+'.'+pkg_name,'package')
     new_pkg = sylk_json._proto_tree._find_node(pkg,sylk_json._proto_tree.root)
     if len(deps) > 0:
         for d in deps:
@@ -824,7 +824,7 @@ def rpc(
     parent: str = None,
     deps = [],
 ):
-    rpc = results["rpc"]
+    rpc = results["rpc"].replace('/','.')
     svc = results.get('service') if results.get('service') is not None else sylk_json.domain+'.'+'.'.join(rpc.split('.')[:-1])
     pkg_path = '.'.join(svc.split('.')[:-1])
     full_name = "{0}.{1}".format(svc, rpc)
@@ -837,7 +837,7 @@ def rpc(
     dependencies = package.dependencies
     if dependencies is None:
         try:
-            sylk_json.get_package(svc.split(".")[1], version=svc.split(".")[2])
+            sylk_json.get_package(pkg_path)
             dependencies = [svc]
         except Exception:
             svc_name = svc.split(".")[1]
@@ -894,10 +894,14 @@ def rpc(
     if inputs_outputs is None:
         print_error("IN/OUT Types are required for RPC")
         exit(1)
+    pkgs = sylk_json._proto_tree.topological_sort()[::-1]
+    if package.package not in pkgs:
+        pkgs.append(package.package)
     architect.AddRPC(
         package,
         service,
         rpc,
+        pkgs,
         [
             (results["type"][0], inputs_outputs["input_type"]),
             (results["type"][1], inputs_outputs["output_type"]),
