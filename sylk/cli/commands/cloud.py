@@ -20,14 +20,14 @@
 # WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 
 from importlib import import_module,util
+import json
 from pathlib import Path
 from sylk.cli import prompter
 from sylk import __version__, config
 
 from sylk.commons import helpers as _helpers, file_system as _fs, pretty as _pretty
 from sylk.commons.protos import Projects_v1, Packages_v2, Messages_v2, Organizations_v1, Methods_v2, Enums_v2,  Users_v1,EnumValues_v2, Tags_v2, Folders_v2, Fields_v2, Services_v2
-import ast
-from sylk.commons.helpers import Graph, MessageToDict,MessageToJson, is_semver_less, read_to_parse_protos
+from sylk.commons.helpers import Graph, MessageToDict,ParseDict,MessageToJson, is_semver_less, read_to_parse_protos
 
 from sylk.commons.protos.sylk.SylkApi.v1.SylkApi_pb2 import GetAccessTokenRequest, GetOrganizationRequest, GetProjectRequest, ListPackagesRequest, ListProjectsRequest, ListServicesRequest
 from sylk.commons.protos.sylk.SylkConfigs.v1.SylkConfigs_pb2 import SylkProjectConfigs
@@ -194,29 +194,24 @@ class SylkCloud:
 
             resources = []
             sylkDict = MessageToDict(sylk)
+            temp_dict = {'packages':{}}
             for pkg in sylkDict['packages']:
-                resources.append(sylkDict['packages'][pkg])
-                # try:
-                #     sort_topological = Graph(sylkDict['packages'][pkg]['messages']).topologicalSort()
-                #     temp_messages = []
-                #     for m in sort_topological[::-1]:
-                #         temp_messages.append(next((tmpM for tmpM in sylkDict['packages'][pkg]['messages'] if tmpM.get('fullName') == m),None))
-                #     sylkDict['packages'][pkg]['messages'] = temp_messages
-                # except KeyError as e:
-                #     # _pretty.print_warning("Error while sorting the dependencies graph of package messages\n\t- If this error appeared right after making rename of message then ignore it...\n\t- Else please issue a bug report !")
-                #     raise Exception('Seems like your project is not ready to be built locally.. missing fields maybe?')
-                
-            
-            
+                existing_domain = sylkDict['packages'][pkg]['package'].split('.')[0]
+                if existing_domain != domain:
+                    _pretty.print_info(f"changing domain from remote '{existing_domain}' -> '{domain}'")
+                    data_string = json.dumps(sylkDict['packages'][pkg])
+                    data_string = data_string.replace(existing_domain+'.',domain+'.')
+                    pkg = pkg.replace(existing_domain+'/',domain+'/')
+                    temp_dict['packages'][pkg] = json.loads(data_string)
+                else:
+                    temp_dict['packages'][pkg] = sylkDict['packages'][pkg]
+                resources.append(temp_dict['packages'][pkg])
+            sylkDict['packages'] = temp_dict['packages']
 
-            # temp_json = _helpers.SylkJson(sylkDict)
-            # for p in sylkDict['packages']:
-            #     pkg = sylkDict['packages'][p]
-            #     msgs = temp_json._proto_tree.resolve_dependency_order(pkg['messages'])
-            #     p['messages'] = msgs
-            #     sylkDict['packages'][p]['messages'] = msgs
             if overwrite:
                 _fs.wFile('sylk.json',sylkDict,True,True)
+
+            sylk = ParseDict(sylkDict,SylkJson())
             return sylk
         except Exception as e:
             _pretty.print_error(e.details(),True,f'Error occured during pulling project {projectId}')

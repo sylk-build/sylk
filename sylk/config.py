@@ -29,5 +29,5 @@ configs=SylkCliConfigs(
     ]
 )
 
-sylk_api_host='api.sylk.build'
+sylk_api_host='localhost'
 sylk_api_port=9000

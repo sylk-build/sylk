@@ -277,7 +277,7 @@ def main(args=None):
     parser_n.add_argument(
         "--host", default="localhost", required=False, help="Host name for server"
     )
-    parser_n.add_argument("--domain", required=False, help="Project domain")
+    parser_n.add_argument("--domain",  required=False, help="Project domain")
     parser_n.add_argument("-s", "--server", required=False, help="Server language")
     parser_n.add_argument(
         "-c",
