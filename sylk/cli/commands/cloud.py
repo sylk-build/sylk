@@ -170,12 +170,12 @@ class SylkCloud:
             #     domain = s.result.service.full_name.split('.')[0]
             #     s_ver = s.result.service.full_name.split('.')[2]
             #     services[f'protos/{domain}/{s.result.service.name}/{s_ver}/{s.result.service.name}.proto'] = s.result.service
-            org = None
             if domain is None:
                 org = self._sylk_cloud._organizations.GetOrganization(GetOrganizationRequest(org_id=org_id))
+                domain = org.result.organization.domain
 
             sylk_org = SylkOrganization(
-                domain=domain if org is None else org.result.organization.domain,
+                domain=domain,
                 orgId=org_id
             )
             project.result.project.uri = _fs.get_current_location()

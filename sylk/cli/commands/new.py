@@ -158,7 +158,7 @@ def create_new_project(
             results["server"] = server_language
             results["clients"] = clients
 
-        project = sylkCloud.pull_project(project_id,domain=domain_name)
+        project = sylkCloud.pull_project(project_id,domain=domain_name if domain_name is not 'domain' else None)
         if path is None:
             try:
                 root = os.getcwd()
