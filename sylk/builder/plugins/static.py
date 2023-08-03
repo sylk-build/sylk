@@ -286,7 +286,7 @@ const pkgJson = require("../sylk.json");\n\
 let protos = [];\n\n\
 function getUniqueStrings(arr) {\n\
   const uniqueSet = new Set(arr);\n\
-  return Array.from(uniqueSet);\n\
+  return Array.from(uniqueSet).filter(u => u !== undefined);\n\
 }\n\n\
 for (const pkg in pkgJson.packages) {\n\
   if (Object.hasOwnProperty.call(pkgJson.packages, pkg)) {\n\

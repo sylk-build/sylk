@@ -69,8 +69,6 @@ _WELL_KNOWN_TS_IMPORTS = [
 
 _WELL_KNOWN_TS_CLIENT_IMPORTS = [
     "import { \n\thandleUnaryCall\n\t,ClientUnaryCall\n\t,ClientReadableStream,\n\thandleClientStreamingCall,\n\thandleServerStreamingCall,\n\thandleBidiStreamingCall,\n\tsendUnaryData,\n\tServerDuplexStream,\n\tServerReadableStream,\n\tServerUnaryCall,\n\tServerWritableStream,\n\tstatus,\n\tUntypedHandleCall,\n\tMetadata,\n\tInterceptor,\n\tcredentials,\n\tChannelCredentials,\n\tServiceError as _service_error\n } from '@grpc/grpc-js';",
-    "import { ServiceError } from './utils/error';",
-    "import { ApiType } from './utils/interfaces';",
     "import { promisify } from 'util';",
     "import { Observable } from 'rxjs';",
 ]
