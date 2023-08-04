@@ -2763,8 +2763,8 @@ class SylkClientTs:
 
     def write_imports(self):
 
+        list_d = list(map(lambda i: i, _WELL_KNOWN_TS_CLIENT_IMPORTS))
         for svc in self._services:
-            list_d = list(map(lambda i: i, _WELL_KNOWN_TS_CLIENT_IMPORTS))
             parent = self._sylk_json._proto_tree.get_parent(svc.get('fullName'))
             refs = self._sylk_json._proto_tree.get_parents_refs([svc.get('fullName')])
             
@@ -2814,20 +2814,18 @@ class SylkClientTs:
                     list_d.append(
                         imp_path
                     )
-            base_path = './' if self._sylk_json._root_protos is None or self._sylk_json._root_protos == '' else f'./{base_protos}/'
-            imp_path = f"import {_OPEN_BRCK} {svc.get('name')}Service, {svc.get('name')}Client as {svc.get('name')}{pkg_ver}Client  {_CLOSING_BRCK} from '{base_path}{parent.full_path.replace('.','/')}/{module_name}';"
-            if imp_path not in list_d:
-                list_d.append(
-                        imp_path
-                    )
-
+                base_path = './' if self._sylk_json._root_protos is None or self._sylk_json._root_protos == '' else f'./{base_protos}/'
+                imp_path = f"import {_OPEN_BRCK} {svc.get('name')}Service, {svc.get('name')}Client as {svc.get('name')}{pkg_ver}Client  {_CLOSING_BRCK} from '{base_path}{parent.full_path.replace('.','/')}/{module_name}';"
+                if imp_path not in list_d:
+                    list_d.append(
+                            imp_path
+                        )
         # Pre data parsing
         if self._pre_data is not None:
             if self._pre_data.get("imports") is not None:
                 for imp in self._pre_data.get("imports"):
                     if imp not in list_d:
                         list_d.append(imp)
-        
         list_d = "\n".join(list_d)
         return list_d
 
