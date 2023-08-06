@@ -3297,6 +3297,11 @@ class SylkClientGo:
                     force=True,
                 )
 
+    def _camelize_string(self,s):
+        words = s.split('_')
+        return words[0][0].upper() + words[0][1:] + ''.join(word.title() for word in words[1:])
+
+
     def write_imports(self, s):
         list_of_services = ["// Importing services"]
         list_of_packages = ["// Importing packages"]
@@ -3305,31 +3310,34 @@ class SylkClientGo:
         imports = []
         go_package_path = self._sylk_json.project.get("goPackage")
         for mod in files:
+            print(mod)
             mod_path = '.'.join(mod.split('/')[:-1])
             mod_name = mod.split('/')[-1].split('.')[0]
             ver = self._sylk_json._proto_tree._parse_version_component(mod_path)
             if ver is not None:
                 version = mod_path.split('.')[-1]
             else:
+                mod_path = '.'.join(mod.split('/')[:-1])+'.'+self._camelize_string(mod.split('/')[-1].split('.')[0])
                 version = ''
             if mod_path.split('.')[0] != self._sylk_json._proto_tree.root.name:
                 base_protos = ''
                 root = self._sylk_json._proto_tree.proto_modules[mod_path.split('.')[0]].root
                 dep_parent = self._sylk_json._proto_tree.proto_modules[mod_path.split('.')[0]].get_parent(mod_path)
                 msg_dep =self._sylk_json._proto_tree._find_node(mod_path,root) 
-                if parse_version_component(dep_parent.full_path) is not None:
-                    temp_name = dep_parent.full_path.split('.')[-2]
-                else:
-                    temp_name = dep_parent.name
-                dep_mod_name = temp_name if msg_dep.properties.get('tag') is None or msg_dep.properties.get('tag') == '' else msg_dep.properties.get('tag')
-                if "google.protobuf" in mod_path:
-                    imp_path = f'{dep_mod_name}pb "google.golang.org/protobuf/types/known/{dep_mod_name}pb"'
-                    if imp_path not in imports:
-                        imports.append(imp_path)
-                else:
-                    imp_path = f'"{base_protos}{mod_path.replace(".","/")}"' 
-                    if imp_path not in imports:
-                        imports.append(imp_path)
+                if msg_dep is not None:
+                    if parse_version_component(dep_parent.full_path) is not None:
+                        temp_name = msg_dep.full_path.split('.')[-2]
+                    else:
+                        temp_name = msg_dep.name
+                    dep_mod_name = temp_name if msg_dep.properties.get('tag') is None or msg_dep.properties.get('tag') == '' else msg_dep.properties.get('tag')
+                    if "google.protobuf" in mod_path:
+                        imp_path = f'{dep_mod_name}pb "google.golang.org/protobuf/types/known/{dep_mod_name}pb"'
+                        if imp_path not in imports:
+                            imports.append(imp_path)
+                    else:
+                        imp_path = f'"{base_protos}{mod_path.replace(".","/")}"' 
+                        if imp_path not in imports:
+                            imports.append(imp_path)
             else:
                 base_protos = f'{self._sylk_json._root_protos}/' if self._sylk_json._root_protos is not None and self._sylk_json._root_protos != '' else ''
                 imp_path = f'"{go_package_path}/services/{base_protos}{mod_path.replace(".","/")}"' 
@@ -3538,7 +3546,11 @@ class SylkClientGo:
         svc = s
         svc_name = s.get('name')
         for r in svc.get("methods"):
-            ref_node = self._sylk_json._proto_tree._find_node(r.get("inputType"),self._sylk_json._proto_tree.root)
+            root = self._sylk_json._proto_tree.root
+            if r.get("inputType").split('.')[0] != root.name:
+                root = self._sylk_json._proto_tree.proto_modules[r.get("inputType").split('.')[0]].root
+
+            ref_node = self._sylk_json._proto_tree._find_node(r.get("inputType"),root)
             ref_node_parent = self._sylk_json._proto_tree.get_parent(ref_node.full_path)
             pkg_ver = parse_version_component(ref_node_parent.full_path)
             if pkg_ver is not None:
@@ -3554,7 +3566,10 @@ class SylkClientGo:
             if "google.protobuf" in r.get("inputType"):
                 well_known = r.get("inputType").split(".")[-1].lower()
                 rpc_msg_in_pkg = f"{well_known}pb"
-            ref_node = self._sylk_json._proto_tree._find_node(r.get("outputType"),self._sylk_json._proto_tree.root)
+            root= self._sylk_json._proto_tree.root
+            if r.get("outputType").split('.')[0] != root.name:
+                root = self._sylk_json._proto_tree.proto_modules[r.get("outputType").split('.')[0]].root
+            ref_node = self._sylk_json._proto_tree._find_node(r.get("outputType"),root)
             ref_node_parent = self._sylk_json._proto_tree.get_parent(ref_node.full_path)
             pkg_ver = parse_version_component(ref_node_parent.full_path)
             if pkg_ver is not None:
@@ -3724,19 +3739,23 @@ class SylkServiceGo:
                     temp_name = dep_parent.full_path.split('.')[-2]
                 else:
                     temp_name = dep_parent.name
-                    dep_mod_version = ""
+                    dep_parent_version = ""
                 dep_mod_name = temp_name if msg_dep.properties.get('tag') is None or msg_dep.properties.get('tag') == '' else msg_dep.properties.get('tag')
                 imp_path = f'{dep_mod_name}{dep_parent_version} "{dep_parent.full_path.replace(".","/")}"'
+                if 'google.protobuf' in dep_parent.full_path:
+                    imp_path = f'{dep_mod_name}pb "google.golang.org/protobuf/types/known/{dep_mod_name}pb"'
             if imp_path not in list_d:
                 list_d.append(
                     imp_path
                 )
         base_path = f'{go_package_name}/services/' if self._sylk_json._root_protos is None or self._sylk_json._root_protos == '' else f'{go_package_name}/services/{base_protos}/'
         imp_path = f'{module_name}{pkg_ver} "{base_path}{parent.full_path.replace(".","/")}"'
+        
         if imp_path not in list_d:
             list_d.append(
                     imp_path
                 )
+        list_d.append(f'"{go_package_name}/services/utils"')
         list_d = "\n".join(list_d)
         return f"{list_d}"
         # # 
@@ -3776,7 +3795,6 @@ class SylkServiceGo:
         #     path = "/".join(self._name.split("/")[:-1])
         #     ver = self._name.split("/")[-2]
         #     list_d.append(f'{name}{ver} "{go_package_name}/services/{path}"')
-        #     list_d.append(f'"{go_package_name}/services/utils"')
         #     list_d = "\n\t".join(list_d)
         #     return f"{list_d}"
 
@@ -3788,8 +3806,16 @@ class SylkServiceGo:
             ver = ''
         name = self._name
         temp_name = name[0].capitalize() + name[1:]
-        return "type {0} struct {1}\n\t{3}{4}.Unimplemented{0}Server\n{2}".format(
-            temp_name, _OPEN_BRCK, _CLOSING_BRCK, name, ver
+        ver = parse_version_component(self._service.get('fullName'))
+        if ver is not None:
+            ver = f'v{ver.get("version")}{ver.get("channel") if ver.get("channel") is not None else ""}{ver.get("release") if ver.get("release") is not None else ""}'
+            svc_name = self._service.get('fullName').split('.')[-3] + ver
+        else:
+            svc_name = self._service.get('fullName').split('.')[-2]
+        dep_mod_name = svc_name if self._service.get('tag') is None or self._service.get('tag') == '' else self._service.get('tag')
+
+        return "type {0} struct {1}\n\t{3}.Unimplemented{0}Server\n{2}".format(
+            temp_name, _OPEN_BRCK, _CLOSING_BRCK, dep_mod_name
         )
 
     def write_methods(self):
@@ -3814,9 +3840,18 @@ class SylkServiceGo:
                     rpc.get("inputType").split(".")[-1]
                 ).lower()
             else:
+                ver = parse_version_component(rpc.get("inputType"))
+                ref_node = self._sylk_json._proto_tree.get_parent(rpc.get("inputType"))
+                if ver is not None:
+                    ver = f'v{ver.get("version")}{ver.get("channel") if ver.get("channel") is not None else ""}{ver.get("release") if ver.get("release") is not None else ""}'
+                    pkg_name = ref_node.full_path.split('.')[-2]
+                else:
+                    pkg_name = ref_node.name
+                    ver = ''
+                dep_mod_name = pkg_name if ref_node.properties.get('tag') is None or ref_node.properties.get('tag') == '' else ref_node.properties.get('tag')
                 rpc_input_package_name = (
-                    rpc.get("inputType").split(".")[1]
-                    + rpc.get("inputType").split(".")[2]
+                    dep_mod_name
+                    + ver
                 )
             rpc_output_name = rpc.get("outputType").split(".")[-1]
             if "google.protobuf." in rpc.get("outputType"):
@@ -3824,9 +3859,18 @@ class SylkServiceGo:
                     rpc.get("outputType").split(".")[-1]
                 ).lower()
             else:
+                ver = parse_version_component(rpc.get("outputType"))
+                ref_node = self._sylk_json._proto_tree.get_parent(rpc.get("outputType"))
+                if ver is not None:
+                    ver = f'v{ver.get("version")}{ver.get("channel") if ver.get("channel") is not None else ""}{ver.get("release") if ver.get("release") is not None else ""}'
+                    pkg_name = ref_node.full_path.split('.')[-2]
+                else:
+                    pkg_name = ref_node.name
+                    ver = ''
+                dep_mod_name = pkg_name if ref_node.properties.get('tag') is None or ref_node.properties.get('tag') == '' else ref_node.properties.get('tag')
                 rpc_output_package_name = (
-                    rpc.get("outputType").split(".")[1]
-                    + rpc.get("outputType").split(".")[2]
+                    dep_mod_name
+                    + ver
                 )
             temp_go_rpc_input_name = rpc_input_name[0].capitalize() + rpc_input_name[1:]
             temp_go_rpc_output_name = (
@@ -3853,7 +3897,7 @@ class SylkServiceGo:
                     "\n".join(
                         [
                             f"\n\n// [sylk.build] - {name}.{rpc_temp_name} - {rpc_description}",
-                            f"func ({name}Servicer *{temp_name}) {rpc_temp_name}(stream {name}Servicer.{temp_name}_{rpc_temp_name}Server) (err error) {_OPEN_BRCK}",
+                            f"func ({name}Servicer *{temp_name}) {rpc_temp_name}(stream {rpc_output_package_name}.{temp_name}_{rpc_temp_name}Server) (err error) {_OPEN_BRCK}",
                             f'\tprintLog("{rpc_temp_name}",stream.Context(), nil)',
                             f"\tfor {_OPEN_BRCK}",
                             f"\t\tclientStreamRequest, err := stream.Recv()",
@@ -3879,7 +3923,7 @@ class SylkServiceGo:
                     "\n".join(
                         [
                             f"\n\n// [sylk.build] - {name}.{rpc_temp_name} - {rpc_description}",
-                            f"func ({name}Servicer *{temp_name}) {rpc_temp_name}({rpc_input_name} *{rpc_input_package_name}.{temp_go_rpc_input_name}, stream {name}Servicer.{temp_name}_{rpc_temp_name}Server) (err error) {_OPEN_BRCK}",
+                            f"func ({name}Servicer *{temp_name}) {rpc_temp_name}({rpc_input_name} *{rpc_input_package_name}.{temp_go_rpc_input_name}, stream {rpc_output_package_name}.{temp_name}_{rpc_temp_name}Server) (err error) {_OPEN_BRCK}",
                             f'\tprintLog("{rpc_temp_name}",stream.Context(), nil)',
                             f"\t// Do loop for responses",
                             f"\treturn nil",

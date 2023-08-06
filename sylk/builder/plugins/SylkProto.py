@@ -276,6 +276,7 @@ def write_protos(sylk_json: helpers.SylkJson):
             
             if len(enums) > 0 or len(msgs) > 0 or len(svcs) > 0:
                 proto = helpers.SylkProtoFile(pkg.name,pkg,sylk_json)
+                print_info('writing proto file-> '+proto._file_path)
                 file_system.wFile(
                     proto._file_path,
                     proto.to_str(),
@@ -286,6 +287,7 @@ def write_protos(sylk_json: helpers.SylkJson):
             
         else:
             proto = helpers.SylkProtoFile(pkg.name,pkg,sylk_json)
+            print_info('writing proto file-> '+proto._file_path)
             file_system.wFile(
                 proto._file_path,
                 proto.to_str(),

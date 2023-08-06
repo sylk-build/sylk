@@ -222,7 +222,7 @@ class SylkTree:
 
     def get_parent(self, node_name) -> Node:
         if node_name.split(".")[0] != self.root.name:
-            n = self._find_node(node_name, self.proto_modules[node_name.split(".")[0]].root)
+            n = self.proto_modules[node_name.split(".")[0]].root
         else:
             n = self.root
         return self._find_parent(node_name, n)

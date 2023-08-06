@@ -23,11 +23,13 @@ import logging
 import sylk.builder as builder
 from sylk.commons import helpers, file_system, pretty
 from sylk.commons.errors import SylkValidationError
+from sylk.commons.modules.google import google
 
 
 @builder.hookimpl
 def pre_build(sylk_json: helpers.SylkJson, sylk_context: helpers.SylkContext):
     pretty.print_info("🔌 Starting sylk build process %s plugin" % (__name__))
+    sylk_json._proto_tree.load_module(google())
 
     directories = [
         # Clients
