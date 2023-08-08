@@ -19,6 +19,7 @@
 # OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION
 # WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 
+import inspect
 import logging
 import subprocess
 import sylk.builder as builder
@@ -101,38 +102,42 @@ def post_build(sylk_json: helpers.SylkJson, sylk_context: helpers.SylkContext):
 
 @builder.hookimpl
 def init_project_structure(
-    sylk_json: helpers.SylkJson, sylk_context: helpers.SylkContext
+    sylk_json: helpers.SylkJson, sylk_context: helpers.SylkContext, pre_data
 ):
     directories = [
         # Clients
         file_system.join_path(sylk_json.path, "clients", "python"),
         # Protos
-        file_system.join_path(sylk_json.path, "services", "protos"),
+        file_system.join_path(sylk_json.path, "services", sylk_json._root_protos),
     ]
-
-    for dir in directories:
-        file_system.mkdir(dir)
-
+    
     # Init files
     files = [
         file_system.join_path(sylk_json.path, "services", "__init__.py"),
         file_system.join_path(sylk_json.path, "clients", "python", "__init__.py"),
-        file_system.join_path(sylk_json.path, "protos", "__init__.py"),
+        file_system.join_path(sylk_json.path, sylk_json._root_protos, "__init__.py"),
     ]
-    # Bin files
-    file_system.wFile(
-        file_system.join_path(sylk_json.path, "bin", "init.sh"), bash_init_script
-    )
-    if sylk_json.get_server_language() == "python":
+
+    if pre_data.get('protos_only',False) == False:
+
+        for dir in directories:
+            file_system.mkdir(dir)
+
+       
+        # Bin files
         file_system.wFile(
-            file_system.join_path(sylk_json.path, "bin", "run-server.sh"),
-            bash_run_server_script(sylk_json._root_protos),
+            file_system.join_path(sylk_json.path, "bin", "init.sh"), bash_init_script
         )
-    # file_system.wFile(file_system.join_path(sylk_json.path,'.sylk','contxt.json'),'{"files":[]}')
-    # .gitignore
-    file_system.wFile(file_system.join_path(sylk_json.path, ".gitignore"), gitignore_py)
-    for file in files:
-        file_system.wFile(file, "")
+        if sylk_json.get_server_language() == "python":
+            file_system.wFile(
+                file_system.join_path(sylk_json.path, "bin", "run-server.sh"),
+                bash_run_server_script(sylk_json._root_protos),
+            )
+        # file_system.wFile(file_system.join_path(sylk_json.path,'.sylk','contxt.json'),'{"files":[]}')
+        # .gitignore
+        file_system.wFile(file_system.join_path(sylk_json.path, ".gitignore"), gitignore_py)
+        for file in files:
+            file_system.wFile(file, "")
 
     return [directories, files]
 

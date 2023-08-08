@@ -220,8 +220,13 @@ def generate_project(
                     go_package = go_package["go_package"]
                 else:
                     go_package = "github.com/{}".format(package_name)
-            # elif c['language'] == 'webpack':
-            #     temp_c_lang = webpack
+            elif (
+                c.language == SylkClient_pb2.typescript
+                if hasattr(c, "language")
+                else c["language"] == "webpack"
+            ):
+                temp_c_lang = SylkClient_pb2.webpack
+
             # TODO Add more client supported languages
             else:
                 raise errors.SylkValidationError(

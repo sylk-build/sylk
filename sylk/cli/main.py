@@ -495,27 +495,27 @@ def main(args=None):
         help="Start the gRPC server with debug mode attached",
     )
 
-    """Migrate command"""
-    praser_migrate = subparsers.add_parser(
-        "migrate", help="Migrate existing gRPC project to sylk.build project"
-    )
-    praser_migrate.add_argument("protos", help="Relative path of proto directory")
-    praser_migrate.add_argument(
-        "--format", choices=["json", "python"], help="Relative path of proto directory"
-    )
-    praser_migrate.add_argument(
-        "--server-language",
-        default="python",
-        choices=["python", "typescript"],
-        help="Chose a server language for migration",
-    )
-    praser_migrate.add_argument(
-        "--clients",
-        nargs="*",
-        default=["python"],
-        choices=["python", "typescript"],
-        help="Enter one or more clients",
-    )
+    # """Migrate command"""
+    # praser_migrate = subparsers.add_parser(
+    #     "migrate", help="Migrate existing gRPC project to sylk.build project"
+    # )
+    # praser_migrate.add_argument("protos", help="Relative path of proto directory")
+    # praser_migrate.add_argument(
+    #     "--format", choices=["json", "python"], help="Relative path of proto directory"
+    # )
+    # praser_migrate.add_argument(
+    #     "--server-language",
+    #     default="python",
+    #     choices=["python", "typescript"],
+    #     help="Chose a server language for migration",
+    # )
+    # praser_migrate.add_argument(
+    #     "--clients",
+    #     nargs="*",
+    #     default=["python"],
+    #     choices=["python", "typescript"],
+    #     help="Enter one or more clients",
+    # )
 
     """Configs command"""
     parse_configs = subparsers.add_parser(

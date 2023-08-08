@@ -35,10 +35,10 @@ log = logging.getLogger("sylk.cli.main")
 
 @builder.hookimpl
 def pre_build(sylk_json: helpers.SylkJson, sylk_context: helpers.SylkContext):
-    if file_system.check_if_dir_exists(file_system.join_path(sylk_json.path, "protos")):
+    if file_system.check_if_dir_exists(file_system.join_path(sylk_json.path, sylk_json._root_protos)):
         print_info("🔌 Starting sylk build process %s plugin" % (__name__))
     else:
-        file_system.mkdir(file_system.join_path(sylk_json.path, "protos"))
+        file_system.mkdir(file_system.join_path(sylk_json.path, sylk_json._root_protos))
     return (__name__, "OK")
 
 
@@ -168,6 +168,33 @@ def compile_protos(
     else:
         protoc_params = ["protoc"] + commands + include_dirs + [f for f in files if 'google/' not in f]
         # print_note(protoc_params)
+        process = subprocess.Popen(
+            protoc_params, stdout=subprocess.PIPE, stderr=subprocess.PIPE
+        )
+        _, stderr = process.communicate()
+        if stderr:
+            print_info(stderr.decode("utf-8"))
+    
+    if sylk_json.is_language("webpack"):
+        protoc_params = (
+            ["protoc"]
+            + [
+                c
+                for c in list(
+                    map(
+                        lambda f: f
+                        if "--js" in f or "-I" in f or "--proto-path" in f or "--grpc-web" in f
+                        else None,
+                        commands,
+                    )
+                )
+                if c is not None
+            ]
+            + include_dirs
+            + [f for f in files if 'google/' not in f]
+        )
+        print_info(protoc_params)
+
         process = subprocess.Popen(
             protoc_params, stdout=subprocess.PIPE, stderr=subprocess.PIPE
         )

@@ -6,9 +6,9 @@ import sys
 import pluggy
 
 from sylk.builder.src import hookspecs, lru
-from sylk.builder.plugins import SylkBase, SylkGoClient, SylkGoServer, SylkJsClient, SylkJsServer, SylkPlugins, SylkProto, SylkPyClient, SylkPyServer, SylkReadme, SylkTsClient, SylkTsServer
+from sylk.builder.plugins import SylkBase, SylkGoClient, SylkGoServer, SylkJsClient, SylkJsServer, SylkPlugins, SylkProto, SylkPyClient, SylkPyServer, SylkReadme, SylkTsClient, SylkTsServer, SylkWebpackClient
 from sylk.commons import file_system, helpers, resources, errors
-from sylk.commons.pretty import print_error, print_info, print_warning
+from sylk.commons.pretty import print_error, print_info, print_note, print_warning
 
 # ADD MORE WELL KNOWN PLUGINS HERE
 _WELL_KNOWN_PLUGINS = [SylkProto, SylkPyServer,SylkPyClient,SylkTsServer,SylkTsClient,SylkGoServer,SylkGoClient,
@@ -129,7 +129,6 @@ class SylkBuilder:
         client_go = next((c for c in self._sylk_json.project.get('clients') if c.get('language') == 'go'),False)
         client_js = next((c for c in self._sylk_json.project.get('clients') if c.get('language') == 'nodejs'),False)
         client_webpack = next((c for c in self._sylk_json.project.get('clients') if c.get('language') == 'webpack'),False)
-
         # Default docker
         # if deployment_type == 'DOCKER':
             # print_error("WebezyDocker plugins not supported yet !")
@@ -156,8 +155,9 @@ class SylkBuilder:
         
         if client_js:
             self._pm.register(SylkJsClient)
-        # if client_webpack:
-            # self._pm.register(WebezyWebpack)
+        
+        if client_webpack:
+            self._pm.register(SylkWebpackClient)
 
         if server_lang == 'typescript':
             self._pm.register(SylkTsServer)
@@ -203,10 +203,11 @@ class SylkBuilder:
                 log.warning(
                     "Error init context, make sure you import a plugin that implement the `init_context` hook")
 
-    def InitProjectStructure(self):
+
+    def InitProjectStructure(self, protos_only):
         """Executing the :func:`sylk.builder.src.hookspecs.init_project_structure` hook"""
         results = self._pm.hook.init_project_structure(
-            sylk_json=self._sylk_json, sylk_context=self._sylk_context,pre_data=None)
+            sylk_json=self._sylk_json, sylk_context=self._sylk_context,pre_data={'protos_only':protos_only})
         results = list(itertools.chain(*results))
         return results
 
@@ -272,10 +273,10 @@ class SylkBuilder:
         results = list(itertools.chain(*results))
         return results
 
-    def PreBuild(self):
+    def PreBuild(self,protos_only):
         """Executing the :func:`sylk.builder.src.hookspecs.pre_build` hook"""
         results = self._pm.hook.pre_build(
-            sylk_json=self._sylk_json, sylk_context=self._sylk_context,pre_data=None)
+            sylk_json=self._sylk_json, sylk_context=self._sylk_context,pre_data={"protos_only":protos_only})
         results = list(itertools.chain(*results))
         return results
 
@@ -359,8 +360,8 @@ class SylkBuilder:
     def BuildAll(self):
         custom_plugins = self.BuildCustomPlugins()
 
-        prebuild = self.PreBuild()
-        init = self.InitProjectStructure()
+        prebuild = self.PreBuild(False)
+        init = self.InitProjectStructure(False)
         context = self.RebuildContext()
 
         """Protos hooks"""
@@ -394,13 +395,16 @@ class SylkBuilder:
         return results
 
     def BuildOnlyProtos(self):
+        print_note('starting build process for proto files only')
         custom_plugins = self.BuildCustomPlugins()
-        prebuild = self.PreBuild()
-        init = self.InitProjectStructure()
+        prebuild = self.PreBuild(True)
+        init = self.InitProjectStructure(True)
         context = self.RebuildContext()
         protos = self.BuildProtos()
+        # pre_compile = self.PreCompileProtos()
+        # compile = self.CompileProtos(pre_compile)
 
-        results = [prebuild, init, context, protos, custom_plugins]
+        results = [prebuild, init, context, protos, compile, custom_plugins]
         return results
 
     def BuildOnlyCode(self):
@@ -415,8 +419,8 @@ class SylkBuilder:
         pre_server = self.PreBuildServer()
         server = self.BuildServer(pre_server)
         post_server = self.PostBuildServer()
-
-        compile = self.CompileProtos()
+        pre_compile_protos = self.PreCompileProtos()
+        compile = self.CompileProtos(pre_compile_protos)
         readme = self.WriteReadme()
         protoclass = self.OverrideGeneratedClasses()
 

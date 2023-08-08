@@ -111,57 +111,59 @@ def post_build(sylk_json: helpers.SylkJson, sylk_context: helpers.SylkContext):
 
 @builder.hookimpl
 def init_project_structure(
-    sylk_json: helpers.SylkJson, sylk_context: helpers.SylkContext
+    sylk_json: helpers.SylkJson, sylk_context: helpers.SylkContext, pre_data
 ):
     directories = [
         # Clients
         file_system.join_path(sylk_json.path, "clients", "typescript"),
-        file_system.join_path(sylk_json.path, "clients", "typescript", "protos"),
+        file_system.join_path(sylk_json.path, "clients", "typescript", sylk_json._root_protos),
         # Utils
         file_system.join_path(sylk_json.path, "services", "utils"),
         # Protos
-        file_system.join_path(sylk_json.path, "services", "protos"),
+        file_system.join_path(sylk_json.path, "services", sylk_json._root_protos),
     ]
+    if pre_data.get('protos_only',False) == False:
 
-    for dir in directories:
-        file_system.mkdir(dir)
-    # package.json
-    if sylk_json.get_server_language() != "typescript":
-        pretty.print_info("Removing rimraf server dir")
-        tmp_pkg_json = package_json.replace("rimraf server &&", "")
-    else:
-        tmp_pkg_json = package_json
-    file_system.wFile(
-        file_system.join_path(sylk_json.path, "package.json"),
-        tmp_pkg_json.replace("REPLACEME", sylk_json.project.get("packageName")),
-    )
 
-    # Bin files
-    file_system.wFile(
-        file_system.join_path(sylk_json.path, "bin", "init-ts.sh"), bash_init_script_ts
-    )
-    file_system.wFile(
-        file_system.join_path(sylk_json.path, "bin", "proto.js"),
-        protos_compile_script_ts,
-    )
-
-    # tsconfig.json
-    if sylk_json.get_server_language() != "typescript":
+        for dir in directories:
+            file_system.mkdir(dir)
+        # package.json
+        if sylk_json.get_server_language() != "typescript":
+            pretty.print_info("Removing rimraf server dir")
+            tmp_pkg_json = package_json.replace("rimraf server &&", "")
+        else:
+            tmp_pkg_json = package_json
         file_system.wFile(
-            file_system.join_path(sylk_json.path, "tsconfig.json"),
-            main_ts_config_client_only,
-        )
-        file_system.wFile(
-            file_system.join_path(
-                sylk_json.path, "services", "protos", "tsconfig.json"
-            ),
-            protos_ts_config_client_only(sylk_json.domain),
+            file_system.join_path(sylk_json.path, "package.json"),
+            tmp_pkg_json.replace("REPLACEME", sylk_json.project.get("packageName")),
         )
 
-    # file_system.wFile(file_system.join_path(sylk_json.path,'.sylk','contxt.json'),'{"files":[]}')
+        # Bin files
+        file_system.wFile(
+            file_system.join_path(sylk_json.path, "bin", "init-ts.sh"), bash_init_script_ts
+        )
+        file_system.wFile(
+            file_system.join_path(sylk_json.path, "bin", "proto.js"),
+            protos_compile_script_ts,
+        )
 
-    # .gitignore
-    file_system.wFile(file_system.join_path(sylk_json.path, ".gitignore"), gitignore_ts)
+        # tsconfig.json
+        if sylk_json.get_server_language() != "typescript":
+            file_system.wFile(
+                file_system.join_path(sylk_json.path, "tsconfig.json"),
+                main_ts_config_client_only,
+            )
+            file_system.wFile(
+                file_system.join_path(
+                    sylk_json.path, "services", sylk_json._root_protos, "tsconfig.json"
+                ),
+                protos_ts_config_client_only(sylk_json.domain),
+            )
+
+        # file_system.wFile(file_system.join_path(sylk_json.path,'.sylk','contxt.json'),'{"files":[]}')
+
+        # .gitignore
+        file_system.wFile(file_system.join_path(sylk_json.path, ".gitignore"), gitignore_ts)
 
     return [directories]
 
@@ -249,40 +251,40 @@ def write_clients(
         file_system.join_path(sylk_json.path, "clients", "typescript")
     ):
         file_system.mkdir(
-            file_system.join_path(sylk_json.path, "clients", "typescript", "protos")
+            file_system.join_path(sylk_json.path, "clients", "typescript", sylk_json._root_protos)
         )
     else:
         file_system.mkdir(
             file_system.join_path(sylk_json.path, "clients", "typescript")
         )
         file_system.mkdir(
-            file_system.join_path(sylk_json.path, "clients", "typescript", "protos")
+            file_system.join_path(sylk_json.path, "clients", "typescript", sylk_json._root_protos)
         )
 
     if file_system.check_if_dir_exists(
-        file_system.join_path(sylk_json.path, "server", "services", "protos")
+        file_system.join_path(sylk_json.path, "server", "services", sylk_json._root_protos)
     ):
         for f in file_system.walkFiles(
-            file_system.join_path(sylk_json.path, "server", "services", "protos")
+            file_system.join_path(sylk_json.path, "server", "services", sylk_json._root_protos)
         ):
             file_system.cpDir(
-                file_system.join_path(sylk_json.path, "server", "services", "protos"),
+                file_system.join_path(sylk_json.path, "server", "services", sylk_json._root_protos),
                 file_system.join_path(
-                    sylk_json.path, "clients", "typescript", "protos"
+                    sylk_json.path, "clients", "typescript", sylk_json._root_protos
                 ),
             )
 
         if file_system.check_if_dir_exists(
             file_system.join_path(
-                sylk_json.path, "server", "services", "protos", "google"
+                sylk_json.path, "server", "services", sylk_json._root_protos, "google"
             )
         ):
             file_system.cpDir(
                 file_system.join_path(
-                    sylk_json.path, "server", "services", "protos", "google"
+                    sylk_json.path, "server", "services", sylk_json._root_protos, "google"
                 ),
                 file_system.join_path(
-                    sylk_json.path, "clients", "typescript", "protos", "google"
+                    sylk_json.path, "clients", "typescript", sylk_json._root_protos, "google"
                 ),
             )
 

@@ -19,6 +19,7 @@
 # OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION
 # WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 
+import inspect
 import logging
 import subprocess
 import sylk.builder as builder
@@ -45,62 +46,33 @@ def post_build(sylk_json: helpers.SylkJson, sylk_context: helpers.SylkContext):
 
 @builder.hookimpl
 def init_project_structure(
-    sylk_json: helpers.SylkJson, sylk_context: helpers.SylkContext
+    sylk_json: helpers.SylkJson, sylk_context: helpers.SylkContext, pre_data
 ):
     directories = [
         # Utils
         file_system.join_path(sylk_json.path, "services", "utils"),
         # Protos
-        file_system.join_path(sylk_json.path, "services", "protos"),
+        file_system.join_path(sylk_json.path, "services", sylk_json._root_protos),
     ]
 
-    for dir in directories:
-        file_system.mkdir(dir)
-    # Utils
-    file_system.wFile(
-        file_system.join_path(sylk_json.path, "services", "utils", "utils.go"), utils_go
-    )
-    # Utils Interfaces
-    # file_system.wFile(file_system.join_path(
-    # sylk_json.path, 'services','utils', 'interfaces.ts'), utils_interfaces)
-    # package.json
-    # file_system.wFile(file_system.join_path(sylk_json.path,'package.json'),package_json.replace('REPLACEME',sylk_json.project.get('packageName')))
-    # Bin files
-    services_protoc = []
-    packages_protoc = []
-    # if sylk_json.services is not None:
-    #     for s in sylk_json.services:
-    #         services_protoc.append(s)
-    #         if file_system.check_if_dir_exists(file_system.join_path(sylk_json.path, 'services', 'protos', s)) == False:
-    #             file_system.mkdir(file_system.join_path(sylk_json.path, 'services', 'protos',s))
-    #         if file_system.check_if_dir_exists(file_system.join_path(sylk_json.path, 'services', s)) == False:
-    #             file_system.mkdir(file_system.join_path(sylk_json.path, 'services',s))
-    # # if sylk_json.packages is not None:
-    #     for p in sylk_json.packages:
-    #         packages_protoc.append(sylk_json.packages[p].get('name'))
-    #         if file_system.check_if_dir_exists(file_system.join_path(sylk_json.path, 'services', 'protos', sylk_json.packages[p].get('name'))) == False:
-    #             file_system.mkdir(file_system.join_path(sylk_json.path, 'services', 'protos', sylk_json.packages[p].get('name')))
+    if pre_data.get('protos_only',False) == False:
 
-    # Bin files
-    # file_system.wFile(file_system.join_path(
-    # sylk_json.path, 'bin', 'init-go.sh'), bash_init_script_ts)
-    # file_system.wFile(file_system.join_path(
-    # sylk_json.path, 'bin', 'proto.js'), protos_compile_script_ts)
-
-    # tsconfig.json
-    # file_system.wFile(file_system.join_path(sylk_json.path, 'tsconfig.json'),main_ts_config)
-    # file_system.wFile(file_system.join_path(sylk_json.path, 'services', 'protos', 'tsconfig.json'),protos_ts_config)
-
-    if sylk_json.get_server_language() == "go":
+        for dir in directories:
+            file_system.mkdir(dir)
+        # Utils
         file_system.wFile(
-            file_system.join_path(sylk_json.path, "bin", "run-server.sh"),
-            bash_run_server_script_go,
+            file_system.join_path(sylk_json.path, "services", "utils", "utils.go"), utils_go
         )
 
-    # file_system.wFile(file_system.join_path(sylk_json.path,'.webezy','contxt.json'),'{"files":[]}')
+        if sylk_json.get_server_language() == "go":
+            file_system.wFile(
+                file_system.join_path(sylk_json.path, "bin", "run-server.sh"),
+                bash_run_server_script_go,
+            )
 
-    # .gitignore
-    file_system.wFile(file_system.join_path(sylk_json.path, ".gitignore"), gitignore_go)
+
+        # .gitignore
+        file_system.wFile(file_system.join_path(sylk_json.path, ".gitignore"), gitignore_go)
 
     return [directories]
 
@@ -218,8 +190,9 @@ def write_server(
             else:
                 svc_ver = ""
             # svc_ver = svc.split("/")[-2]
+            base_protos = f'{sylk_json._root_protos}/' if sylk_json._root_protos is not None else ''
             imports.append(
-                f'{svc_name}{svc_ver}Servicer "{go_package_name}/services/{svc_path}"'
+                f'{svc_name}{svc_ver}Servicer "{go_package_name}/services/{base_protos}{svc_path}"'
             )
             imports.append(
                 f'{svc_name}{svc_ver} "{go_package_name}/services/{svc_name}/{svc_ver}"'

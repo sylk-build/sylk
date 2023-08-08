@@ -51,61 +51,63 @@ def post_build(sylk_json: helpers.SylkJson, sylk_context: helpers.SylkContext):
 
 @builder.hookimpl
 def init_project_structure(
-    sylk_json: helpers.SylkJson, sylk_context: helpers.SylkContext
+    sylk_json: helpers.SylkJson, sylk_context: helpers.SylkContext, pre_data
 ):
     directories = [
         # Utils
         file_system.join_path(sylk_json.path, "services", "utils"),
         # Protos
-        file_system.join_path(sylk_json.path, "services", "protos"),
+        file_system.join_path(sylk_json.path, "services", sylk_json._root_protos),
     ]
 
-    for dir in directories:
-        file_system.mkdir(dir)
-    # Utils error
-    file_system.wFile(
-        file_system.join_path(sylk_json.path, "services", "utils", "error.ts"),
-        utils_errors_ts,
-    )
-    # Utils Interfaces
-    file_system.wFile(
-        file_system.join_path(sylk_json.path, "services", "utils", "interfaces.ts"),
-        utils_interfaces,
-    )
-    # package.json
-    file_system.wFile(
-        file_system.join_path(sylk_json.path, "package.json"),
-        package_json.replace("REPLACEME", sylk_json.project.get("packageName")),
-    )
+    if pre_data.get('protos_only',False) == False:
 
-    # Bin files
-    file_system.wFile(
-        file_system.join_path(sylk_json.path, "bin", "init-ts.sh"), bash_init_script_ts
-    )
-    file_system.wFile(
-        file_system.join_path(sylk_json.path, "bin", "proto.js"),
-        protos_compile_script_ts,
-    )
-
-    # tsconfig.json
-    file_system.wFile(
-        file_system.join_path(sylk_json.path, "tsconfig.json"), main_ts_config
-    )
-    file_system.wFile(
-        file_system.join_path(sylk_json.path, "services", "protos", "tsconfig.json"),
-        protos_ts_config(sylk_json.domain),
-    )
-
-    if sylk_json.get_server_language() == "typescript":
+        for dir in directories:
+            file_system.mkdir(dir)
+        # Utils error
         file_system.wFile(
-            file_system.join_path(sylk_json.path, "bin", "run-server.sh"),
-            bash_run_server_script_ts,overwrite=True
+            file_system.join_path(sylk_json.path, "services", "utils", "error.ts"),
+            utils_errors_ts,
+        )
+        # Utils Interfaces
+        file_system.wFile(
+            file_system.join_path(sylk_json.path, "services", "utils", "interfaces.ts"),
+            utils_interfaces,
+        )
+        # package.json
+        file_system.wFile(
+            file_system.join_path(sylk_json.path, "package.json"),
+            package_json.replace("REPLACEME", sylk_json.project.get("packageName")),
         )
 
-    # file_system.wFile(file_system.join_path(sylk_json.path,'.webezy','contxt.json'),'{"files":[]}')
+        # Bin files
+        file_system.wFile(
+            file_system.join_path(sylk_json.path, "bin", "init-ts.sh"), bash_init_script_ts
+        )
+        file_system.wFile(
+            file_system.join_path(sylk_json.path, "bin", "proto.js"),
+            protos_compile_script_ts,
+        )
 
-    # .gitignore
-    file_system.wFile(file_system.join_path(sylk_json.path, ".gitignore"), gitignore_ts)
+        # tsconfig.json
+        file_system.wFile(
+            file_system.join_path(sylk_json.path, "tsconfig.json"), main_ts_config
+        )
+        file_system.wFile(
+            file_system.join_path(sylk_json.path, "services", sylk_json._root_protos, "tsconfig.json"),
+            protos_ts_config(sylk_json.domain),
+        )
+
+        if sylk_json.get_server_language() == "typescript":
+            file_system.wFile(
+                file_system.join_path(sylk_json.path, "bin", "run-server.sh"),
+                bash_run_server_script_ts,overwrite=True
+            )
+
+        # file_system.wFile(file_system.join_path(sylk_json.path,'.webezy','contxt.json'),'{"files":[]}')
+
+        # .gitignore
+        file_system.wFile(file_system.join_path(sylk_json.path, ".gitignore"), gitignore_ts)
 
     return [directories]
 

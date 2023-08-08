@@ -12,16 +12,18 @@ class SylkClientLanguages(int, metaclass=_enum_type_wrapper.EnumTypeWrapper):
     nodejs: _ClassVar[SylkClientLanguages]
     typescript: _ClassVar[SylkClientLanguages]
     go: _ClassVar[SylkClientLanguages]
+    webpack: _ClassVar[SylkClientLanguages]
 DEFAULT_SYLKCLIENTLANGUAGES: SylkClientLanguages
 python: SylkClientLanguages
 nodejs: SylkClientLanguages
 typescript: SylkClientLanguages
 go: SylkClientLanguages
+webpack: SylkClientLanguages
 
 class SylkClient(_message.Message):
-    __slots__ = ["out_dir", "language"]
-    OUT_DIR_FIELD_NUMBER: _ClassVar[int]
+    __slots__ = ["language", "out_dir"]
     LANGUAGE_FIELD_NUMBER: _ClassVar[int]
-    out_dir: str
+    OUT_DIR_FIELD_NUMBER: _ClassVar[int]
     language: SylkClientLanguages
-    def __init__(self, out_dir: _Optional[str] = ..., language: _Optional[_Union[SylkClientLanguages, str]] = ...) -> None: ...
+    out_dir: str
+    def __init__(self, language: _Optional[_Union[SylkClientLanguages, str]] = ..., out_dir: _Optional[str] = ...) -> None: ...

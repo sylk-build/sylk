@@ -27,22 +27,24 @@ from sylk.commons.modules.google import google
 
 
 @builder.hookimpl
-def pre_build(sylk_json: helpers.SylkJson, sylk_context: helpers.SylkContext):
+def pre_build(sylk_json: helpers.SylkJson, sylk_context: helpers.SylkContext, pre_data):
     pretty.print_info("🔌 Starting sylk build process %s plugin" % (__name__))
+    
     sylk_json._proto_tree.load_module(google())
 
     directories = [
         # Clients
         file_system.join_path(sylk_json.path, "clients"),
-        file_system.join_path(sylk_json.path, "services", "protos", sylk_json.domain),
-        file_system.join_path(sylk_json.path, "protos"),
-        file_system.join_path(sylk_json.path, "protos", sylk_json.domain),
+        file_system.join_path(sylk_json.path, "services", sylk_json._root_protos, sylk_json.domain),
+        file_system.join_path(sylk_json.path, sylk_json._root_protos),
+        file_system.join_path(sylk_json.path, sylk_json._root_protos, sylk_json.domain),
         file_system.join_path(sylk_json.path, "bin"),
         file_system.join_path(sylk_json.path, ".sylk"),
         file_system.join_path(sylk_json.path, "server"),
     ]
-    for d in directories:
-        file_system.mkdir(d)
+    if pre_data.get('protos_only',False) == False:
+        for d in directories:
+            file_system.mkdir(d)
 
 
 @builder.hookimpl(hookwrapper=True)

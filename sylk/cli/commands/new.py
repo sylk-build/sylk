@@ -82,6 +82,7 @@ clients_languages_q = QCheckbox(
         ("Typescript", SylkClient_pb2.typescript),
         ("Go", SylkClient_pb2.go),
         ("NodeJs", SylkClient_pb2.nodejs),
+        ("Webpack", SylkClient_pb2.webpack),
     ],
     default=[SylkClient_pb2.python],
     validate=validate_client,
@@ -210,8 +211,8 @@ def create_new_project(
         ARCHITECT = SylkArchitect(
             path=project_path, domain=domain_name, project_name=project_name, format=format
         )
-        print_info(clients)
-        print_info(server_language)
+        # print_info(clients)
+        # print_info(server_language)
         ARCHITECT.AddProject(
             project_name, project.project.server.language if server_language is None else server_language, project.project.clients if len(clients) == 0 else list(map(lambda c: {"language": c}, clients))
         )

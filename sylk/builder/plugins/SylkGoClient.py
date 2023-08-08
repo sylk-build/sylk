@@ -19,6 +19,7 @@
 # OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION
 # WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 
+import inspect
 import logging
 import subprocess
 import sylk.builder as builder
@@ -57,55 +58,27 @@ def post_build(sylk_json: helpers.SylkJson, sylk_context: helpers.SylkContext):
 
 @builder.hookimpl
 def init_project_structure(
-    sylk_json: helpers.SylkJson, sylk_context: helpers.SylkContext
+    sylk_json: helpers.SylkJson, sylk_context: helpers.SylkContext, pre_data
 ):
     directories = [
         # Clients
         file_system.join_path(sylk_json.path, "clients", "go"),
-        file_system.join_path(sylk_json.path, "clients", "go", "protos"),
+        file_system.join_path(sylk_json.path, "clients", "go", sylk_json._root_protos),
         file_system.join_path(sylk_json.path, "clients", "go", "utils"),
         # Protos
-        file_system.join_path(sylk_json.path, "services", "protos"),
+        file_system.join_path(sylk_json.path, "services", sylk_json._root_protos),
     ]
+    if pre_data.get('protos_only',False) == False:
 
-    for dir in directories:
-        file_system.mkdir(dir)
+        for dir in directories:
+            file_system.mkdir(dir)
 
-    # Bin files
-    services_protoc = []
-    packages_protoc = []
-    # if sylk_json.services is not None:
-    #     for s in sylk_json.services:
-    #         services_protoc.append(s)
-    #         if file_system.check_if_dir_exists(file_system.join_path(sylk_json.path, 'services', 'protos', s)) == False:
-    #             file_system.mkdir(file_system.join_path(sylk_json.path, 'services', 'protos',s))
-    # if sylk_json.packages is not None:
-    #     for p in sylk_json.packages:
-    #         packages_protoc.append(sylk_json.packages[p].get('name'))
-    #         if file_system.check_if_dir_exists(file_system.join_path(sylk_json.path, 'services', 'protos', sylk_json.packages[p].get('name'))) == False:
-    #             file_system.mkdir(file_system.join_path(sylk_json.path, 'services', 'protos', sylk_json.packages[p].get('name')))
-
-    file_system.wFile(
-        file_system.join_path(sylk_json.path, "clients", "go", "utils", "channel.go"),
-        sylk_go_utils_channel,
-    )
-    # file_system.wFile(file_system.join_path(
-    # sylk_json.path, 'bin', 'proto.js'), protos_compile_script_ts)
-
-    # tsconfig.json
-    # if sylk_json.get_server_language() != 'typescript':
-    # file_system.wFile(file_system.join_path(sylk_json.path, 'tsconfig.json'),main_ts_config_client_only)
-    # file_system.wFile(file_system.join_path(sylk_json.path, 'services', 'protos', 'tsconfig.json'),protos_ts_config_client_only)
-
-    # file_system.wFile(file_system.join_path(sylk_json.path,'.sylk','contxt.json'),'{"files":[]}')
-
-    # .gitignore
-    # gitignore_path = file_system.join_path(sylk_json.path,'.gitignore')
-    # if file_system.check_if_file_exists(gitignore_path):
-    #     gitignore_file = ''.join(file_system.rFile(gitignore_path))
-    #     gitignore_file += gitignore_go
-    #     file_system.wFile(file_system.join_path(sylk_json.path,'.gitignore'),gitignore_file,True)
-    file_system.wFile(file_system.join_path(sylk_json.path, ".gitignore"), gitignore_go)
+        file_system.wFile(
+            file_system.join_path(sylk_json.path, "clients", "go", "utils", "channel.go"),
+            sylk_go_utils_channel,
+        )
+        # file_system.wFile(file_system.join_path(sylk_json.path,'.gitignore'),gitignore_file,True)
+        file_system.wFile(file_system.join_path(sylk_json.path, ".gitignore"), gitignore_go)
 
     return [directories]
 
@@ -157,12 +130,12 @@ def write_clients(sylk_json: helpers.SylkJson, sylk_context: helpers.SylkContext
         file_system.join_path(sylk_json.path, "clients", "go")
     ):
         file_system.mkdir(
-            file_system.join_path(sylk_json.path, "clients", "go", "protos")
+            file_system.join_path(sylk_json.path, "clients", "go", sylk_json._root_protos)
         )
     else:
         file_system.mkdir(file_system.join_path(sylk_json.path, "clients", "go"))
         file_system.mkdir(
-            file_system.join_path(sylk_json.path, "clients", "go", "protos")
+            file_system.join_path(sylk_json.path, "clients", "go", sylk_json._root_protos)
         )
 
     # if file_system.check_if_dir_exists(file_system.join_path(sylk_json.path, 'services','protos')):

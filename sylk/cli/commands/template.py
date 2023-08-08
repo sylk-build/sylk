@@ -134,6 +134,7 @@ _architect.SetDomain(_DOMAIN)
     """
 
 def create_clients(clients):
+    
     temp_clients = []
     langauges = []
     for c in clients:
@@ -147,6 +148,7 @@ _clients = {0}
 
 
 def add_project():
+
     return """
 # Adding the base project data
 _project = _architect.AddProject(server_language=_SERVER_LANGUAGE,
@@ -162,6 +164,7 @@ _project = _architect.AddProject(server_language=_SERVER_LANGUAGE,
     """
 
 def create_enums_values(enums):
+
     if enums is not None:
         code = ''
         for e in enums:
@@ -178,6 +181,7 @@ def create_enums_values(enums):
         return "\n"
 
 def create_enums(enums):
+
     if enums is not None:
         code = ''
         for e in enums:
@@ -190,6 +194,7 @@ def create_enums(enums):
         return "\n"
 
 def create_fields(messages):
+
     fields = {}
     for m in messages:
         
@@ -244,6 +249,7 @@ def create_fields(messages):
     """.format(code)
 
 def create_msgs(messages):
+
     code = ''
     for m in messages:
         code += '\n# Constructing message [{0}]\n_msg_{0} = helpers.SylkMessage(name=\'{1}\',\n\
@@ -320,11 +326,11 @@ def add_enums(packages):
 
 def create_rpcs(services):
     code = ''
+
     if services is not None:
         for s in services:
-            svc = services.get(s)
-            for rpc in svc.get('methods'):
-                code += '\n_rpc_{0}_{4} = helpers.SylkRPC(name=\'{4}\',client_stream={5},server_stream={6},in_type=msgs_map[_DOMAIN+\'.{1}\'].full_name, out_type=msgs_map[_DOMAIN+\'.{2}\'].full_name, description=\'{3}\')'.format(svc.get('fullName').replace('.','_'),'.'.join(rpc.get('inputType').split('.')[1:]),'.'.join(rpc.get('outputType').split('.')[1:]),str(rpc.get('description')).replace("'",'"'),rpc.get('name'),rpc.get('clientStreaming'),rpc.get('serverStreaming'))
+            for rpc in s.get('methods'):
+                code += '\n_rpc_{0}_{4} = helpers.SylkRPC(name=\'{4}\',client_stream={5},server_stream={6},in_type=msgs_map[_DOMAIN+\'.{1}\'].full_name, out_type=msgs_map[_DOMAIN+\'.{2}\'].full_name, description=\'{3}\')'.format(s.get('fullName').replace('.','_'),'.'.join(rpc.get('inputType').split('.')[1:]),'.'.join(rpc.get('outputType').split('.')[1:]),str(rpc.get('description')).replace("'",'"'),rpc.get('name'),rpc.get('clientStreaming'),rpc.get('serverStreaming'))
         return """
 \"\"\"Services and thier resources\"\"\"
 # Construct rpc's
@@ -335,15 +341,15 @@ def create_rpcs(services):
 
 def create_services(services):
     code = ''
+
     if services is not None:
-        for s in services:
-            svc = services[s]
+        for svc in services:
             temp_rpcs = []
             for rpc in svc.get('methods'):
                 temp_rpcs.append('_rpc_{0}_{1}'.format(svc.get('fullName').replace('.','_'),rpc.get('name'))) 
 
             temp_dependencies = []
-            for d in svc.get('dependencies'):
+            for d in svc.get('dependencies',[]):
                 temp_dependencies.append('_pkg_{0}.package'.format(d.replace('.','_')))
 
             code += '\n_svc_{0} = helpers.SylkService(\'{0}\',\n\
@@ -362,9 +368,9 @@ def create_services(services):
 
 def add_services(services):
     code = ''
+
     if services is not None:
-        for s in services:
-            svc = services[s]
+        for svc in services:
             code += '\n_svc_{0} = _architect.AddService(_svc_{0}_name,_svc_{0}_dependencies,_svc_{0}_desc,[],extensions=_svc_{0}_ext)'.format(svc.get('name'))
 
         return """
@@ -377,8 +383,7 @@ def add_services(services):
 def add_rpcs(services):
     code = ''
     if services is not None:
-        for s in services:
-            svc = services[s]
+        for svc in services:
             code += '\nfor rpc in _svc_{0}_methods:\n\
 \trpc_name, rpc_in_out, rpc_desc = rpc\n\
 \t_architect.AddRPC(_svc_{0}, rpc_name, rpc_in_out, rpc_desc)'.format(svc.get('name'))            
