@@ -44,6 +44,7 @@ sylk/builder/plugins/SylkPyServer.py
 sylk/builder/plugins/SylkReadme.py
 sylk/builder/plugins/SylkTsClient.py
 sylk/builder/plugins/SylkTsServer.py
+sylk/builder/plugins/SylkWebpackClient.py
 sylk/builder/plugins/__init__.py
 sylk/builder/plugins/static.py
 sylk/builder/src/__init__.py
