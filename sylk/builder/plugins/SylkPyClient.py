@@ -46,20 +46,21 @@ def post_build(sylk_json: helpers.SylkJson, sylk_context: helpers.SylkContext):
             if (
                 file_system.check_if_dir_exists(
                     file_system.join_path(
-                        sylk_json.path, "clients", "python", "/".join(temp_path)
+                        sylk_json.path, sylk_json.code_base_path, "clients", "python", "/".join(temp_path)
                     )
                 )
                 == False
             ):
                 file_system.mkdir(
                     file_system.join_path(
-                        sylk_json.path, "clients", "python", "/".join(temp_path)
+                        sylk_json.path, sylk_json.code_base_path, "clients", "python", "/".join(temp_path)
                     )
                 )
             if (
                 file_system.check_if_file_exists(
                     file_system.join_path(
                         sylk_json.path,
+                        sylk_json.code_base_path,
                         "clients",
                         "python",
                         "/".join(temp_path),
@@ -71,6 +72,7 @@ def post_build(sylk_json: helpers.SylkJson, sylk_context: helpers.SylkContext):
                 file_system.wFile(
                     file_system.join_path(
                         sylk_json.path,
+                        sylk_json.code_base_path,
                         "clients",
                         "python",
                         "/".join(temp_path),
@@ -150,17 +152,18 @@ def init_project_structure(
 ):
     directories = [
         # Clients
-        file_system.join_path(sylk_json.path, "clients", "python"),
-        file_system.join_path(sylk_json.path, "clients", "python", sylk_json._root_protos),
+        file_system.join_path(sylk_json.path, sylk_json.code_base_path, "clients", "python"),
+        file_system.join_path(sylk_json.path, sylk_json.code_base_path, "clients", "python", sylk_json._root_protos),
         # Protos
-        file_system.join_path(sylk_json.path, "services", sylk_json._root_protos),
+        file_system.join_path(sylk_json.path, sylk_json.code_base_path, "services", sylk_json._root_protos),
     ]
 
     # Init files
     files = [
-        file_system.join_path(sylk_json.path, "services", "__init__.py"),
-        file_system.join_path(sylk_json.path, "clients", "python", "__init__.py"),
+        file_system.join_path(sylk_json.path, sylk_json.code_base_path, "services", "__init__.py"),
+        file_system.join_path(sylk_json.path, sylk_json.code_base_path, "clients", "python", "__init__.py"),
         file_system.join_path(sylk_json.path, sylk_json._root_protos, "__init__.py"),
+        file_system.join_path(sylk_json.path, sylk_json.code_base_path, "__init__.py"),
     ]
     if pre_data.get('protos_only',False) == False:
         for dir in directories:
@@ -183,13 +186,14 @@ def init_project_structure(
 @builder.hookimpl
 def pre_compile_protos(sylk_json: helpers.SylkJson, sylk_context: helpers.SylkContext):
     pretty.print_info("Running pre compile protos - python client")
-    file_system.removeDir(file_system.join_path(sylk_json.path, 'clients', 'python', sylk_json._root_protos, sylk_json.domain))
+    file_system.removeDir(file_system.join_path(sylk_json.path, sylk_json.code_base_path, 'clients', 'python', sylk_json._root_protos, sylk_json.domain))
+    protos_out = file_system.join_path(sylk_json.code_base_path,'clients','python', sylk_json._root_protos)
     return {
         "sylk.builder.plugins.SylkProto:compile_protos():commands": [
             f"--proto_path={sylk_json._root_protos}/",
-            f"--python_out=./clients/python/{sylk_json._root_protos}",
-            f"--pyi_out=./clients/python/{sylk_json._root_protos}",
-            f"--grpc_python_out=./clients/python/{sylk_json._root_protos}",
+            f"--python_out=./{protos_out}",
+            f"--pyi_out=./{protos_out}",
+            f"--grpc_python_out=./{protos_out}",
             f"-I./{sylk_json._root_protos}/",
         ],
         "sylk.builder.plugins.SylkProto:compile_protos():include_dirs": [],
@@ -243,11 +247,11 @@ def write_clients(
                                         client_options.append((k, v))
 
     for f in file_system.walkFiles(
-        file_system.join_path(sylk_json.path, "services", sylk_json._root_protos)
+        file_system.join_path(sylk_json.path, sylk_json.code_base_path, "services", sylk_json._root_protos)
     ):
         if ".py" in f:
             file = file_system.rFile(
-                file_system.join_path(sylk_json.path, "services", sylk_json._root_protos, f)
+                file_system.join_path(sylk_json.path, sylk_json.code_base_path, "services", sylk_json._root_protos, f)
             )
             if "_grpc" not in f:
                 index = 13
@@ -264,7 +268,7 @@ def write_clients(
 
                 index += 1
             file_system.wFile(
-                file_system.join_path(sylk_json.path, "clients", "python", f),
+                file_system.join_path(sylk_json.path, sylk_json.code_base_path, "clients", "python", f),
                 "".join(file),
                 True,
             )
@@ -278,7 +282,7 @@ def write_clients(
         sylk_json=sylk_json
     )
     file_system.wFile(
-        file_system.join_path(sylk_json.path, "clients", "python", "__init__.py"),
+        file_system.join_path(sylk_json.path, sylk_json.code_base_path, "clients", "python", "__init__.py"),
         client.__str__(),
         overwrite=True,
     )
@@ -290,12 +294,12 @@ def override_generated_classes(
 ):
     if sylk_json.project.get("server").get("language") != "python":
         for f in file_system.walkFiles(
-            file_system.join_path(sylk_json.path, "services", sylk_json._root_protos)
+            file_system.join_path(sylk_json.path, sylk_json.code_base_path, "services", sylk_json._root_protos)
         ):
             name = f.split("_pb2")
             if "_grpc" not in name:
                 file_content = file_system.rFile(
-                    file_system.join_path(sylk_json.path, "services", sylk_json._root_protos, f)
+                    file_system.join_path(sylk_json.path, sylk_json.code_base_path, "services", sylk_json._root_protos, f)
                 )
                 file_content.insert(
                     5, "\nfrom typing import overload, Iterator, List, Dict\n"
@@ -438,7 +442,7 @@ def override_generated_classes(
                                 index += 1
                         file_system.wFile(
                             file_system.join_path(
-                                sylk_json.path, "services", sylk_json._root_protos, f
+                                sylk_json.path, sylk_json.code_base_path, "services", sylk_json._root_protos, f
                             ),
                             "".join(file_content),
                             True,

@@ -50,9 +50,9 @@ def init_project_structure(
 ):
     directories = [
         # Utils
-        file_system.join_path(sylk_json.path, "services", "utils"),
+        file_system.join_path(sylk_json.path, sylk_json.code_base_path, "services", "utils"),
         # Protos
-        file_system.join_path(sylk_json.path, "services", sylk_json._root_protos),
+        file_system.join_path(sylk_json.path, sylk_json.code_base_path, "services", sylk_json._root_protos),
     ]
 
     if pre_data.get('protos_only',False) == False:
@@ -61,13 +61,14 @@ def init_project_structure(
             file_system.mkdir(dir)
         # Utils
         file_system.wFile(
-            file_system.join_path(sylk_json.path, "services", "utils", "utils.go"), utils_go
+            file_system.join_path(sylk_json.path, sylk_json.code_base_path, "services", "utils", "utils.go"), utils_go
         )
 
         if sylk_json.get_server_language() == "go":
             file_system.wFile(
                 file_system.join_path(sylk_json.path, "bin", "run-server.sh"),
-                bash_run_server_script_go,
+                bash_run_server_script_go(sylk_json.code_base_path),
+                overwrite=True
             )
 
 
@@ -86,6 +87,7 @@ def write_services(sylk_json: helpers.SylkJson, sylk_context: helpers.SylkContex
             service_version = svc.get("fullName").split(".")[-2]
             svc_path = file_system.join_path(
                     sylk_json.path,
+                    sylk_json.code_base_path,
                     "services",
                     service_name,
                     service_version,
@@ -94,6 +96,7 @@ def write_services(sylk_json: helpers.SylkJson, sylk_context: helpers.SylkContex
         else:
             svc_path = file_system.join_path(
                     sylk_json.path,
+                    sylk_json.code_base_path,
                     "services",
                     service_name,
                     f"{service_name}.go",
@@ -132,9 +135,9 @@ def pre_compile_protos(sylk_json: helpers.SylkJson, sylk_context: helpers.SylkCo
     return {
         "sylk.builder.plugins.SylkProto:compile_protos():commands": [
             f"--proto_path={sylk_json._root_protos}/",
-            f"--go_out=./services/{sylk_json._root_protos}",
+            f"--go_out=./{file_system.join_path(sylk_json.code_base_path,'services',sylk_json._root_protos)}",
             f"--go_opt=paths=source_relative",
-            f"--go-grpc_out=./services/{sylk_json._root_protos}",
+            f"--go-grpc_out=./{file_system.join_path(sylk_json.code_base_path,'services',sylk_json._root_protos)}",
             f"--go-grpc_opt=paths=source_relative",
             f"-I./{sylk_json._root_protos}/",
         ],
@@ -174,7 +177,7 @@ def write_server(
 ):
     if (
         file_system.check_if_file_exists(
-            file_system.join_path(sylk_json.path, "server", "server.go")
+            file_system.join_path(sylk_json.path, sylk_json.code_base_path, "server", "server.go")
         )
         == False
     ):
@@ -192,7 +195,7 @@ def write_server(
             # svc_ver = svc.split("/")[-2]
             base_protos = f'{sylk_json._root_protos}/' if sylk_json._root_protos is not None else ''
             imports.append(
-                f'{svc_name}{svc_ver}Servicer "{go_package_name}/services/{base_protos}{svc_path}"'
+                f'{svc_name}{svc_ver}Servicer "{file_system.join_path(go_package_name, sylk_json.code_base_path, "services", base_protos, svc_path)}"'
             )
             imports.append(
                 f'{svc_name}{svc_ver} "{go_package_name}/services/{svc_name}/{svc_ver}"'
@@ -225,16 +228,16 @@ def write_server(
 
         if (
             file_system.check_if_file_exists(
-                file_system.join_path(sylk_json.path, "server", "server.go")
+                file_system.join_path(sylk_json.path, sylk_json.code_base_path, "server", "server.go")
             )
             == False
         ):
             file_system.wFile(
-                file_system.join_path(sylk_json.path, "server", "server.go"),
+                file_system.join_path(sylk_json.path, sylk_json.code_base_path, "server", "server.go"),
                 server_code,
                 overwrite=True,
             )
         else:
             pretty.print_warning(
-                "Make sure you make desired changes on server/server.go file !"
+                f"Make sure you make desired changes on {sylk_json.code_base_path}/server/server.go file !"
             )

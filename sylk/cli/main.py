@@ -260,7 +260,10 @@ def main(args=None):
         help="The access token for sylk platform needed if used with --project-id",
     )
     parser_new.add_argument(
-        "--base-protos", default="protos", required=False, help="The base sub-directory under root project which will hold all protobuf files"
+        "--base-protos", required=False, help="The base sub-directory under root project which will hold all protobuf files"
+    )
+    parser_new.add_argument(
+        "--code-base", required=False, help="The main code base directory"
     )
     parser_new.add_argument(
         "--format", default="json", required=False, choices=['json','textpb'], help="The sylk local schema format, for large schemas it is recommended to save the schema into protobuf with 'textpb' option"
@@ -306,7 +309,10 @@ def main(args=None):
         help="The access token for sylk platform needed if used with --project-id",
     )
     parser_n.add_argument(
-        "--base-protos", default="protos", required=False, help="The base sub-directory under root project which will hold all protobuf files"
+        "--base-protos", required=False, help="The base sub-directory under root project which will hold all protobuf files"
+    )
+    parser_n.add_argument(
+        "--code-base", required=False, help="The main code base directory"
     )
     parser_n.add_argument(
         "--format", default="json", required=False, choices=['json','textpb'], help="The sylk local schema format, for large schemas it is recommended to save the schema into protobuf with 'textpb' option"
@@ -660,7 +666,8 @@ def main(args=None):
             configs=sylk_project_config,
             base_proto_path=args.base_protos,
             format=args.format,
-            token=args.token
+            token=args.token,
+            code_base=args.code_base
         )
         exit(0)
     else:
@@ -838,7 +845,6 @@ def main(args=None):
                 # ARCHITECT.Save()
             elif hasattr(args, "protos") and hasattr(args, "code"):
                 """Build command process"""
-
                 if args.code:
                     print_info("🔨 Building project resources code files")
                     build.build_code(sylk_json_path)

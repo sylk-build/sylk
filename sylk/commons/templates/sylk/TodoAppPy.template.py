@@ -19,7 +19,6 @@ Author: Amit Shmulevitch
 # (Same inteface that sylk.build cli is built as wrapper for
 # SylkArchitect whenever you generate new resource / create new project)
 from sylk import SylkArchitect
-
 # Some common utils modules to help us build the services faster
 # and adds an validations to object before they created
 from sylk.commons import helpers, file_system
@@ -44,9 +43,11 @@ parser = argparse.ArgumentParser(
                     epilog = 'Text at the bottom of help')
 parser.add_argument('--domain',default='sylk')           # optional argument
 parser.add_argument('--project-name',default='TodoAppPy')           # optional argument
+parser.add_argument('--proto-path',default='protos')           # optional argument
+parser.add_argument('--code-base',default='src')           # optional argument
 
 args = parser.parse_args()
-
+print(args)
 # Constants
 _PATH = file_system.join_path(os.getcwd(), 'sylk.json') 
 _DOMAIN = args.domain
@@ -54,15 +55,17 @@ _PROJECT_NAME = args.project_name
 _SERVER_LANGUAGE = SylkServer_pb2.SylkServerLanguages.Name(SylkServer_pb2.SylkServerLanguages.python)
 _HOST = 'localhost'
 _PORT = 44880
+_PROTO_BASE_PATH = args.proto_path
+_CODE_BASE_PATH = args.code_base
 
 # Initializing SylkArchitect class which we going to interact with
 # It is used to create all of our 'sylk' resources
 _architect = SylkArchitect(path=_PATH,
                              domain=_DOMAIN,
                              project_name=_PROJECT_NAME)
-_architect.SetConfig({'host': _HOST, 'port': _PORT})
+_architect.SetSylkVersion()
+_architect.SetConfig({'host': _HOST, 'port': _PORT, 'codeBasePath': _CODE_BASE_PATH, 'protoBasePath': _PROTO_BASE_PATH})
 _architect.SetDomain(_DOMAIN)
-    
 """Project specific configurations"""
     
 # Init all the client to be used with your services
@@ -352,35 +355,33 @@ _msg_public_Todo_v1_Todo = helpers.SylkMessage(name='Todo',
     
 # Construct packages
 
-_pkg_public_API_v1 = helpers.SylkPackage(name='API',
+_pkg_public_API_v1 = helpers.SylkPackage(name='API.v1',
                                                 messages=[_msg_public_API_v1_GetTodoRequest,_msg_public_API_v1_DeleteTodoRequest,_msg_public_API_v1_CreateTodoResponse,_msg_public_API_v1_CreateTodoRequest,_msg_public_API_v1_GetTodoResponse,_msg_public_API_v1_DeleteTodoResponse,_msg_public_API_v1_UpdateTodoRequest,_msg_public_API_v1_UpdateTodoResponse],
                                                 enums=[],
                                                 extensions=None)
 
 # Unpacking package [public_API_v1]
 _pkg_public_API_v1_name, _pkg_public_API_v1_messages, _pkg_public_API_v1_enums, _pkg_public_API_v1_ext, _pkg_public_API_v1_domain = _pkg_public_API_v1.to_tuple()
-_pkg_public_Todo_v1 = helpers.SylkPackage(name='Todo',
+_pkg_public_Todo_v1 = helpers.SylkPackage(name='Todo.v1',
                                                 messages=[_msg_public_Todo_v1_Todo],
                                                 enums=[_enum_public_Todo_v1_Statuses],
                                                 extensions=None)
-
 # Unpacking package [public_Todo_v1]
 _pkg_public_Todo_v1_name, _pkg_public_Todo_v1_messages, _pkg_public_Todo_v1_enums, _pkg_public_Todo_v1_ext, _pkg_public_Todo_v1_domain = _pkg_public_Todo_v1.to_tuple()
     
+order_pkgs = list(map(lambda x: _DOMAIN+'.'+x,[_pkg_public_Todo_v1_name,_pkg_public_API_v1_name]))
 # Add packages
 
 # Adding package [public_API_v1]
 _pkg_public_API_v1 = _architect.AddPackage(_pkg_public_API_v1_name,
                                                     dependencies=[],
                                                     description='The main entities of our application which represnets the schema of our buisness logic',
-                                                    domain=_pkg_public_API_v1_domain,
-                                                    extensions=_pkg_public_API_v1_ext)
+                                                    extensions=_pkg_public_API_v1_ext,version_component={"version": 1, "channel": None, "release": None}, order_pkg=order_pkgs)
 # Adding package [public_Todo_v1]
 _pkg_public_Todo_v1 = _architect.AddPackage(_pkg_public_Todo_v1_name,
                                                     dependencies=[],
                                                     description='The main entities of our application which represnets the schema of our buisness logic',
-                                                    domain=_pkg_public_Todo_v1_domain,
-                                                    extensions=_pkg_public_Todo_v1_ext)
+                                                    extensions=_pkg_public_Todo_v1_ext,version_component={"version": 1, "channel": None, "release": None}, order_pkg=order_pkgs)
     
 msgs_map = {}
 
@@ -388,22 +389,21 @@ msgs_map = {}
 
 for m in _pkg_public_API_v1_messages:
 	msg_name, msg_fields, msg_desc, msg_opt, msg_ext, msg_domain = m
-	temp_msg = _architect.AddMessage(package=_pkg_public_API_v1, name=msg_name, fields=msg_fields, description=msg_desc, options=msg_opt, extensions=msg_ext, domain=msg_domain)
+	temp_msg = _architect.AddMessage(package=_pkg_public_API_v1, name=msg_name, fields=msg_fields, description=msg_desc, options=msg_opt, extensions=msg_ext, domain=msg_domain,order_pkg=order_pkgs)
 	msgs_map[temp_msg.full_name] = temp_msg
 for m in _pkg_public_Todo_v1_messages:
 	msg_name, msg_fields, msg_desc, msg_opt, msg_ext, msg_domain = m
-	temp_msg = _architect.AddMessage(package=_pkg_public_Todo_v1, name=msg_name, fields=msg_fields, description=msg_desc, options=msg_opt, extensions=msg_ext, domain=msg_domain)
+	temp_msg = _architect.AddMessage(package=_pkg_public_Todo_v1, name=msg_name, fields=msg_fields, description=msg_desc, options=msg_opt, extensions=msg_ext, domain=msg_domain,order_pkg=order_pkgs)
 	msgs_map[temp_msg.full_name] = temp_msg
-    
 # Add packages enums
 
 for e in _pkg_public_API_v1_enums:
 	enum_name, enum_values, enum_desc, enum_domain = e
-	_architect.AddEnum(package=_pkg_public_API_v1, name=enum_name, enum_values=enum_values, description=enum_desc, domain=enum_domain)
+	_architect.AddEnum(package=_pkg_public_API_v1, name=enum_name, enum_values=enum_values, description=enum_desc, domain=enum_domain,order_pkg=order_pkgs)
 for e in _pkg_public_Todo_v1_enums:
 	enum_name, enum_values, enum_desc, enum_domain = e
-	_architect.AddEnum(package=_pkg_public_Todo_v1, name=enum_name, enum_values=enum_values, description=enum_desc, domain=enum_domain)
-    
+	_architect.AddEnum(package=_pkg_public_Todo_v1, name=enum_name, enum_values=enum_values, description=enum_desc, domain=enum_domain,order_pkg=order_pkgs)
+
 """Services and thier resources"""
 # Construct rpc's
 
@@ -415,21 +415,21 @@ _rpc_public_Todos_v1_DeleteTodo = helpers.SylkRPC(name='DeleteTodo',client_strea
 # Construct services
 
 _svc_Todos = helpers.SylkService('Todos',
-                                                methods=[_rpc_public_Todos_v1_GetTodo,_rpc_public_Todos_v1_CreateTodo,_rpc_public_Todos_v1_UpdateTodo,_rpc_public_Todos_v1_DeleteTodo],
-                                                dependencies=[_pkg_public_API_v1.package],
-                                                description='The todos service which will interact with todo tasks list',
-                                                extensions=None)
+                                methods=[_rpc_public_Todos_v1_GetTodo,_rpc_public_Todos_v1_CreateTodo,_rpc_public_Todos_v1_UpdateTodo,_rpc_public_Todos_v1_DeleteTodo],
+                                dependencies=[_pkg_public_API_v1.package],
+                                description='The todos service which will interact with todo tasks list',
+                                extensions=None)
 
 _svc_Todos_name, _svc_Todos_methods, _svc_Todos_dependencies, _svc_Todos_desc, _svc_Todos_ext = _svc_Todos.to_tuple()
         
 # Add services
 
-_svc_Todos = _architect.AddService(_svc_Todos_name,_svc_Todos_dependencies,_svc_Todos_desc,[],extensions=_svc_Todos_ext)
-        
+_svc_Todos = _architect.AddService(_svc_Todos_name,_svc_Todos_dependencies,_svc_Todos_desc,[],package=_pkg_public_API_v1,extensions=_svc_Todos_ext,order_pkg=order_pkgs)
+
 
 for rpc in _svc_Todos_methods:
 	rpc_name, rpc_in_out, rpc_desc = rpc
-	_architect.AddRPC(_svc_Todos, rpc_name, rpc_in_out, rpc_desc)
+	_architect.AddRPC(_pkg_public_API_v1,_svc_Todos, rpc_name, order_pkgs, rpc_in_out, rpc_desc)
     
 # Initalize all code files 
 _context = SylkCommons_pb2.SylkContext(files=[SylkCommons_pb2.SylkFileContext(file='services/Todos.py',code=b'x\x9c\xb5TQo\xd30\x10~N~\xc5){\x98#:K\xf0X)hc-h\x02V\xb4v\x084M\x91\xdb\\\x8a\xb5\xc4\x0e\xb63\xadB\xfcwl\xa7\xa1^\xbb\x95\n\xc4S\xe4\xf3w\xbe\xef\xbe\xefrI\x92\xe8UuG\xe7-\xaf\n\xd0\xa8\xee\xf9\x02\x81\xd7M\x855\x13\x86\x19.\x05\x94R\xc1\xc9k\x98\xc9B\xea$Ib{-\x95\x81\xa5j\x16q\xa9d\rK)\x97\x15\xd2FI#\xe7mI\r\xafQ\x1bV7y3\x7f\x05k\xf8\xac\x0fv9f\xd5p\xb1\xec//\x0c*f\xa4\x1a\xc0\x07\xaeM_\xc1Wto\xe4\xbeV\x10u\xc1\xfe|\xf6\xe9\xc2\x1f\xe3E\xc5\xb4\xee\x92\xc8\xe3T\xea\x8f\xd3\xae=\x95\x0e\xe38*\xb0\x84<\xe7\x82\x9b<\'q\x14i\xac\xca\x81\xfd\x1a\xa6\xef\xf4\xd0\xb1\xb8\xe9\x0b\xf9\xec\xdb\xec\xe66\x8eR\'\xc4\xa5\x148\\\xa7\xd0\xdc\'@\x06\xfek\x1f\x8e\x8e`$a%[\x05\xa37\xb0\x90B\xe0\xc2\xc9\xa8\xe1\x1b*\xa4\x94Z\xcc\x11\x9cZVpz\xea\xc4\x87\x13\x18M\xe0r2\x83\xab\xf1\xc7\xc9\xe7q\xc7\xed\x1d\x1aW\x96x^\xa0\xf0{k\xd5\x1b\xf6\xcd\xd2\xf5\xf5U\x17\x1f\xb8:\x06\x1f\x8c\xe7\xb7\x83\xd1\x8d-\xef)7\x8a\x0bC\xd6`\xca\xc5\xbd\\x\x8f\xf3\x1a\r+\x98a$M\xd7"\xd8\x96\x84\x05\x11b\xfc\x00\x18\xe0\x02\xc2\x8ey\t\xf6\x85\x02\xb2\xacgG\x8d\x13\x8c\x17\xe9\xc0)\xe4\xdeq\x18\xf7\x14\xd7 \xa4\xf9-\\\xa4\xd6\x94l\x8dg\xc8\x12G&s\xc9i\x97`Z%\xa0\xcf\xb3!\xac\xba\x8e\xa2\xbe\x196\xb7\xc3@\xbc\xdbS;\xb8\xad>\x97\x05R+k\xfevr}9\x1a\x94\xc73Ge\xbe\x02^\x0c!\xf9\xb1E\xfag\xe2)\x96\xb2\x15\x05=N\xe3\xc3\\:W\xc8\x0c\xee3j\x83\xd8\xebU\x08\xdb\xd8u\xb0\x0f\x86\x9b\n\xb7\xad\xe8\xa2O\xba\x118\x11\xe0\x9d\x9b\xa0\x8d"5{ 7nR\x9c\xc3\xe9\x93uo\xd3\x17/\xbd5A\x8c\xb2\xa6AQ\x90\xf0\xd1\xf4\x19\xbfw\x1b&\xbc\xc8\xb6\xe8\xfc\x9b\xf7g\x1f\xae\xc6g\xa3\xaf\xf9\xf8\xcb\xc5t6\r\x06\xc0\xeb\xb2=\x03\x9dZv\x0cXe\xa9\x15+\xc0\x07\xbb\x04\xf4\xe1\xb3p\xdd\x14\x7f\x98\x85\rb\xef,\x84\xb0\xcd,\x1c\xc1\x13*\xeeB\x89\xf6\x02d\xbd\xe9.\xed\xb1~ns\xb5\r*\x92\x06\xe9\xbdg\x1bF\x875=\xc2\n\xf77\xbdA\xecm:\x84\xfd\xc5\x0f\xf0x\x11\x1d\xb2\x83\xc2\xb9UX\xcb{$\xc1\xba\xd9Qz\x97_\xaft2y\x9f\xfc\xef%\xb5\xb3\x9f~\x01F\x86\x8f\xb9'),
@@ -440,6 +440,6 @@ SylkCommons_pb2.SylkFileContext(file='test.py',code=b"x\x9c}\xd2KK\xc40\x10\x00\
 for f in _context.files:
 	file_system.wFile(file_system.get_current_location()+'/'+f.file,zlib.decompress(f.code).decode(),force=True)
 
-    
+
 _architect.Save()
     

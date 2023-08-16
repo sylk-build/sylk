@@ -44,7 +44,7 @@ from google.protobuf.descriptor import (
 from grpc_tools import command
 from sylk.cli import prompter
 from sylk import __version__
-from sylk.commons import errors
+from sylk.commons import errors, file_system
 from sylk.commons.pretty import print_error, print_info, print_note, print_warning
 
 from sylk.commons.protos.sylk.Sylk.v2 import Sylk_pb2
@@ -140,7 +140,7 @@ def get_blank_sylk_json(json=False):
 
 
 def generate_project(
-    path, name, server_langauge="python", clients=[], package_name=None, json=False
+    path, name, server_langauge="python", clients=[], package_name=None, json=False, code_base_path=None
 ):
     path = path.split("/sylk.json")[0]
     # Init server
@@ -235,7 +235,7 @@ def generate_project(
                 )
             client = SylkClient_pb2.SylkClient(
                 out_dir=get_uri_client(
-                    path, c.language if hasattr(c, "language") else c["language"]
+                    file_system.join_path(path,code_base_path if code_base_path is not None else ''), c.language if hasattr(c, "language") else c["language"]
                 ),
                 language=SylkClient_pb2.SylkClientLanguages.Name(temp_c_lang),
             )

@@ -34,13 +34,13 @@ def pre_build(sylk_json: helpers.SylkJson, sylk_context: helpers.SylkContext, pr
 
     directories = [
         # Clients
-        file_system.join_path(sylk_json.path, "clients"),
-        file_system.join_path(sylk_json.path, "services", sylk_json._root_protos, sylk_json.domain),
+        file_system.join_path(sylk_json.path, sylk_json.code_base_path, "clients"),
+        file_system.join_path(sylk_json.path, sylk_json.code_base_path, "services", sylk_json._root_protos, sylk_json.domain),
         file_system.join_path(sylk_json.path, sylk_json._root_protos),
         file_system.join_path(sylk_json.path, sylk_json._root_protos, sylk_json.domain),
         file_system.join_path(sylk_json.path, "bin"),
         file_system.join_path(sylk_json.path, ".sylk"),
-        file_system.join_path(sylk_json.path, "server"),
+        file_system.join_path(sylk_json.path, sylk_json.code_base_path, "server"),
     ]
     if pre_data.get('protos_only',False) == False:
         for d in directories:

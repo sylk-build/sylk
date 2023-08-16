@@ -1164,6 +1164,10 @@ class SylkJson:
         return deps
 
     @property
+    def code_base_path(self):
+        return self._config.get('codeBasePath', '')
+
+    @property
     def domain(self):
         """str: Project domain."""
         return self._domain
@@ -1207,7 +1211,7 @@ class SylkProtoFile:
 
     def _set_file_path(self):
         pkg_path = self._package.package.replace(".", "/")
-        return f"{self._sylk_json.path}/{self._sylk_json._root_protos}/{pkg_path}/{self._file_name}.proto"
+        return f"{file_system.join_path(self._sylk_json.path, self._sylk_json._root_protos, pkg_path, self._file_name)}.proto"
 
     def get_metadata(self):
         pkg_path = self._package.package.replace(".", "/")
@@ -1222,6 +1226,7 @@ class SylkProtoFile:
 
     def get_imports(self):
         dependencies = []
+        print(self._file_path)
         current_file_path = self._file_path.split(self._sylk_json.path + '/' +self._sylk_json._root_protos + '/')[1]
         if self._file_name != self._package.name or self._is_tag == True:
             refs = []
@@ -2129,7 +2134,7 @@ if proto_module not in sys.path:\n\
             "import sys",
             adding_protos_module_path,
             "from functools import partial",
-            "from sylk.commons.interceptors import sylk_client_pre_rpc, SylkSimpleAuth",
+            # "from sylk.commons.interceptors import sylk_client_pre_rpc, SylkSimpleAuth",
             "import logging",
         ]
 
@@ -2138,15 +2143,18 @@ if proto_module not in sys.path:\n\
             mod_path = '.'.join(mod.split('/')[:-1])
             mod_name = mod.split('/')[-1].split('.')[0]
             ver = self._sylk_json._proto_tree._parse_version_component(mod_path)
+            code_base_path = '' if self._sylk_json.code_base_path is None or self._sylk_json.code_base_path == '' else f'{self._sylk_json.code_base_path}.'
+            
             if ver is not None:
                 version = mod_path.split('.')[-1]
             else:
                 version = ''
             if mod_path.split('.')[0] != self._sylk_json._proto_tree.root.name:
-                base_protos = ''
+                base_protos = code_base_path
+
                 imports.append(f"from {base_protos}{mod_path} import {mod_name}_pb2" )
             else:
-                base_protos = f'.{self._sylk_json._root_protos}.' if self._sylk_json._root_protos is not None and self._sylk_json._root_protos != '' else '.'
+                base_protos = f'.{code_base_path}{self._sylk_json._root_protos}.' if self._sylk_json._root_protos is not None and self._sylk_json._root_protos != '' else f'.{code_base_path}'
                 imports.append(f"from {base_protos}{mod_path} import {mod_name}_pb2 as {mod_name}_{version}, {mod_name}_pb2_grpc as {mod_name}_{version}_grpc" )
 
         # Pre data parsing
@@ -2308,11 +2316,13 @@ class SylkServicePy:
             pkg_name = parent.name
         module_name = pkg_name if self._service.get('tag') is None and self._service.get('tag') != '' else self._service.get('tag')
         base_protos = self._sylk_json._root_protos.replace('/','.')
+        code_base_path = '' if self._sylk_json.code_base_path is None or self._sylk_json.code_base_path == '' else f'{self._sylk_json.code_base_path}.'
+
         for d in deps:
             if d.split('.')[0] == self._sylk_json._proto_tree.root.name:
                 root = self._sylk_json._proto_tree.root
                 dep_parent = self._sylk_json._proto_tree.get_parent(d)
-                base_path = 'services.' if self._sylk_json._root_protos is None or self._sylk_json._root_protos == '' else f'services.{base_protos}.'
+                base_path = f'{code_base_path}services.' if self._sylk_json._root_protos is None or self._sylk_json._root_protos == '' else f'{code_base_path}services.{base_protos}.'
                 msg_dep =self._sylk_json._proto_tree._find_node(d,root) 
                 if parse_version_component(dep_parent.full_path) is not None:
                     temp_name = dep_parent.full_path.split('.')[-2]
@@ -2334,7 +2344,8 @@ class SylkServicePy:
                 list_d.append(
                     imp_path
                 )
-        base_path = 'services.' if self._sylk_json._root_protos is None or self._sylk_json._root_protos == '' else f'services.{base_protos}.'
+        
+        base_path = f'{code_base_path}services.' if self._sylk_json._root_protos is None or self._sylk_json._root_protos == '' else f'{code_base_path}services.{base_protos}.'
         imp_path = f"from {base_path}{parent.full_path} import {module_name}_pb2_grpc, {module_name}_pb2"
         if imp_path not in list_d:
             list_d.append(
@@ -2996,7 +3007,7 @@ class SylkClientJs:
         svcs = []
         for svc in self._services:
             svc_methods = []
-            for method in self._services[svc]["methods"]:
+            for method in svc["methods"]:
                 rpc_name = method["name"]
                 rpc_in_type_pkg = method["inputType"].split(".")[1]
                 rpc_in_type = method["inputType"].split(".")[-1]
@@ -3099,9 +3110,8 @@ class SylkClientJs:
         if self._pre_data is not None:
             if self._pre_data.get("stubs") is not None:
                 temp_stubs = self._pre_data.get("stubs")
-
         for svc in self._services:
-            if svc in temp_stubs:
+            if svc.get('fullName') in temp_stubs:
                 stub = temp_stubs[svc]
                 stub_target = (
                     stub.get("target")
@@ -3174,7 +3184,7 @@ class SylkClientJs:
         if self._services is not None:
             rpcs = []
             for svc in self._services:
-                for rpc in self._services[svc]["methods"]:
+                for rpc in svc["methods"]:
                     rpc_name = rpc["name"]
                     rpc_in_type_pkg = rpc["inputType"].split(".")[1]
                     rpc_in_type = rpc["inputType"].split(".")[-1]

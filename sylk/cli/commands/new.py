@@ -21,6 +21,7 @@
 
 import logging
 import subprocess
+from tkinter import E
 from typing import List, Literal
 from sylk import architect
 from sylk.cli import prompter
@@ -74,6 +75,12 @@ server_language_q = QList(
     ],
     default=SylkServer_pb2.python,
 )
+def code_base_q(language: SylkServer_pb2.SylkServerLanguages):
+    return QText(
+        name='code_base_path',
+        message='Enter code base path',
+        default= 'src' if language in[SylkServer_pb2.typescript,SylkServer_pb2.nodejs,SylkServer_pb2.python] else 'pkg' if language == SylkServer_pb2.go else ''
+    )
 clients_languages_q = QCheckbox(
     name="clients",
     message="Choose clients languages (Use arrows keys to enable disable a language)",
@@ -93,8 +100,13 @@ domain_q = QText(
     default="domain",
     validate=validate_domain,
 )
+base_proto_path_q = QText(
+    name="base_proto_path",
+    message="Enter your proto path",
+    default="protos"
+) 
 
-sylk_neq_q = [server_language_q, clients_languages_q, domain_q]
+sylk_neq_q = [base_proto_path_q, server_language_q, clients_languages_q, domain_q]
 
 
 def create_new_project(
@@ -110,10 +122,10 @@ def create_new_project(
     configs=None,
     base_proto_path=None,
     format='json',
-    token=None
+    token=None,
+    code_base=None
 ):
     domain_name = domain if domain is not None else 'domain'
-
     if project_id is not None:
 
         sylkCloud = SylkCloud(
@@ -122,14 +134,18 @@ def create_new_project(
         )
 
         # If no options passed
-        if server_language is None and clients == None and domain is None:
+        if server_language is None and clients == None and domain is None and code_base is None and base_proto_path is None:
             results = ask_user_question(questions=sylk_neq_q)
-
+            tmp_code_base_path = ask_user_question(questions=[code_base_q(results.get("server"))])
+            if tmp_code_base_path.get('code_base_path'):
+                results["code_base_path"] = tmp_code_base_path['code_base_path']
+            else:
+                results["code_base_path"] = code_base
             if results is None:
                 print_warning("Must answer project creation questions")
                 exit(1)
         # If someof the options has passed
-        elif server_language is not None or clients is not None or domain is not None:
+        elif server_language is not None or clients is not None or domain is not None or code_base is not None or base_proto_path is not None:
             questions = []
 
             if server_language is None:
@@ -143,6 +159,11 @@ def create_new_project(
                 clients_display = ", ".join(clients)
                 print_note(f"Passed client languages: {clients_display}")
 
+            if base_proto_path is None:
+                questions.append(base_proto_path_q)
+            else:
+                print_note(f"Passed base proto path: {base_proto_path}")
+
             results = ask_user_question(questions=questions)
 
             if results is None:
@@ -153,13 +174,25 @@ def create_new_project(
                     results["server"] = server_language
                 if results.get("clients") is None:
                     results["clients"] = clients
-
+                if results.get("base_proto_path") is None:
+                    results["base_proto_path"] = base_proto_path
+                if code_base is None:
+                    tmp_code_base_path = ask_user_question([code_base_q(results.get("server"))])
+                    results["code_base_path"] = tmp_code_base.get('code_base_path')
+                else:
+                    results["code_base_path"] = code_base
         else:
             results = {}
             results["server"] = server_language
             results["clients"] = clients
+            results["base_proto_path"] = base_proto_path
+            if code_base is None:
+                tmp_code_base_path = ask_user_question([code_base_q(results.get("server"))])
+                results["code_base_path"] = tmp_code_base.get('code_base_path')
+            else:
+                results["code_base_path"] = code_base
 
-        project = sylkCloud.pull_project(project_id,domain=domain_name if domain_name is not 'domain' else None)
+        project = sylkCloud.pull_project(project_id,domain=domain_name if domain_name != 'domain' else None)
         if path is None:
             try:
                 root = os.getcwd()
@@ -203,7 +236,6 @@ def create_new_project(
                 go_package = "github.com/{}".format(project.project.package_name)
             project.project.go_package = go_package
 
-
         mkdir(result_path)
         # print_info(MessageToDict(project),True,'JSON:')
         wFile(project_path, MessageToDict(project), overwrite=True, json=True)
@@ -213,11 +245,11 @@ def create_new_project(
         )
         # print_info(clients)
         # print_info(server_language)
+        ARCHITECT.SetConfig({"host": host, "port": int(port), "protoBasePath": results["base_proto_path"], "codeBasePath": results["code_base_path"]})
         ARCHITECT.AddProject(
-            project_name, project.project.server.language if server_language is None else server_language, project.project.clients if len(clients) == 0 else list(map(lambda c: {"language": c}, clients))
+            project_name, project.project.server.language if server_language is None else server_language, project.project.clients if len(results["clients"]) == 0 else list(map(lambda c: {"language": SylkClient_pb2.SylkClientLanguages.Name(c)}, results["clients"]))
         )
         # ARCHITECT._sylk = project
-        ARCHITECT.SetConfig({"host": host, "port": int(port)})
         ARCHITECT.SetSylkVersion()
         ARCHITECT.Save()
 
@@ -226,15 +258,23 @@ def create_new_project(
         )
 
     else:
+
         # If no options passed
-        if server_language is None and clients == None and domain is None:
+        if server_language is None and clients == None and domain is None and code_base is None and base_proto_path is None:
+            
             results = ask_user_question(questions=sylk_neq_q)
+            tmp_code_base_path = ask_user_question(questions=[code_base_q(results['server'])])
+            if tmp_code_base_path.get('code_base_path'):
+                results["code_base_path"] = tmp_code_base_path['code_base_path']
+            else:
+                results["code_base_path"] = code_base
 
             if results is None:
                 print_warning("Must answer project creation questions")
                 exit(1)
+            
         # If someof the options has passed
-        elif server_language is not None or clients is not None or domain is not None:
+        elif server_language is not None or clients is not None or domain is not None or code_base is not None or base_proto_path is not None:
             questions = []
 
             if server_language is None:
@@ -253,6 +293,11 @@ def create_new_project(
             else:
                 print_note(f"Passed domain: {domain}")
 
+            if base_proto_path is None:
+                questions.append(base_proto_path_q)
+            else:
+                print_note(f"Passed base proto path: {base_proto_path}")
+
             results = ask_user_question(questions=questions)
 
             if results is None:
@@ -265,13 +310,27 @@ def create_new_project(
                     results["clients"] = clients
                 if results.get("domain") is None:
                     results["domain"] = domain
+                if results.get("base_proto_path") is None:
+                    results["base_proto_path"] = base_proto_path   
+                if code_base is None:
+                    tmp_code_base = ask_user_question(questions=[code_base_q(server_language)])
+                    results["code_base_path"] = tmp_code_base.get('code_base_path')
+                else:
+                    results["code_base_path"] = code_base
 
         else:
             results = {}
             results["server"] = server_language
             results["clients"] = clients
             results["domain"] = domain
+            results["base_proto_path"] = base_proto_path
+            if code_base is None:
+                tmp_code_base = ask_user_question(questions=[code_base_q(server_language)])
+                results["code_base_path"] = tmp_code_base.get('code_base_path')
+            else:
+                results["code_base_path"] = code_base
 
+            
         if path is None:
             try:
                 root = os.getcwd()
@@ -310,7 +369,7 @@ def create_new_project(
                         client_lang = c
                     else:
                         client_lang = SylkClient_pb2.SylkClientLanguages.Name(c)
-                    out_dir = join_path(result_path, "clients", client_lang)
+                    out_dir = join_path(result_path, results.get("code_base_path",""), "clients", client_lang)
                     print_info(f"Adding client: {client_lang}\n\t-> {out_dir}")
                     clients.append({"out_dir": out_dir, "language": client_lang})
             if k == "domain":
@@ -319,6 +378,7 @@ def create_new_project(
 
         out_dir = join_path(
             result_path,
+            results.get("code_base_path",''),
             "clients",
             results["server"]
             if type(results["server"]) == str
@@ -364,6 +424,8 @@ def create_new_project(
         ARCHITECT = SylkArchitect(
             path=sylk_json_path, domain=domain_name, project_name=project_name
         )
+        ARCHITECT.SetConfig({"host": host, "port": int(port), "protoBasePath": results["base_proto_path"], "codeBasePath": results["code_base_path"]})
+        ARCHITECT.SetDomain(domain_name)
         if template != "@sylk/Blank" and template is not None:
             print_info("Starting sylk build project from template:")
             print_info(f'Creating new sylk.build project "{project_name}" [{template}]')
@@ -378,9 +440,8 @@ def create_new_project(
             # ARCHITECT.SetDomain(domain_name)
             exit(1)
 
+        
         ARCHITECT.AddProject(server_language=server_langugae, clients=clients)
-        ARCHITECT.SetDomain(domain_name)
-        ARCHITECT.SetConfig({"host": host, "port": int(port), "protoBasePath": base_proto_path})
         ARCHITECT.SetSylkVersion()
         ARCHITECT.Save()
 
@@ -403,9 +464,16 @@ def attach_template(ARCHITECT: SylkArchitect, template: _TEMPLATES):
         # print(file_system.get_current_location())
         os.chdir(ARCHITECT._path.split("sylk.json")[0])
         # print(file_system.get_current_location())
-
-        subprocess.run(
-            [
+        proto_path = ARCHITECT._sylk.sylkJson.get('configs',{}).get('protoBasePath')
+        code_path = ARCHITECT._sylk.sylkJson.get('configs',{}).get('codeBasePath')
+        optionals = []
+        if proto_path is not None:
+            optionals.append('--proto-path')
+            optionals.append(proto_path)
+        if code_path is not None:
+            optionals.append('--code-base')
+            optionals.append(code_path)
+        process= [
                 "python",
                 file_dir
                 + "/commons/templates/{0}/{1}.template.py".format(
@@ -413,5 +481,7 @@ def attach_template(ARCHITECT: SylkArchitect, template: _TEMPLATES):
                 ),
                 "--project-name",
                 ARCHITECT._project_name,
-            ]
+            ] + optionals
+        subprocess.run(
+            process
         )

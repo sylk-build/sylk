@@ -33,7 +33,13 @@ def build_all(path:str):
     print_success('Sylk build finished succesfully')
     print_note(f'Build time: {rt:.3f}s')
 
-def build_code(path:str):
+class Framework:
+    GRPC = "gRPC"
+    SYLK_JS = "sylk-js"
+
+def build_code(path:str, framework:Framework=Framework.GRPC):
+    if not hasattr(Framework, framework):
+        raise ValueError(f"Invalid framework. Choose from: {[attr for attr in dir(Framework) if not callable(getattr(Framework, attr)) and not attr.startswith('__')]}")
     prj_configs = parse_project_config(path,proto=True)
     sylkBuilder = SylkBuilder(path=path,configs=prj_configs)
     sylkBuilder.BuildOnlyCode()

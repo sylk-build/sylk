@@ -47,27 +47,27 @@ def post_build(sylk_json: helpers.SylkJson, sylk_context: helpers.SylkContext):
             if (
                 file_system.check_if_dir_exists(
                     file_system.join_path(
-                        sylk_json.path, "services", "/".join(temp_path)
+                        sylk_json.path, sylk_json.code_base_path, "services", "/".join(temp_path)
                     )
                 )
                 == False
             ):
                 file_system.mkdir(
                     file_system.join_path(
-                        sylk_json.path, "services", "/".join(temp_path)
+                        sylk_json.path, sylk_json.code_base_path, "services", "/".join(temp_path)
                     )
                 )
             if (
                 file_system.check_if_file_exists(
                     file_system.join_path(
-                        sylk_json.path, "services", "/".join(temp_path), "__init__.py"
+                        sylk_json.path, sylk_json.code_base_path, "services", "/".join(temp_path), "__init__.py"
                     )
                 )
                 == False
             ):
                 file_system.wFile(
                     file_system.join_path(
-                        sylk_json.path, "services", "/".join(temp_path), "__init__.py"
+                        sylk_json.path, sylk_json.code_base_path, "services", "/".join(temp_path), "__init__.py"
                     ),
                     "",
                 )
@@ -106,16 +106,17 @@ def init_project_structure(
 ):
     directories = [
         # Clients
-        file_system.join_path(sylk_json.path, "clients", "python"),
+        file_system.join_path(sylk_json.path, sylk_json.code_base_path, "clients", "python"),
         # Protos
-        file_system.join_path(sylk_json.path, "services", sylk_json._root_protos),
+        file_system.join_path(sylk_json.path, sylk_json.code_base_path, "services", sylk_json._root_protos),
     ]
     
     # Init files
     files = [
-        file_system.join_path(sylk_json.path, "services", "__init__.py"),
-        file_system.join_path(sylk_json.path, "clients", "python", "__init__.py"),
+        file_system.join_path(sylk_json.path, sylk_json.code_base_path, "services", "__init__.py"),
+        file_system.join_path(sylk_json.path, sylk_json.code_base_path, "clients", "python", "__init__.py"),
         file_system.join_path(sylk_json.path, sylk_json._root_protos, "__init__.py"),
+        file_system.join_path(sylk_json.path, sylk_json.code_base_path, "__init__.py"),
     ]
 
     if pre_data.get('protos_only',False) == False:
@@ -131,7 +132,8 @@ def init_project_structure(
         if sylk_json.get_server_language() == "python":
             file_system.wFile(
                 file_system.join_path(sylk_json.path, "bin", "run-server.sh"),
-                bash_run_server_script(sylk_json._root_protos),
+                bash_run_server_script(sylk_json.code_base_path,sylk_json._root_protos),
+                overwrite=True
             )
         # file_system.wFile(file_system.join_path(sylk_json.path,'.sylk','contxt.json'),'{"files":[]}')
         # .gitignore
@@ -151,6 +153,7 @@ def write_services(sylk_json: helpers.SylkJson, sylk_context: helpers.SylkContex
             service_version = svc.get("fullName").split(".")[-2]
             svc_path = file_system.join_path(
                     sylk_json.path,
+                    sylk_json.code_base_path,
                     "services",
                     service_name,
                     service_version,
@@ -159,6 +162,7 @@ def write_services(sylk_json: helpers.SylkJson, sylk_context: helpers.SylkContex
         else:
             svc_path = file_system.join_path(
                     sylk_json.path,
+                    sylk_json.code_base_path,
                     "services",
                     service_name,
                     f"{service_name}.py",
@@ -180,7 +184,7 @@ def write_services(sylk_json: helpers.SylkJson, sylk_context: helpers.SylkContex
             ).to_str()
             file_system.wFile(
                 file_system.join_path(
-                    sylk_json.path, "services", service_name, "__init__.py"
+                    sylk_json.path, sylk_json.code_base_path, "services", service_name, "__init__.py"
                 ),
                 "",
                 overwrite=False,
@@ -211,12 +215,13 @@ def pre_compile_protos(sylk_json: helpers.SylkJson, sylk_context: helpers.SylkCo
     pretty.print_info("Running pre compile protos - python server")
     proto_path = file_system.join_path(sylk_json.path,'services',sylk_json._root_protos, sylk_json.domain)
     file_system.removeDir(proto_path)
+    protos_out = file_system.join_path(sylk_json.code_base_path, 'services', sylk_json._root_protos)
     return {
         "sylk.builder.plugins.SylkProto:compile_protos():commands": [
             f"--proto_path={sylk_json._root_protos}/",
-            f"--python_out=./services/{sylk_json._root_protos}",
-            f"--pyi_out=./services/{sylk_json._root_protos}",
-            f"--grpc_python_out=./services/{sylk_json._root_protos}",
+            f"--python_out=./{protos_out}",
+            f"--pyi_out=./{protos_out}",
+            f"--grpc_python_out=./{protos_out}",
             f"-I./{sylk_json._root_protos}/",
         ],
         "sylk.builder.plugins.SylkProto:compile_protos():include_dirs": [],
@@ -231,7 +236,7 @@ def write_server(
 
     if (
         file_system.check_if_file_exists(
-            file_system.join_path(sylk_json.path, "server", "server.py")
+            file_system.join_path(sylk_json.path, sylk_json.code_base_path, "server", "server.py")
         )
         == False
     ):
@@ -247,16 +252,17 @@ def write_server(
             version = None
             pkg_path = sylk_json._proto_tree.get_parent(svc.get('fullName')).full_path
             ver = sylk_json._proto_tree._parse_version_component(pkg_path)
-            base_protos = f'services.{sylk_json._root_protos}' if sylk_json._root_protos is not None and sylk_json._root_protos != '' else 'services'
+            code_base_path = '' if sylk_json.code_base_path is None or sylk_json.code_base_path == '' else f'{sylk_json.code_base_path}.'
+            base_protos = f'{code_base_path}services.{sylk_json._root_protos}' if sylk_json._root_protos is not None and sylk_json._root_protos != '' else f'{code_base_path}services'
             svc_desc_path = f'{base_protos}.{pkg_path}'
 
             svc_name = svc.get('name')
             if ver is not None:
                 version = pkg_path.split('.')[-1]
-                svc_impl_path = f'services.{svc_name}.{version}.{svc_name}'
+                svc_impl_path = f'{code_base_path}services.{svc_name}.{version}.{svc_name}'
                 svc_desc_module_name = svc.get('tag') if svc.get('tag') is not None else pkg_path.split('.')[-2]
             else:
-                svc_impl_path = f'services.{svc_name}.{svc_name}'
+                svc_impl_path = f'{code_base_path}services.{svc_name}.{svc_name}'
                 svc_desc_module_name = svc.get('tag') if svc.get('tag') is not None else pkg_path.split('.')[-2]
 
             # svc_name = sylk_json.services[svc].get("name")
@@ -296,7 +302,7 @@ def serve(host="0.0.0.0:{port}"):\n\
 if __name__ == "__main__":\n\
 \tserve()'
         file_system.wFile(
-            file_system.join_path(sylk_json.path, "server", "server.py"),
+            file_system.join_path(sylk_json.path, sylk_json.code_base_path, "server", "server.py"),
             server_code,
             overwrite=True,
         )
@@ -522,17 +528,17 @@ echo "Exit code for protoc -> "$statuscode\n\
 [[ "$statuscode" != "0" ]] && { echo "Some error occured during init script"; exit 1; }\n\
 exit 0'
 
-def bash_run_server_script(root):
-    pythonpath = f'./services:./:./services/{root}'
+def bash_run_server_script(code_base_path: str,root):
+    pythonpath = f'./{file_system.join_path(code_base_path,"services")}:./:./{file_system.join_path(code_base_path,"services",root)}'
     return f'#!/bin/bash\n\n\
 if [[ $1 == "debug" ]]\n\
 then\n\
 \techo "Debug Mode: $1"\n\
-\tGRPC_VERBOSITY=DEBUG GRPC_TRACE=all PYTHONPATH={pythonpath} python3 server/server.py\n\
+\tGRPC_VERBOSITY=DEBUG GRPC_TRACE=all PYTHONPATH={pythonpath} python3 {file_system.join_path(code_base_path,"server","server.py")}\n\
 elif [[ $1 == "info" ]]\n\
 then\n\
 \techo "Info Mode: $1"\n\
-\tGRPC_VERBOSITY=INFO GRPC_TRACE=all PYTHONPATH={pythonpath} python3 server/server.py\n\
+\tGRPC_VERBOSITY=INFO GRPC_TRACE=all PYTHONPATH={pythonpath} python3 {file_system.join_path(code_base_path, "server", "server.py")}\n\
 else\n\
-\tPYTHONPATH={pythonpath} python3 server/server.py\n\
+\tPYTHONPATH={pythonpath} python3 {file_system.join_path(code_base_path, "server", "server.py")}\n\
 fi'

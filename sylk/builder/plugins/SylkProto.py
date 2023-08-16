@@ -89,35 +89,7 @@ def compile_protos(
 
     proto_files = []
     files = sylk_json._proto_tree.get_all_file_paths()
-    # for pkg in sylk_json.packages:
-    #     p= sylk_json.packages[pkg]
-    #     msgs = sylk_json.packages[pkg].get('messages') if sylk_json.packages[pkg].get('messages') is not None else []
-    #     svcs = sylk_json.packages[pkg].get('services') if sylk_json.packages[pkg].get('services') is not None else []
-    #     enms = sylk_json.packages[pkg].get('enums') if sylk_json.packages[pkg].get('enums') is not None else []
-    #     tags = [m.get('tag') for m in msgs if m.get('tag') is not None and m.get('tag') != '']
-    #     if len(tags) == 0:
-    #         tags.append(p.get('name'))
-    #     enum_tags = [e.get('tag') for e in enms if e.get('tag') is not None and e.get('tag') != '']
-    #     if len(tags) == 0 and p.get('name') not in tags:
-    #         tags.append(p.get('name'))
-    #     else:
-    #         tags.extend(enum_tags)
-    #     svc_tags = [s.get('tag') for s in svcs if s.get('tag') is not None and s.get('tag') != '']
-    #     if len(svc_tags) == 0 and p.get('name') not in tags:
-    #         tags.append(p.get('name'))
-    #     else:
-    #         tags.extend(svc_tags)
-    #     if len(tags) > 0:
-    #         for t in tags:
-    #             proto_files.append(pkg + '/' + t +'.proto')
-    #     else:
-    #         ver = helpers.parse_version_component(pkg)
-    #         if ver:
-    #             pkg_name = pkg.split('/')[-2].lower()
-    #         else:
-    #             pkg_name = pkg.split('/')[-1].lower()
-    #         proto_files.append(pkg + '/' + pkg_name +'.proto')
-    
+
     if sylk_json.is_language("python"):
         protoc_params = (
             [
@@ -141,30 +113,8 @@ def compile_protos(
             + include_dirs
             + [f for f in files if 'google/' not in f]
         )
-        # print_note(protoc_params)
+        print_note(protoc_params)
         run_protoc(protoc_params)
-        # protoc_params = ["protoc"] + [
-        #         c
-        #         for c in list(
-        #             map(
-        #                 lambda f: f
-        #                 if "--plugin" in f
-        #                 or "--custom" in f
-        #                 or "--proto_path" in f
-        #                 or "-I" in f
-        #                 else None,
-        #                 commands,
-        #             )
-        #         )
-        #         if c is not None
-        #     ] + include_dirs + [f for f in files if 'google/' not in f]
-        # # print_note(protoc_params)
-        # process = subprocess.Popen(
-        #     protoc_params, stdout=subprocess.PIPE, stderr=subprocess.PIPE
-        # )
-        # _, stderr = process.communicate()
-        # if stderr:
-        #     print_info(stderr.decode("utf-8"))
     else:
         protoc_params = ["protoc"] + commands + include_dirs + [f for f in files if 'google/' not in f]
         # print_note(protoc_params)
@@ -278,7 +228,6 @@ def write_protos(sylk_json: helpers.SylkJson):
             for t in tags:
                 proto = helpers.SylkProtoFile(t,pkg,sylk_json,True)
                 proto._set_file_path()
-                print(proto._file_path)
                 file_system.wFile(
                     proto._file_path,
                     proto.to_str(),
@@ -303,7 +252,7 @@ def write_protos(sylk_json: helpers.SylkJson):
             
             if len(enums) > 0 or len(msgs) > 0 or len(svcs) > 0:
                 proto = helpers.SylkProtoFile(pkg.name,pkg,sylk_json)
-                print_info('writing proto file-> '+proto._file_path)
+                print_note('writing proto file-> '+proto._file_path)
                 file_system.wFile(
                     proto._file_path,
                     proto.to_str(),
@@ -314,7 +263,7 @@ def write_protos(sylk_json: helpers.SylkJson):
             
         else:
             proto = helpers.SylkProtoFile(pkg.name,pkg,sylk_json)
-            print_info('writing proto file-> '+proto._file_path)
+            print_note('writing proto file-> '+proto._file_path)
             file_system.wFile(
                 proto._file_path,
                 proto.to_str(),
@@ -322,111 +271,3 @@ def write_protos(sylk_json: helpers.SylkJson):
                 False,
                 True,
             )
-
-        #     # print(tags)
-        #     proto = helpers.SylkProto(
-        #         pkg.name,
-        #         imports=pkg.dependencies,
-        #         package=pkg.package,
-        #         services=pkg.services,
-        #         messages=pkg.messages,
-        #         enums=pkg.enums,
-        #         description=pkg.description,
-        #         extensions=pkg.extensions,
-        #         sylk_json=sylk_json,
-        #         tags=tags
-        #     )
-        #     proto.write_files()
-        # else:
-        #     proto = helpers.SylkProto(
-        #         pkg.name,
-        #         imports=pkg.dependencies,
-        #         package=pkg.package,
-        #         services=pkg.services,
-        #         messages=pkg.messages,
-        #         enums=pkg.enums,
-        #         description=pkg.description,
-        #         extensions=pkg.extensions,
-        #         sylk_json=sylk_json,
-        #         tags={}
-        #     )
-        #     proto.write_files()
-    # for svc in sylk_json.services:
-    #     if svc.get("methods") is None:
-    #         print_error(f"Cannot build service [{svc}] proto file with 0 methods!")
-    #         exit(1)
-
-    #     svc_name = svc.get("name")
-    #     svc_pkg_messages = []
-    #     svc_pkg_enums = []
-    #     svc_deps = svc.get("dependencies", [])
-    #     try:
-    #         svc_pkg = sylk_json.get_package(
-    #             svc_name, version=svc.get("fullName").split(".")[-1]
-    #         )
-    #         svc_pkg_messages = sylk_json.packages[svc].get("messages")
-
-    #         svc_pkg_enums = sylk_json.packages[svc].get("enums")
-    #         if svc_pkg.get("dependencies") is not None:
-    #             for d in svc_pkg.get("dependencies"):
-    #                 if d not in svc_deps:
-    #                     svc_deps.append(d)
-
-    #     except Exception:
-    #         pass
-
-    #     svc_def = helpers.SylkProto(
-    #         svc_name,
-    #         imports=svc_deps,
-    #         service=svc,
-    #         package=svc.get("fullName")
-    #         if (len(svc_pkg_messages) > 0 or len(svc_pkg_enums) > 0)
-    #         else None,
-    #         messages=svc_pkg_messages,
-    #         enums=svc_pkg_enums,
-    #         description=svc.get("description"),
-    #         extensions=svc.get("extensions"),
-    #         sylk_json=sylk_json,
-    #     )
-
-    #     log.debug(f"Writing proto file for service: {svc.get('name')}")
-    #     file_system.wFile(
-    #         file_system.join_path(sylk_json.path, svc),
-    #         svc_def.__str__(),
-    #         True,
-    #         False,
-    #         True,
-    #     )
-
-    # for pkg in sylk_json.packages:
-    #     pkg_name = sylk_json.packages[pkg].get("name")
-    #     # Checking if proto file already defined by service with the same name of the package
-    #     svc = sylk_json.get_service(
-    #         pkg_name, version=sylk_json.packages[pkg].get("package").split(".")[-1]
-    #     )
-    #     if svc is None:
-    #         # If no service with the same name then we need to write a standalone proto file for packages
-    #         pkg_full_name = sylk_json.packages[pkg].get("package")
-    #         if sylk_json.packages[pkg].get("messages") is None:
-    #             print_error(
-    #                 f"Cannot build package [{sylk_json.packages[pkg].get('package')}] proto file with 0 messages!"
-    #             )
-    #             exit(1)
-
-    #         pkg_def = helpers.SylkProto(
-    #             pkg_name,
-    #             sylk_json.packages[pkg].get("dependencies"),
-    #             package=pkg_full_name,
-    #             messages=sylk_json.packages[pkg].get("messages"),
-    #             enums=sylk_json.packages[pkg].get("enums"),
-    #             extensions=sylk_json.packages[pkg].get("extensions"),
-    #             sylk_json=sylk_json,
-    #         )
-    #         log.debug(f"Writing proto file for package: {pkg_name}")
-    #         file_system.wFile(
-    #             file_system.join_path(sylk_json.path, pkg),
-    #             pkg_def.__str__(),
-    #             True,
-    #             False,
-    #             True,
-    #         )

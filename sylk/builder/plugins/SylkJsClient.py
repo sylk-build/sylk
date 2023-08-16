@@ -49,22 +49,23 @@ def post_build(sylk_json: helpers.SylkJson, sylk_context: helpers.SylkContext):
         # exit(proc.returncode)
     if (
         file_system.check_if_dir_exists(
-            file_system.join_path(sylk_json.path, "clients", "javascript", "utils")
+            file_system.join_path(sylk_json.path, sylk_json.code_base_path, "clients", "javascript", "utils")
         )
         == False
     ):
         file_system.mkdir(
-            file_system.join_path(sylk_json.path, "clients", "javascript", "utils")
+            file_system.join_path(sylk_json.path, sylk_json.code_base_path, "clients", "javascript", "utils")
         )
 
     file_system.cpDir(
-        file_system.join_path(sylk_json.path, "server", "services", "utils"),
-        file_system.join_path(sylk_json.path, "clients", "javascript", "utils"),
+        file_system.join_path(sylk_json.path, sylk_json.code_base_path, "server", "services", "utils"),
+        file_system.join_path(sylk_json.path, sylk_json.code_base_path, "clients", "javascript", "utils"),
     )
-    for f in file_system.walkFiles(file_system.join_path(sylk_json.path, "protos")):
+    for f in file_system.walkFiles(file_system.join_path(sylk_json.path, sylk_json._root_protos)):
         if file_system.check_if_file_exists(
             file_system.join_path(
                 sylk_json.path,
+                sylk_json.code_base_path,
                 "clients",
                 "javascript",
                 "protos",
@@ -74,9 +75,10 @@ def post_build(sylk_json: helpers.SylkJson, sylk_context: helpers.SylkContext):
             )
         ):
             file_system.copyFile(
-                file_system.join_path(sylk_json.path, "protos", f),
+                file_system.join_path(sylk_json.path, sylk_json._root_protos, f),
                 file_system.join_path(
                     sylk_json.path,
+                    sylk_json.code_base_path,
                     "clients",
                     "javascript",
                     "protos",
@@ -89,6 +91,7 @@ def post_build(sylk_json: helpers.SylkJson, sylk_context: helpers.SylkContext):
             file_system.wFile(
                 file_system.join_path(
                     sylk_json.path,
+                    sylk_json.code_base_path,
                     "clients",
                     "javascript",
                     "protos",
@@ -102,9 +105,10 @@ def post_build(sylk_json: helpers.SylkJson, sylk_context: helpers.SylkContext):
                 True,
             )
             file_system.copyFile(
-                file_system.join_path(sylk_json.path, "protos", f),
+                file_system.join_path(sylk_json.path, sylk_json._root_protos, f),
                 file_system.join_path(
                     sylk_json.path,
+                    sylk_json.code_base_path,
                     "clients",
                     "javascript",
                     "protos",
@@ -126,12 +130,12 @@ def init_project_structure(
 ):
     directories = [
         # Clients
-        file_system.join_path(sylk_json.path, "clients", "javascript"),
-        file_system.join_path(sylk_json.path, "clients", "javascript", "protos"),
+        file_system.join_path(sylk_json.path, sylk_json.code_base_path, "clients", "javascript"),
+        file_system.join_path(sylk_json.path, sylk_json.code_base_path, "clients", "javascript", "protos"),
         # Utils
-        file_system.join_path(sylk_json.path, "services", "utils"),
+        file_system.join_path(sylk_json.path, sylk_json.code_base_path,"services", "utils"),
         # Protos
-        file_system.join_path(sylk_json.path, "services", "protos"),
+        file_system.join_path(sylk_json.path, sylk_json.code_base_path,"services", "protos"),
     ]
 
     for dir in directories:
@@ -149,7 +153,7 @@ def init_project_structure(
     # sylk_json.path, 'bin', 'proto.js'), protos_compile_script_ts)
     file_system.wFile(
         file_system.join_path(
-            sylk_json.path, "clients", "javascript", "utils", "interceptors.js"
+            sylk_json.path, sylk_json.code_base_path, "clients", "javascript", "utils", "interceptors.js"
         ),
         interceptors_js(__version__.__version__),
         force=True,

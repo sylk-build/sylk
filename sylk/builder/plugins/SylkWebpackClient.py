@@ -34,8 +34,8 @@ def init_project_structure(
 
     directories = [
         # Clients
-        file_system.join_path(sylk_json.path, "clients", "webpack"),
-        file_system.join_path(sylk_json.path, "clients", "webpack", sylk_json._root_protos),
+        file_system.join_path(sylk_json.path, sylk_json.code_base_path, "clients", "webpack"),
+        file_system.join_path(sylk_json.path, sylk_json.code_base_path, "clients", "webpack", sylk_json._root_protos),
     ]
     if pre_data.get('protos_only',False) == False:
 
@@ -48,11 +48,12 @@ def init_project_structure(
 @builder.hookimpl
 def pre_compile_protos(sylk_json: helpers.SylkJson, sylk_context: helpers.SylkContext):
     pretty.print_info("Running pre compile protos - webpack client")
+    protos_out = file_system.join_path(sylk_json.code_base_path,'clients','webpack',sylk_json._root_protos)
     return {
         "sylk.builder.plugins.SylkProto:compile_protos():commands": [
             f"--proto_path={sylk_json._root_protos}/",
-            f"--grpc-web_out=import_style=typescript,mode=grpcwebtext:./clients/webpack/{sylk_json._root_protos}",
-            f"--js_out=import_style=commonjs,binary:./clients/webpack/{sylk_json._root_protos}",
+            f"--grpc-web_out=import_style=typescript,mode=grpcwebtext:./{protos_out}",
+            f"--js_out=import_style=commonjs,binary:./{protos_out}",
             f"-I./{sylk_json._root_protos}/",
         ],
         "sylk.builder.plugins.SylkProto:compile_protos():include_dirs": [],
@@ -61,13 +62,13 @@ def pre_compile_protos(sylk_json: helpers.SylkJson, sylk_context: helpers.SylkCo
 @builder.hookimpl
 def write_clients(sylk_json: helpers.SylkJson, sylk_context: helpers.SylkContext):
     if file_system.check_if_dir_exists(
-        file_system.join_path(sylk_json.path, "clients", "webpack")
+        file_system.join_path(sylk_json.path, sylk_json.code_base_path, "clients", "webpack")
     ):
         file_system.mkdir(
-            file_system.join_path(sylk_json.path, "clients", "webpack", sylk_json._root_protos)
+            file_system.join_path(sylk_json.path, sylk_json.code_base_path, "clients", "webpack", sylk_json._root_protos)
         )
     else:
-        file_system.mkdir(file_system.join_path(sylk_json.path, "clients", "webpack"))
+        file_system.mkdir(file_system.join_path(sylk_json.path, sylk_json.code_base_path, "clients", "webpack"))
         file_system.mkdir(
-            file_system.join_path(sylk_json.path, "clients", "webpack", sylk_json._root_protos)
+            file_system.join_path(sylk_json.path, sylk_json.code_base_path, "clients", "webpack", sylk_json._root_protos)
         )

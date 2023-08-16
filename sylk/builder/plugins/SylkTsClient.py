@@ -42,65 +42,65 @@ def pre_build(sylk_json: helpers.SylkJson, sylk_context: helpers.SylkContext):
 @builder.hookimpl
 def post_build(sylk_json: helpers.SylkJson, sylk_context: helpers.SylkContext):
     if file_system.check_if_file_exists(
-        file_system.join_path(sylk_json.path, "server", "services", "index.js")
+        file_system.join_path(sylk_json.path, sylk_json.code_base_path, "server", "services", "index.js")
     ):
         file_system.copyFile(
-            file_system.join_path(sylk_json.path, "server", "services", "index.d.ts"),
+            file_system.join_path(sylk_json.path, sylk_json.code_base_path, "server", "services", "index.d.ts"),
             file_system.join_path(
-                sylk_json.path, "clients", "typescript", "index.d.ts"
+                sylk_json.path, sylk_json.code_base_path, "clients", "typescript", "index.d.ts"
             ),
         )
         file_system.copyFile(
-            file_system.join_path(sylk_json.path, "server", "services", "index.js"),
-            file_system.join_path(sylk_json.path, "clients", "typescript", "index.js"),
+            file_system.join_path(sylk_json.path, sylk_json.code_base_path, "server", "services", "index.js"),
+            file_system.join_path(sylk_json.path, sylk_json.code_base_path, "clients", "typescript", "index.js"),
         )
         file_system.copyFile(
-            file_system.join_path(sylk_json.path, "server", "services", "index.js.map"),
+            file_system.join_path(sylk_json.path, sylk_json.code_base_path, "server", "services", "index.js.map"),
             file_system.join_path(
-                sylk_json.path, "clients", "typescript", "index.js.map"
+                sylk_json.path, sylk_json.code_base_path, "clients", "typescript", "index.js.map"
             ),
         )
     else:
         subprocess.run(["tsc", "-b"])
         if file_system.check_if_file_exists(
-            file_system.join_path(sylk_json.path, "server", "services", "index.js")
+            file_system.join_path(sylk_json.path, sylk_json.code_base_path, "server", "services", "index.js")
         ):
             file_system.copyFile(
                 file_system.join_path(
-                    sylk_json.path, "server", "services", "index.d.ts"
+                    sylk_json.path, sylk_json.code_base_path, "server", "services", "index.d.ts"
                 ),
                 file_system.join_path(
-                    sylk_json.path, "clients", "typescript", "index.d.ts"
-                ),
-            )
-            file_system.copyFile(
-                file_system.join_path(sylk_json.path, "server", "services", "index.js"),
-                file_system.join_path(
-                    sylk_json.path, "clients", "typescript", "index.js"
+                    sylk_json.path, sylk_json.code_base_path, "clients", "typescript", "index.d.ts"
                 ),
             )
             file_system.copyFile(
+                file_system.join_path(sylk_json.path, sylk_json.code_base_path, "server", "services", "index.js"),
                 file_system.join_path(
-                    sylk_json.path, "server", "services", "index.js.map"
+                    sylk_json.path, sylk_json.code_base_path, "clients", "typescript", "index.js"
+                ),
+            )
+            file_system.copyFile(
+                file_system.join_path(
+                    sylk_json.path, sylk_json.code_base_path, "server", "services", "index.js.map"
                 ),
                 file_system.join_path(
-                    sylk_json.path, "clients", "typescript", "index.js.map"
+                    sylk_json.path, sylk_json.code_base_path, "clients", "typescript", "index.js.map"
                 ),
             )
 
     if (
         file_system.check_if_dir_exists(
-            file_system.join_path(sylk_json.path, "clients", "typescript", "utils")
+            file_system.join_path(sylk_json.path, sylk_json.code_base_path, "clients", "typescript", "utils")
         )
         == False
     ):
         file_system.mkdir(
-            file_system.join_path(sylk_json.path, "clients", "typescript", "utils")
+            file_system.join_path(sylk_json.path, sylk_json.code_base_path, "clients", "typescript", "utils")
         )
 
     file_system.cpDir(
-        file_system.join_path(sylk_json.path, "server", "services", "utils"),
-        file_system.join_path(sylk_json.path, "clients", "typescript", "utils"),
+        file_system.join_path(sylk_json.path, sylk_json.code_base_path, "server", "services", "utils"),
+        file_system.join_path(sylk_json.path, sylk_json.code_base_path, "clients", "typescript", "utils"),
     )
 
     # file_system.cpDir(file_system.join_path(sylk_json.path,'server','services','p'),file_system.join_path(sylk_json.path,'clients','typescript','index.js.map'))
@@ -115,12 +115,12 @@ def init_project_structure(
 ):
     directories = [
         # Clients
-        file_system.join_path(sylk_json.path, "clients", "typescript"),
-        file_system.join_path(sylk_json.path, "clients", "typescript", sylk_json._root_protos),
+        file_system.join_path(sylk_json.path, sylk_json.code_base_path, "clients", "typescript"),
+        file_system.join_path(sylk_json.path, sylk_json.code_base_path, "clients", "typescript", sylk_json._root_protos),
         # Utils
-        file_system.join_path(sylk_json.path, "services", "utils"),
+        file_system.join_path(sylk_json.path, sylk_json.code_base_path, "services", "utils"),
         # Protos
-        file_system.join_path(sylk_json.path, "services", sylk_json._root_protos),
+        file_system.join_path(sylk_json.path, sylk_json.code_base_path, "services", sylk_json._root_protos),
     ]
     if pre_data.get('protos_only',False) == False:
 
@@ -130,12 +130,13 @@ def init_project_structure(
         # package.json
         if sylk_json.get_server_language() != "typescript":
             pretty.print_info("Removing rimraf server dir")
-            tmp_pkg_json = package_json.replace("rimraf server &&", "")
+            server_dir_path = file_system.join_path(sylk_json.code_base_path,'server')
+            tmp_pkg_json = package_json(sylk_json.project.get('packageName'),sylk_json.code_base_path).replace(f"rimraf {server_dir_path} &&", "")
         else:
-            tmp_pkg_json = package_json
+            tmp_pkg_json = package_json(sylk_json.project.get('packageName'),sylk_json.code_base_path)
         file_system.wFile(
             file_system.join_path(sylk_json.path, "package.json"),
-            tmp_pkg_json.replace("REPLACEME", sylk_json.project.get("packageName")),
+            tmp_pkg_json,
         )
 
         # Bin files
@@ -155,7 +156,7 @@ def init_project_structure(
             )
             file_system.wFile(
                 file_system.join_path(
-                    sylk_json.path, "services", sylk_json._root_protos, "tsconfig.json"
+                    sylk_json.path, sylk_json.code_base_path, "services", sylk_json._root_protos, "tsconfig.json"
                 ),
                 protos_ts_config_client_only(sylk_json.domain),
             )
@@ -248,43 +249,43 @@ def write_clients(
                         pretty.print_warning(f"[{__name__}] `{hook}` missing command")
 
     if file_system.check_if_dir_exists(
-        file_system.join_path(sylk_json.path, "clients", "typescript")
+        file_system.join_path(sylk_json.path, sylk_json.code_base_path, "clients", "typescript")
     ):
         file_system.mkdir(
-            file_system.join_path(sylk_json.path, "clients", "typescript", sylk_json._root_protos)
+            file_system.join_path(sylk_json.path, sylk_json.code_base_path, "clients", "typescript", sylk_json._root_protos)
         )
     else:
         file_system.mkdir(
-            file_system.join_path(sylk_json.path, "clients", "typescript")
+            file_system.join_path(sylk_json.path, sylk_json.code_base_path, "clients", "typescript")
         )
         file_system.mkdir(
-            file_system.join_path(sylk_json.path, "clients", "typescript", sylk_json._root_protos)
+            file_system.join_path(sylk_json.path, sylk_json.code_base_path, "clients", "typescript", sylk_json._root_protos)
         )
 
     if file_system.check_if_dir_exists(
-        file_system.join_path(sylk_json.path, "server", "services", sylk_json._root_protos)
+        file_system.join_path(sylk_json.path, sylk_json.code_base_path, "server", "services", sylk_json._root_protos)
     ):
         for f in file_system.walkFiles(
-            file_system.join_path(sylk_json.path, "server", "services", sylk_json._root_protos)
+            file_system.join_path(sylk_json.path, sylk_json.code_base_path, "server", "services", sylk_json._root_protos)
         ):
             file_system.cpDir(
-                file_system.join_path(sylk_json.path, "server", "services", sylk_json._root_protos),
+                file_system.join_path(sylk_json.path, sylk_json.code_base_path, "server", "services", sylk_json._root_protos),
                 file_system.join_path(
-                    sylk_json.path, "clients", "typescript", sylk_json._root_protos
+                    sylk_json.path, sylk_json.code_base_path, "clients", "typescript", sylk_json._root_protos
                 ),
             )
 
         if file_system.check_if_dir_exists(
             file_system.join_path(
-                sylk_json.path, "server", "services", sylk_json._root_protos, "google"
+                sylk_json.path, sylk_json.code_base_path, "server", "services", sylk_json._root_protos, "google"
             )
         ):
             file_system.cpDir(
                 file_system.join_path(
-                    sylk_json.path, "server", "services", sylk_json._root_protos, "google"
+                    sylk_json.path, sylk_json.code_base_path, "server", "services", sylk_json._root_protos, "google"
                 ),
                 file_system.join_path(
-                    sylk_json.path, "clients", "typescript", sylk_json._root_protos, "google"
+                    sylk_json.path, sylk_json.code_base_path, "clients", "typescript", sylk_json._root_protos, "google"
                 ),
             )
 
@@ -304,7 +305,7 @@ def write_clients(
         sylk_json=sylk_json
     )
     file_system.wFile(
-        file_system.join_path(sylk_json.path, "services", "index.ts"),
+        file_system.join_path(sylk_json.path, sylk_json.code_base_path, "services", "index.ts"),
         client.__str__(),
         overwrite=True,
     )

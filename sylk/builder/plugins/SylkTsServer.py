@@ -55,9 +55,9 @@ def init_project_structure(
 ):
     directories = [
         # Utils
-        file_system.join_path(sylk_json.path, "services", "utils"),
+        file_system.join_path(sylk_json.path, sylk_json.code_base_path, "services", "utils"),
         # Protos
-        file_system.join_path(sylk_json.path, "services", sylk_json._root_protos),
+        file_system.join_path(sylk_json.path, sylk_json.code_base_path, "services", sylk_json._root_protos),
     ]
 
     if pre_data.get('protos_only',False) == False:
@@ -66,18 +66,18 @@ def init_project_structure(
             file_system.mkdir(dir)
         # Utils error
         file_system.wFile(
-            file_system.join_path(sylk_json.path, "services", "utils", "error.ts"),
+            file_system.join_path(sylk_json.path, sylk_json.code_base_path, "services", "utils", "error.ts"),
             utils_errors_ts,
         )
         # Utils Interfaces
         file_system.wFile(
-            file_system.join_path(sylk_json.path, "services", "utils", "interfaces.ts"),
+            file_system.join_path(sylk_json.path, sylk_json.code_base_path, "services", "utils", "interfaces.ts"),
             utils_interfaces,
         )
         # package.json
         file_system.wFile(
             file_system.join_path(sylk_json.path, "package.json"),
-            package_json.replace("REPLACEME", sylk_json.project.get("packageName")),
+            package_json(sylk_json.project.get("packageName"), sylk_json.code_base_path),
         )
 
         # Bin files
@@ -101,7 +101,7 @@ def init_project_structure(
         if sylk_json.get_server_language() == "typescript":
             file_system.wFile(
                 file_system.join_path(sylk_json.path, "bin", "run-server.sh"),
-                bash_run_server_script_ts,overwrite=True
+                bash_run_server_script_ts(sylk_json.code_base_path),overwrite=True
             )
 
         # file_system.wFile(file_system.join_path(sylk_json.path,'.webezy','contxt.json'),'{"files":[]}')

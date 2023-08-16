@@ -123,9 +123,10 @@ class SylkArchitect:
         server_language=SylkServer_pb2.SylkServerLanguages.Name(SylkServer_pb2.python),
         clients=[],
     ) -> SylkProject_pb2.SylkProject:
+    
         name = name if name is not None else self._project_name
-        dict = generate_project(self._path, name, server_language, clients, json=True)
-        project = generate_project(self._path, name, server_language, clients)
+        dict = generate_project(self._path, name, server_language, clients, json=True, code_base_path=self._sylk.sylkJson.get('configs',{}).get('codeBasePath'))
+        project = generate_project(self._path, name, server_language, clients, code_base_path=self._sylk.sylkJson.get('configs',{}).get('codeBasePath'))
         self._sylk.execute(CommandMap._ADD_RESOURCE, {"project": dict}, [])
         self._project = project
         return project

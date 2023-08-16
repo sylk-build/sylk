@@ -19,6 +19,9 @@
 # OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION
 # WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 
+from sylk.commons import file_system
+
+
 gitignore_py = "# Byte-compiled / optimized / DLL files\n\
 __pycache__/\n\
 *.py[cod]\n\
@@ -262,18 +265,19 @@ done'.format(
     _OPEN_BRCK, _CLOSING_BRCK
 )
 
-bash_run_server_script_ts = '#!/bin/bash\n\n\
+def bash_run_server_script_ts(code_base_path: str):
+    return '#!/bin/bash\n\n\
 if [[ $1 == "debug" ]]\n\
 then\n\
 \techo "Debug mode: $1"\n\
-\tGRPC_VERBOSITY=DEBUG GRPC_TRACE=all node ./server/server.js\n\
+\tGRPC_VERBOSITY=DEBUG GRPC_TRACE=all node {0}\n\
 elif [[ $1 == "info" ]]\n\
 then\n\
 \techo "Info Mode: $1"\n\
-\tGRPC_VERBOSITY=INFO GRPC_TRACE=all node ./server/server.js\n\
+\tGRPC_VERBOSITY=INFO GRPC_TRACE=all node {0}\n\
 else\n\
-\tnode ./server/server.js\n\
-fi'
+\tnode {0}\n\
+fi'.format(file_system.join_path('.',code_base_path,'server','server.js'))
 
 protos_compile_script_ts = 'const path = require("path");\n\
 const { execSync } = require("child_process");\n\
@@ -430,16 +434,16 @@ def js_package_json(prj_name):
         "REPLACEME", prj_name
     )
 
-
-package_json = '{\n\
-    "name": "REPLACEME",\n\
+def package_json(prj_name: str,code_base_path: str):
+ return '{\n\
+    "name": "{0}",\n\
     "version": "1.0.0",\n\
     "description": "This project has been generated thanks to ```sylk.io``` CLI. For start using it please run  ```sylk run --build```  and see the magic in action. For more information please visit https://docs.sylk.build",\n\
     "main": "bin/proto.js",\n\
     "scripts": {\n\
         "test": "echo \\"Error: no test specified\\" && exit 1",\n\
         "lint": "eslint --ext .ts .",\n\
-        "build": "node bin/proto && rimraf clients/typescript/protos && rimraf clients/typescript/index.* && rimraf server && tsc -b",\n\
+        "build": "node bin/proto && rimraf {1}/clients/typescript/protos && rimraf {1}/clients/typescript/index.* && rimraf {1}/server && tsc -b",\n\
         "build:webpack": "bash bin/webpack.sh",\n\
         "start": "node clients/typescript/server",\n\
         "client": "node clients/typescript/client",\n\
@@ -466,7 +470,7 @@ package_json = '{\n\
         "typescript": "^4.8.2",\n\
         "ts-node": "^10.9.1"\n\
     }\n\
-}'
+}'.format(prj_name, code_base_path)
 
 package_json_webpack = '{\n\
   "name": "REPLACEME",\n\
@@ -657,18 +661,19 @@ def protos_ts_config_client_only(domain):
 {_CLOSING_BRCK}'
 
 
-bash_run_server_script_go = '#!/bin/bash\n\n\
+def bash_run_server_script_go(code_base_path):
+    return '#!/bin/bash\n\n\
 if [[ $1 == "debug" ]]\n\
 then\n\
 \techo "Debug mode: $1"\n\
-\tGRPC_VERBOSITY=DEBUG GRPC_TRACE=all go run ./server/server.go\n\
+\tGRPC_VERBOSITY=DEBUG GRPC_TRACE=all go run {0}\n\
 elif [[ $1 == "info" ]]\n\
 then\n\
 \techo "Info Mode: $1"\n\
-\tGRPC_VERBOSITY=INFO GRPC_TRACE=all go run ./server/server.go\n\
+\tGRPC_VERBOSITY=INFO GRPC_TRACE=all go run {0}\n\
 else\n\
-\tgo run ./server/server.go\n\
-fi'
+\tgo run {0}\n\
+fi'.format(file_system.join_path('.',code_base_path,'server','server.go'))
 
 logger_js = ""
 

@@ -62,11 +62,11 @@ def init_project_structure(
 ):
     directories = [
         # Clients
-        file_system.join_path(sylk_json.path, "clients", "go"),
-        file_system.join_path(sylk_json.path, "clients", "go", sylk_json._root_protos),
-        file_system.join_path(sylk_json.path, "clients", "go", "utils"),
+        file_system.join_path(sylk_json.path, sylk_json.code_base_path, "clients", "go"),
+        file_system.join_path(sylk_json.path, sylk_json.code_base_path, "clients", "go", sylk_json._root_protos),
+        file_system.join_path(sylk_json.path, sylk_json.code_base_path, "clients", "go", "utils"),
         # Protos
-        file_system.join_path(sylk_json.path, "services", sylk_json._root_protos),
+        file_system.join_path(sylk_json.path, sylk_json.code_base_path, "services", sylk_json._root_protos),
     ]
     if pre_data.get('protos_only',False) == False:
 
@@ -74,7 +74,7 @@ def init_project_structure(
             file_system.mkdir(dir)
 
         file_system.wFile(
-            file_system.join_path(sylk_json.path, "clients", "go", "utils", "channel.go"),
+            file_system.join_path(sylk_json.path, sylk_json.code_base_path, "clients", "go", "utils", "channel.go"),
             sylk_go_utils_channel,
         )
         # file_system.wFile(file_system.join_path(sylk_json.path,'.gitignore'),gitignore_file,True)
@@ -90,9 +90,9 @@ def pre_compile_protos(sylk_json: helpers.SylkJson, sylk_context: helpers.SylkCo
         return {
             "sylk.builder.plugins.SylkProto:compile_protos():commands": [
                 f"--proto_path={sylk_json._root_protos}/",
-                f"--go_out=./services/{sylk_json._root_protos}",
+                f"--go_out=./{file_system.join_path(sylk_json.code_base_path,'services',sylk_json._root_protos)}",
                 f"--go_opt=paths=source_relative",
-                f"--go-grpc_out=./services/{sylk_json._root_protos}",
+                f"--go-grpc_out=./{file_system.join_path(sylk_json.code_base_path,'services',sylk_json._root_protos)}",
                 f"--go-grpc_opt=paths=source_relative",
                 f"-I./{sylk_json._root_protos}/",
             ],
@@ -127,15 +127,15 @@ def pre_compile_protos(sylk_json: helpers.SylkJson, sylk_context: helpers.SylkCo
 @builder.hookimpl
 def write_clients(sylk_json: helpers.SylkJson, sylk_context: helpers.SylkContext):
     if file_system.check_if_dir_exists(
-        file_system.join_path(sylk_json.path, "clients", "go")
+        file_system.join_path(sylk_json.path, sylk_json.code_base_path, "clients", "go")
     ):
         file_system.mkdir(
-            file_system.join_path(sylk_json.path, "clients", "go", sylk_json._root_protos)
+            file_system.join_path(sylk_json.path, sylk_json.code_base_path, "clients", "go", sylk_json._root_protos)
         )
     else:
-        file_system.mkdir(file_system.join_path(sylk_json.path, "clients", "go"))
+        file_system.mkdir(file_system.join_path(sylk_json.path, sylk_json.code_base_path, "clients", "go"))
         file_system.mkdir(
-            file_system.join_path(sylk_json.path, "clients", "go", sylk_json._root_protos)
+            file_system.join_path(sylk_json.path, sylk_json.code_base_path, "clients", "go", sylk_json._root_protos)
         )
 
     # if file_system.check_if_dir_exists(file_system.join_path(sylk_json.path, 'services','protos')):
