@@ -47,7 +47,7 @@ parser.add_argument('--proto-path',default='protos')           # optional argume
 parser.add_argument('--code-base',default='src')           # optional argument
 
 args = parser.parse_args()
-print(args)
+# print(args)
 # Constants
 _PATH = file_system.join_path(os.getcwd(), 'sylk.json') 
 _DOMAIN = args.domain

@@ -98,21 +98,26 @@ class SylkArchitect:
         self._sylk.registerCommand(CommandMap._EDIT_RESOURCE, self._edit_resource)
         self._sylk.registerCommand(CommandMap._ADD_RESOURCE, self._add_resource)
         self._sylk.registerHook(CommandMap._ADD_RESOURCE, "log", self._logger)
+        self._unsaved_change = False
 
     def SetDomain(self, domain):
+        self._unsaved_change = True
         self._domain = domain
         self._sylk.execute(
             CommandMap._ADD_RESOURCE, {"organization": {"domain": domain}}, []
         )
 
     def SetOrgId(self, orgId):
+        self._unsaved_change = True
         self._org_id = orgId
         self._sylk.execute(CommandMap._ADD_RESOURCE, {"organization": {"orgId": orgId}}, [])
 
     def SetConfig(self, config):
+        self._unsaved_change = True
         self._sylk.execute(CommandMap._ADD_RESOURCE, {"configs": config}, [])
 
     def SetSylkVersion(self):
+        self._unsaved_change = True
         self._sylk.execute(
             CommandMap._ADD_RESOURCE, {"sylkVersion": __version__.__version__}, []
         )
@@ -123,7 +128,7 @@ class SylkArchitect:
         server_language=SylkServer_pb2.SylkServerLanguages.Name(SylkServer_pb2.python),
         clients=[],
     ) -> SylkProject_pb2.SylkProject:
-    
+        self._unsaved_change = True
         name = name if name is not None else self._project_name
         dict = generate_project(self._path, name, server_language, clients, json=True, code_base_path=self._sylk.sylkJson.get('configs',{}).get('codeBasePath'))
         project = generate_project(self._path, name, server_language, clients, code_base_path=self._sylk.sylkJson.get('configs',{}).get('codeBasePath'))
@@ -145,7 +150,7 @@ class SylkArchitect:
         tag=None,
         order_pkg=[]
     ):
-
+        self._unsaved_change = True
         path_with_domain = package.package + '.' + name
         service = generate_service(
             self._path,
@@ -179,6 +184,7 @@ class SylkArchitect:
         return service
 
     def AddRPC(self, package, service, name, order_pkg=[], *args):
+        self._unsaved_change = True
         # service_name = service.name
         # service_ver = service.full_name.split(".")[2]
         package_path = (
@@ -215,6 +221,7 @@ class SylkArchitect:
         version_component=None,
         order_pkg=[]
     ):
+        self._unsaved_change = True
         if name == self._domain:
             path_with_domain = self._domain
         else:
@@ -263,6 +270,7 @@ class SylkArchitect:
         tag=None,
         order_pkg=[]
     ):
+        self._unsaved_change = True
         path_with_domain = self._domain + '.' + name
         message = generate_message(
             self._path,
@@ -306,6 +314,7 @@ class SylkArchitect:
         tag=None,
         order_pkg=[]
     ):
+        self._unsaved_change = True
         enum = generate_enum(
             self._path,
             self._domain if domain is None else domain,
@@ -330,9 +339,20 @@ class SylkArchitect:
         )
         return enum
 
+    def ReplaceService(
+        self,
+        service
+    ):
+        self._unsaved_change = True
+        self._sylk.execute(
+            CommandMap._EDIT_RESOURCE, MessageToDict(service)
+        )
+        return service
+
     def EditService(
         self, name, dependencies, description, methods, extensions=None, version="v1"
     ):
+        self._unsaved_change = True
         service = generate_service(
             self._path,
             self._domain,
@@ -348,6 +368,16 @@ class SylkArchitect:
         self._sylk.execute(CommandMap._EDIT_RESOURCE, MessageToDict(service))
         return service
 
+    def ReplacePackage(
+        self,
+        package
+    ):
+        self._unsaved_change = True
+        self._sylk.execute(
+            CommandMap._EDIT_RESOURCE, MessageToDict(package)
+        )
+        return package
+
     def EditPackage(
         self,
         name,
@@ -358,6 +388,7 @@ class SylkArchitect:
         extensions=None,
         version="v1",
     ):
+        self._unsaved_change = True
         package = generate_package(
             self._path,
             name,
@@ -372,6 +403,18 @@ class SylkArchitect:
         self._sylk.execute(CommandMap._EDIT_RESOURCE, MessageToDict(package))
         return package
 
+    def ReplaceMessage(
+        self,
+        package_path,
+        message_name,
+        message
+    ):
+        self._unsaved_change = True
+        self._sylk.execute(
+            CommandMap._EDIT_RESOURCE, MessageToDict(message), old_name=message_name, package=package_path
+        )
+        return message
+
     def EditMessage(
         self,
         package,
@@ -383,6 +426,7 @@ class SylkArchitect:
         extensions=None,
         tag=None
     ):
+        self._unsaved_change = True
         message = generate_message(
             self._path,
             self._domain,
@@ -408,8 +452,21 @@ class SylkArchitect:
         description=None,
         tag=None,
     ):
+        self._unsaved_change = True
         enum = generate_enum(self._path, self._domain, package, name, enum_values,tag=tag,description=description)
         self._sylk.execute(CommandMap._EDIT_RESOURCE, MessageToDict(enum))
+
+    def ReplaceEnum(
+        self,
+        package_path,
+        enum_name,
+        enum
+    ): 
+        self._unsaved_change = True
+        self._sylk.execute(
+            CommandMap._EDIT_RESOURCE, MessageToDict(enum), old_name=enum_name, package=package_path
+        )
+        return enum
 
     def EditRPC(
         self,
@@ -422,6 +479,7 @@ class SylkArchitect:
         description,
         extensions=None,
     ):
+        self._unsaved_change = True
         RPC = generate_rpc(
             self._path,
             name,
@@ -434,27 +492,34 @@ class SylkArchitect:
         self._sylk.execute(CommandMap._EDIT_RESOURCE, MessageToDict(RPC))
 
     def RemoveEnum(self, full_name):
+        self._unsaved_change = True
         self._sylk.execute(CommandMap._REMOVE_RESOURCE, full_name)
 
     def RemoveMessage(self, full_name):
+        self._unsaved_change = True
         self._sylk.execute(CommandMap._REMOVE_RESOURCE, full_name)
 
     def RemoveRpc(self, full_name):
+        self._unsaved_change = True
         self._sylk.execute(CommandMap._REMOVE_RESOURCE, full_name)
 
     def RemoveField(self, full_name):
+        self._unsaved_change = True
         self._sylk.execute(CommandMap._REMOVE_RESOURCE, full_name)
 
     def RemoveOneofField(self, full_name):
+        self._unsaved_change = True
         self._sylk.execute(CommandMap._REMOVE_RESOURCE, full_name)
 
     def RemoveEnumValue(self, full_name):
+        self._unsaved_change = True
         self._sylk.execute(CommandMap._REMOVE_RESOURCE, full_name)
 
     def Save(self):
         logging.debug("Saving sylk.build architect process")
 
         self._sylk.save()
+        self._unsaved_change = False
 
     def undo(self):
         self._sylk.undo()

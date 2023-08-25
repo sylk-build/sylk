@@ -351,7 +351,11 @@ def create_new_project(
                 print_error(f"Error root dir exists\n[{join_path(root,project_name)}]")
                 exit(1)
         else:
-            result_path = join_path(path, project_name)
+            if path == ".":
+                path = os.getcwd()
+                result_path = join_path(path)
+            else:
+                result_path = join_path(path, project_name)
 
         clients = []
         for k in results:
@@ -369,7 +373,7 @@ def create_new_project(
                         client_lang = c
                     else:
                         client_lang = SylkClient_pb2.SylkClientLanguages.Name(c)
-                    out_dir = join_path(result_path, results.get("code_base_path",""), "clients", client_lang)
+                    out_dir = join_path(result_path, results.get("code_base_path") if results.get("code_base_path") is not None else '', "clients", client_lang)
                     print_info(f"Adding client: {client_lang}\n\t-> {out_dir}")
                     clients.append({"out_dir": out_dir, "language": client_lang})
             if k == "domain":
@@ -378,7 +382,7 @@ def create_new_project(
 
         out_dir = join_path(
             result_path,
-            results.get("code_base_path",''),
+            results.get("code_base_path") if results.get("code_base_path") is not None else '',
             "clients",
             results["server"]
             if type(results["server"]) == str

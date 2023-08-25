@@ -853,6 +853,7 @@ class SylkJson:
                     services=services if services is not None else [],
                     sylk_json=self,
                     version=ver,
+                    extensions=pkg.get('extensions')
                 )
             else:
                 raise SylkValidationError(
@@ -1165,7 +1166,7 @@ class SylkJson:
 
     @property
     def code_base_path(self):
-        return self._config.get('codeBasePath', '')
+        return self._config.get('codeBasePath') if self._config.get('codeBasePath') is not None else ''
 
     @property
     def domain(self):
@@ -1201,6 +1202,29 @@ def load_sylk_json(path: str):
     return SYLK_JSON
 
 
+def proto_struct_to_dict(proto_struct):
+    result = {}
+    for key, value in proto_struct.fields.items():
+        if value.HasField("null_value"):
+            result[key] = None
+        elif value.HasField("number_value"):
+            result[key] = value.number_value
+        elif value.HasField("string_value"):
+            result[key] = value.string_value
+        elif value.HasField("bool_value"):
+            result[key] = value.bool_value
+        elif value.HasField("struct_value"):
+            result[key] = proto_struct_to_dict(value.struct_value)
+        elif value.HasField("list_value"):
+            result[key] = [proto_struct_to_dict(v) if v.HasField("struct_value") else v for v in value.list_value.values]
+    return result
+
+def to_snake_case(s):
+    # Insert an underscore before all uppercase letters, then make lowercase
+    s1 = re.sub('(.)([A-Z][a-z]+)', r'\1_\2', s)
+    return re.sub('([a-z0-9])([A-Z])', r'\1_\2', s1).lower()
+
+
 class SylkProtoFile:
     def __init__(self, file_name, package, sylk_json: SylkJson = None, is_tag: bool = False) -> None:
         self._file_name = file_name
@@ -1221,13 +1245,25 @@ class SylkProtoFile:
             file_ver = f";{self._package.name}v{file_ver.get('version')}{file_ver.get('channel') if file_ver.get('channel') is not None else ''}{file_ver.get('release') if file_ver.get('release') is not None else ''}"
         else:
             file_ver = ''
-        go_package = f'\noption go_package = "{self._sylk_json.project.get("goPackage")}/services/{base_protos}{pkg_path}{file_ver}";' if self._sylk_json.project.get("goPackage") is not None else ''
-        return "package {};{}".format(self._package.package,go_package)
+
+        metadata = []
+        for k in self._package.extensions.keys():
+            # TODO move to a defind protobuf message
+            if k == 'files':
+                d = proto_struct_to_dict(self._package.extensions[k])
+                for file_name in d.keys():
+                    if file_name == self._file_name:
+                        for file_opt in d[file_name]:
+                            metadata.append('option {} = "{}";'.format(to_snake_case(file_opt), d[file_name][file_opt]))
+
+        metadata = '\n'.join(metadata)
+        # go_package = f'\noption go_package = "{self._sylk_json.project.get("goPackage")}/services/{base_protos}{pkg_path}{file_ver}";' if self._sylk_json.project.get("goPackage") is not None else ''
+        return "\npackage {};\n\n{}".format(self._package.package,metadata)
 
     def get_imports(self):
         dependencies = []
-        print(self._file_path)
-        current_file_path = self._file_path.split(self._sylk_json.path + '/' +self._sylk_json._root_protos + '/')[1]
+        # print(self._file_path)
+        current_file_path = self._file_path.split(join_path(self._sylk_json.path,self._sylk_json._root_protos))[1]
         if self._file_name != self._package.name or self._is_tag == True:
             refs = []
             msgs = [m.full_name for m in self._package.messages if m.tag == self._file_name]
@@ -1298,7 +1334,9 @@ class SylkProtoFile:
             for rpc in s.methods:
                 in_stream = "stream " if rpc.client_streaming == True else ""
                 out_stream = "stream " if rpc.server_streaming == True else ""
-                methods.append("\t// [{}] - {}".format(rpc.full_name, rpc.description))
+                format_desc =  rpc.description.split('\n') if rpc.description.split('\n')[-1]!='' else rpc.description.split('\n')[:-1]
+                if format_desc is not None and len(format_desc) > 0:
+                    methods.append("\t// {}".format('// '.join(format_desc)))
                 methods.append(
                     "\trpc {} ({}{}) returns ({}{});".format(
                         rpc.name, in_stream, rpc.input_type, out_stream, rpc.output_type
@@ -1306,6 +1344,9 @@ class SylkProtoFile:
                 )
             methods = "\n".join(methods)
 
+            format_desc =  s.description.split('\n') if s.description.split('\n')[-1]!='' else s.description.split('\n')[:-1]
+            if format_desc is not None and len(format_desc) > 0:
+                temp_svcs.append("// {}".format('// '.join(format_desc)))
             temp_svcs.append(
                 "service {0} {2}\n{1}\n{3}".format(
                     s.name, methods, _OPEN_BRCK, _CLOSING_BRCK
@@ -1361,16 +1402,16 @@ class SylkProtoFile:
 
             field_extensions = ""
             format_desc =  f.description.split('\n') if f.description.split('\n')[-1]!='' else f.description.split('\n')[:-1]
-            if inline == False:
+            if inline == False and len(format_desc)>0:
                 fields.append(
-                    "\t// [{}] - {}".format(
-                        f.full_name, '\n\t//'.join(format_desc)
+                    "\t// {}".format(
+                        '\n\t//'.join(format_desc)
                     )
                 )
-            else:
+            elif len(format_desc)>0:
                 inline_fields.append(
-                    "\t\t// [{}] - {}".format(
-                        f.full_name, '\n\t//'.join(format_desc)
+                    "\t\t// {}".format(
+                       '\n\t//'.join(format_desc)
                     )
                 )
 
@@ -1409,11 +1450,12 @@ class SylkProtoFile:
                     )
                     oneof_field_extensions = ""
                     format_desc = oneof.description.split('\n') if oneof.description.split('\n')[-1]!='' else oneof.description.split('\n')[:-1]
-                    oneofs.append(
-                        "{}\t\t// [{}] - {}".format(
-                            '\t' if inline == True else '' ,oneof.full_name, '\n\t\t//'.join(format_desc)
+                    if format_desc is not None and len(format_desc) > 0:
+                        oneofs.append(
+                            "{}\t\t// {}".format(
+                                '\t' if inline == True else '' , '\n\t\t//'.join(format_desc)
+                            )
                         )
-                    )
                     oneofs.append(
                         "{}\t\t{} {} = {}{};".format(
                            '\t' if inline == True else '' ,oneof_field_type, oneof.name, oneof.index, oneof_field_extensions
@@ -1461,20 +1503,24 @@ class SylkProtoFile:
                     inline_fields = []
                     for f in msg.fields:
                         inline_fields = inline_fields + _process_field(self,f,True)
-                    format_desc =  m.description.split('\n') if m.description.split('\n')[-1]!='' else m.description.split('\n')[:-1]
+                    format_desc =  msg.description.split('\n') if msg.description.split('\n')[-1]!='' else msg.description.split('\n')[:-1]
+                    if format_desc is not None and len(format_desc) > 0:
+                        temp_inlines.append("\n\t// {}".format('\n//'.join(format_desc)))
                     temp_inlines.append(
-                        "\n\t// [{4}] - {5}\n\tmessage {0} {2}\n{1}\n\t{3}\n".format(
-                            msg.name, "\n".join(inline_fields), _OPEN_BRCK, _CLOSING_BRCK, msg.full_name, '\n//'.join(format_desc)
+                        "\n\tmessage {0} {2}\n{1}\n\t{3}\n".format(
+                            msg.name, "\n".join(inline_fields), _OPEN_BRCK, _CLOSING_BRCK, msg.full_name, 
                         )
                     )
                 else:
                     enm = SylkEnum_pb2.SylkEnum()
                     inline.Unpack(enm)
                     values = "\n\t".join(self._process_enum(enm))
-                    format_desc =  m.description.split('\n') if m.description.split('\n')[-1]!='' else m.description.split('\n')[:-1]
+                    format_desc =  enm.description.split('\n') if enm.description.split('\n')[-1]!='' else enm.description.split('\n')[:-1]
+                    if format_desc is not None and len(format_desc) > 0:
+                        temp_inlines.append("\n\t// {}".format('\n//'.join(format_desc)))
                     temp_inlines.append(
-                        "\n\t// [{4}] - {5}\n\tenum {0} {2}\n{1}\n\t{3}\n".format(
-                            enm.name, values, _OPEN_BRCK, _CLOSING_BRCK, enm.full_name, '\n//'.join(format_desc)
+                        "\n\tenum {0} {2}\n{1}\n\t{3}\n".format(
+                            enm.name, values, _OPEN_BRCK, _CLOSING_BRCK, enm.full_name
                         )
                     )
                         
@@ -1483,9 +1529,13 @@ class SylkProtoFile:
             temp_inlines = "\n".join(temp_inlines)
             fields = "\n".join(fields)
             format_desc =  m.description.split('\n') if m.description.split('\n')[-1]!='' else m.description.split('\n')[:-1]
+            if format_desc is not None and len(format_desc) > 0:
+                temp_msgs.append("\n// {}".format('\n//'.join(format_desc)))
+            else:
+                temp_msgs.append("")
             temp_msgs.append(
-                "\n// [{6}] - {5}\nmessage {0} {3}\n{1}{2}\n{4}".format(
-                    m.name, temp_inlines, fields, _OPEN_BRCK, _CLOSING_BRCK, '\n//'.join(format_desc),m.full_name
+                "message {0} {3}\n{1}{2}\n{4}".format(
+                    m.name, temp_inlines, fields, _OPEN_BRCK, _CLOSING_BRCK
                 )
             )
         return "\n\n" + "\n".join(temp_msgs) if len(temp_msgs) > 0 else ""
@@ -1494,7 +1544,8 @@ class SylkProtoFile:
         values = []
         for v in sorted(e.values, key=lambda x: x.number):
             format_desc =  v.description.split('\n') if v.description.split('\n')[-1]!='' else v.description.split('\n')[:-1]
-            values.append('\t// [{}] - {}'.format(v.full_name, '\n//'.join(format_desc)))
+            if format_desc is not None and len(format_desc) > 0:
+                values.append('\t// {}'.format('// '.join(format_desc)))
             values.append('\t{} = {};'.format(v.name, v.number))
         return values
     
@@ -1507,15 +1558,19 @@ class SylkProtoFile:
         for e in enums:
             values = "\n".join(self._process_enum(e))
             format_desc =  e.description.split('\n') if e.description.split('\n')[-1]!='' else e.description.split('\n')[:-1]
+            if format_desc is not None and len(format_desc) > 0:
+                temp_enums.append("\n// {}".format('\n//'.join(format_desc)))    
+            else:
+                temp_enums.append("")
             temp_enums.append(
-                "\n// [{4}] - {5}\nenum {0} {2}\n{1}\n{3}".format(
-                    e.name, values, _OPEN_BRCK, _CLOSING_BRCK, e.full_name, '\n//'.join(format_desc)
+                "enum {0} {2}\n{1}\n{3}".format(
+                    e.name, values, _OPEN_BRCK, _CLOSING_BRCK
                 )
             )
         return "\n\n" + "\n".join(temp_enums) if len(temp_enums) > 0 else ""
 
     def to_str(self):
-        return f'// Generated by sylk.build, DO NOT EDIT.\nsyntax = "proto3";\n{self.get_metadata()}{self.get_imports()}{self.get_services()}{self.get_messages()}{self.get_enums()}'
+        return f'// Generated by sylk.build\nsyntax = "proto3";\n{self.get_metadata()}{self.get_imports()}{self.get_services()}{self.get_messages()}{self.get_enums()}'
 
 
 class SylkProto:
@@ -1740,11 +1795,11 @@ class SylkProto:
                 )
 
                 rpcs.append(
-                    f"// [sylk] - {description}\n\trpc {rpc_name} ({stream_in}{msg_name_in}) returns ({stream_out}{msg_name_out});"
+                    f"// {description}\n\trpc {rpc_name} ({stream_in}{msg_name_in}) returns ({stream_out}{msg_name_out});"
                 )
             rpcs = "\n\t".join(rpcs)
             desc = (
-                f"// [sylk] {self._description}\n"
+                f"// {self._description}\n"
                 if self._description is not None
                 else ""
             )
@@ -1937,13 +1992,13 @@ class SylkProto:
                         or ext_type == "MethodOptions"
                     ):
                         f_desc = (
-                            f"// [{f_fullname}] - {f_desc}\n\t\t"
+                            f"// {f_desc}\n\t\t"
                             if f_desc is not None
                             else ""
                         )
                     else:
                         f_desc = (
-                            f"// [{f_fullname}] - {f_desc}\n\t"
+                            f"// {f_desc}\n\t"
                             if f_desc is not None
                             else ""
                         )
@@ -1957,32 +2012,32 @@ class SylkProto:
                 if ext_type == "FieldOptions":
                     fields = "\n\t\t".join(fields)
                     msgs.append(
-                        f"\n// [{msg_full_name}] - {m_desc}\nmessage {msg_name} {_OPEN_BRCK}\n\textend google.protobuf.FieldOptions {_OPEN_BRCK}\n\t\t{fields}\n\t{_CLOSING_BRCK}\n{_CLOSING_BRCK}\n"
+                        f"\n// {m_desc}\nmessage {msg_name} {_OPEN_BRCK}\n\textend google.protobuf.FieldOptions {_OPEN_BRCK}\n\t\t{fields}\n\t{_CLOSING_BRCK}\n{_CLOSING_BRCK}\n"
                     )
                 elif ext_type == "MessageOptions":
                     fields = "\n\t\t".join(fields)
                     msgs.append(
-                        f"\n// [{msg_full_name}] - {m_desc}\nmessage {msg_name} {_OPEN_BRCK}\n\textend google.protobuf.MessageOptions {_OPEN_BRCK}\n\t\t{fields}\n\t{_CLOSING_BRCK}\n{_CLOSING_BRCK}\n"
+                        f"\n// {m_desc}\nmessage {msg_name} {_OPEN_BRCK}\n\textend google.protobuf.MessageOptions {_OPEN_BRCK}\n\t\t{fields}\n\t{_CLOSING_BRCK}\n{_CLOSING_BRCK}\n"
                     )
                 elif ext_type == "FileOptions":
                     fields = "\n\t\t".join(fields)
                     msgs.append(
-                        f"\n// [{msg_full_name}] - {m_desc}\nmessage {msg_name} {_OPEN_BRCK}\n\textend google.protobuf.FileOptions {_OPEN_BRCK}\n\t\t{fields}\n\t{_CLOSING_BRCK}\n{_CLOSING_BRCK}\n"
+                        f"\n// {m_desc}\nmessage {msg_name} {_OPEN_BRCK}\n\textend google.protobuf.FileOptions {_OPEN_BRCK}\n\t\t{fields}\n\t{_CLOSING_BRCK}\n{_CLOSING_BRCK}\n"
                     )
                 elif ext_type == "ServiceOptions":
                     fields = "\n\t\t".join(fields)
                     msgs.append(
-                        f"\n// [{msg_full_name}] - {m_desc}\nmessage {msg_name} {_OPEN_BRCK}\n\textend google.protobuf.ServiceOptions {_OPEN_BRCK}\n\t\t{fields}\n\t{_CLOSING_BRCK}\n{_CLOSING_BRCK}\n"
+                        f"\n// {m_desc}\nmessage {msg_name} {_OPEN_BRCK}\n\textend google.protobuf.ServiceOptions {_OPEN_BRCK}\n\t\t{fields}\n\t{_CLOSING_BRCK}\n{_CLOSING_BRCK}\n"
                     )
                 elif ext_type == "MethodOptions":
                     fields = "\n\t\t".join(fields)
                     msgs.append(
-                        f"\n// [{msg_full_name}] - {m_desc}\nmessage {msg_name} {_OPEN_BRCK}\n\textend google.protobuf.MethodOptions {_OPEN_BRCK}\n\t\t{fields}\n\t{_CLOSING_BRCK}\n{_CLOSING_BRCK}\n"
+                        f"\n// {m_desc}\nmessage {msg_name} {_OPEN_BRCK}\n\textend google.protobuf.MethodOptions {_OPEN_BRCK}\n\t\t{fields}\n\t{_CLOSING_BRCK}\n{_CLOSING_BRCK}\n"
                     )
                 else:
                     fields = "\n\t".join(fields)
                     msgs.append(
-                        f"\n// [{msg_full_name}] - {m_desc}\nmessage {msg_name} {_OPEN_BRCK}\n\t{fields}\n{_CLOSING_BRCK}\n"
+                        f"\n// {m_desc}\nmessage {msg_name} {_OPEN_BRCK}\n\t{fields}\n{_CLOSING_BRCK}\n"
                     )
 
             msgs = "\n".join(msgs)
@@ -2002,12 +2057,12 @@ class SylkProto:
                     value_number = 0 if v.number is None else v.number
                     v_desc = v.description
                     values.append(
-                        f"// [{enum_full_name}] - {v_desc}\n\t{value_name} = {int(value_number)};"
+                        f"// {v_desc}\n\t{value_name} = {int(value_number)};"
                     )
                 values = "\n\t".join(values)
                 e_desc = e.description
                 tmp_enums.append(
-                    f"// [{enum_full_name}] - {e_desc}\nenum {enum_name} {_OPEN_BRCK}\n\t{values}\n{_CLOSING_BRCK}\n"
+                    f"// {e_desc}\nenum {enum_name} {_OPEN_BRCK}\n\t{values}\n{_CLOSING_BRCK}\n"
                 )
             return "\n".join(tmp_enums)
 
@@ -3320,7 +3375,6 @@ class SylkClientGo:
         imports = []
         go_package_path = self._sylk_json.project.get("goPackage")
         for mod in files:
-            print(mod)
             mod_path = '.'.join(mod.split('/')[:-1])
             mod_name = mod.split('/')[-1].split('.')[0]
             ver = self._sylk_json._proto_tree._parse_version_component(mod_path)

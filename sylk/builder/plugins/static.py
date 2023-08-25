@@ -438,7 +438,7 @@ def package_json(prj_name: str,code_base_path: str):
  return '{\n\
     "name": "{0}",\n\
     "version": "1.0.0",\n\
-    "description": "This project has been generated thanks to ```sylk.io``` CLI. For start using it please run  ```sylk run --build```  and see the magic in action. For more information please visit https://docs.sylk.build",\n\
+    "description": "This project has been generated thanks to ```Sylk.build``` CLI. For start using it please run  ```sylk run --build```  and see the magic in action. For more information please visit https://docs.sylk.build",\n\
     "main": "bin/proto.js",\n\
     "scripts": {\n\
         "test": "echo \\"Error: no test specified\\" && exit 1",\n\

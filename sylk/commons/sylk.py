@@ -293,7 +293,8 @@ class SylkTree:
                 if parent_node.type != 'package':
                     parent_node = self._find_parent(parent_node.full_path,current_node,recursive)
             return parent_node
-
+        else:
+            return self._find_node(node_path.split('.')[0], current_node)
         return None
 
     def _find_node(self, node_path, current_node) -> Node:
@@ -370,6 +371,36 @@ class SylkTree:
         files = []
         for node in self._bfs(self.root):
             if node.type == "package":
+                if len([c for c in node.children if c.type != "package"]) > 0:
+                    tags = set(
+                        [
+                            c.properties.get("tag")
+                            for c in node.children
+                            if c.properties.get("tag") is not None
+                        ]
+                    )
+                    if len(tags) > 0:
+                        for t in tags:
+                            files.append(
+                                node.full_path.replace(".", "/") + "/" + f"{t}.proto"
+                            )
+
+                    if len(
+                        [
+                            c.properties.get("tag")
+                            for c in node.children
+                            if c.properties.get("tag") is not None
+                        ]
+                    ) != len([c for c in node.children if c.type != "package"]):
+                        ver = self._parse_version_component(node.full_path)
+                        if ver is not None:
+                            pkg_name = node.full_path.split(".")[-2]
+                        else:
+                            pkg_name = node.full_path.split(".")[-1]
+                        files.append(
+                            node.full_path.replace(".", "/") + "/" + f"{pkg_name}.proto"
+                        )
+            elif node.type == "root":
                 if len([c for c in node.children if c.type != "package"]) > 0:
                     tags = set(
                         [

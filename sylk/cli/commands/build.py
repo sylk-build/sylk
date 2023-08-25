@@ -21,9 +21,11 @@
 
 from time import time
 from sylk.builder.src.main import SylkBuilder
+from sylk.cli import prompter
+from sylk.commons import proto_comparison
 from sylk.commons.config import parse_project_config
-from sylk.commons.pretty import print_note, print_success
-def build_all(path:str):
+from sylk.commons.pretty import print_error, print_note, print_success, print_warning
+def build_all(path:str, pass_all: bool= False):
     st = time()
     prj_configs = parse_project_config(path,proto=True)
     sylkBuilder = SylkBuilder(path=path,configs=prj_configs)
@@ -34,17 +36,18 @@ def build_all(path:str):
     print_note(f'Build time: {rt:.3f}s')
 
 class Framework:
-    GRPC = "gRPC"
-    SYLK_JS = "sylk-js"
+    GRPC = "GRPC"
+    SYLK_JS = "SYLK_JS"
 
-def build_code(path:str, framework:Framework=Framework.GRPC):
+def build_code(path:str, framework:Framework=Framework.GRPC, pass_all: bool= False):
+    print_note(framework)
     if not hasattr(Framework, framework):
         raise ValueError(f"Invalid framework. Choose from: {[attr for attr in dir(Framework) if not callable(getattr(Framework, attr)) and not attr.startswith('__')]}")
     prj_configs = parse_project_config(path,proto=True)
     sylkBuilder = SylkBuilder(path=path,configs=prj_configs)
     sylkBuilder.BuildOnlyCode()
 
-def build_protos(path:str):
+def build_protos(path:str, pass_all: bool= False):
     prj_configs = parse_project_config(path,proto=True)
     sylkBuilder = SylkBuilder(path=path,configs=prj_configs)
     sylkBuilder.BuildOnlyProtos()

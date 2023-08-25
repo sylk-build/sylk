@@ -98,12 +98,10 @@ class Builder:
                         sylkJson[k] = reorder_dict(sylkJson[k],[c.replace('.','/') for c in order_dict])
 
     def edit_resource(self,sylkJson,resource,args):
-
         resource = resource[0]
         type = resource.get('type')
         kind = resource.get('kind')
         base_protos = sylkJson.get('configs').get('protoBasePath')+'/' if sylkJson.get('configs').get('protoBasePath') is not None else ''
-        
         if type is not None:
             if type == 'descriptor':
                 if kind == resources.ResourceKinds.message.value:
@@ -160,20 +158,22 @@ class Builder:
                 if package is not None:
                     sylkJson['packages'][pkgname] = resource
             elif type == 'service':
-                svc_path = args[0].get('package').replace('.','/')
+                pkg_path = '/'.join(resource.get('fullName').split('.')[:-1])
                 index = 0
-                for s in sylkJson['packages'][svc_path]['services']:
+                for s in sylkJson['packages'][pkg_path]['services']:
                     if args[0] is not None and args[0].get('old_name') is not None:
 
                         if s.get('name') == args[0].get('old_name'):
-                            sylkJson['packages'][svc_path]['services'][index] = resource
+                            sylkJson['packages'][pkg_path]['services'][index] = resource
                             break
 
                     if s.get('fullName') == resource.get('fullName'):
-                        sylkJson['packages'][svc_path]['services'][index] = resource
+                        sylkJson['packages'][pkg_path]['services'][index] = resource
                         break
                     
                     index += 1
+            else:
+                print_error('type not supported for edit: '+type)
 
     def remove_resource(self,sylkJson,full_name,*args,**kwargs):
         """Removing sylk.build resource by full name identifier"""

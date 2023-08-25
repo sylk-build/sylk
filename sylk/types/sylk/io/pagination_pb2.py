@@ -13,11 +13,11 @@ _sym_db = _symbol_database.Default()
 
 
 
-DESCRIPTOR = _descriptor_pool.Default().AddSerializedFile(b'\n\x18sylk/io/pagination.proto\x12\x07sylk.io\":\n\x11PaginationRequest\x12\x11\n\tpage_size\x18\x02 \x01(\x05\x12\x12\n\npage_token\x18\x03 \x01(\t\"-\n\x12PaginationResponse\x12\x17\n\x0fnext_page_token\x18\x02 \x01(\tB;Z9github.com/sylk-build/sylk-io/types/pagination;paginationb\x06proto3')
+DESCRIPTOR = _descriptor_pool.Default().AddSerializedFile(b'\n\x18sylk/io/pagination.proto\x12\x07Sylk.build\":\n\x11PaginationRequest\x12\x11\n\tpage_size\x18\x02 \x01(\x05\x12\x12\n\npage_token\x18\x03 \x01(\t\"-\n\x12PaginationResponse\x12\x17\n\x0fnext_page_token\x18\x02 \x01(\tB;Z9github.com/sylk-build/sylk-io/types/pagination;paginationb\x06proto3')
 
 _globals = globals()
 _builder.BuildMessageAndEnumDescriptors(DESCRIPTOR, _globals)
-_builder.BuildTopDescriptorsAndMessages(DESCRIPTOR, 'sylk.io.pagination_pb2', _globals)
+_builder.BuildTopDescriptorsAndMessages(DESCRIPTOR, 'Sylk.build.pagination_pb2', _globals)
 if _descriptor._USE_C_DESCRIPTORS == False:
 
   DESCRIPTOR._options = None

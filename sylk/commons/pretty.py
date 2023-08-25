@@ -74,9 +74,9 @@ def print_error(message,pprint=False,tag=None):
         sep = '-'*45
         if tag is not None:
             print_error(tag)
-        print(bcolors.FAIL+sep+bcolors.ENDC)
+        print(bcolors.FAIL+sep)
         pretty(message)
-        print(bcolors.FAIL+sep+bcolors.ENDC)
+        print(sep+bcolors.ENDC)
 
     else:
-        print(bcolors.FAIL+"[!]"+bcolors.ENDC,message)
+        print(bcolors.FAIL+"[!]",message+bcolors.ENDC)

@@ -380,50 +380,54 @@ def generate_package(
     if extensions is not None:
         temp_ext = {}
         for ext in extensions:
-            if (
-                ".".join(ext.split(".")[:3]) not in dependencies
-                and ".".join(ext.split(".")[:3]) != pkg_full_path
-            ):
-                depend_name = ".".join(ext.split(".")[:3])
-                print_warning("Adding depndency {}".format(depend_name))
-                dependencies.append(depend_name)
-            if sylk_json is not None:
-                pkg_path = "protos/{0}/{1}/{2}/{1}.proto".format(
-                    ext.split(".")[0], ext.split(".")[1], ext.split(".")[2]
-                )
-                if sylk_json.get("packages"):
-                    ext_package = sylk_json.get("packages").get(pkg_path)
-                    ext_msg = next(
-                        (
-                            m
-                            for m in ext_package.get("messages")
-                            if m.get("fullName") == ".".join(ext.split(".")[:-1])
-                        ),
-                        None,
-                    )
-                    if ext_msg is not None:
-                        ext_field = next(
-                            (
-                                f_ext
-                                for f_ext in ext_msg.get("fields")
-                                if f_ext.get("fullName") == ext
-                            ),
-                            None,
-                        )
-                        if ext_field is not None:
-                            temp_ext = parse_proto_extension(
-                                ext_field.get("fieldType"),
-                                ext_field.get("label"),
-                                ext_field,
-                                extensions[ext],
-                                temp_ext,
-                                sylk_json=sylk_json,
-                            )
-            else:
-                print_error(
-                    "Cannot parse extension value without context to sylk.json file !"
-                )
-                exit(1)
+            tmp = Struct()
+            tmp.update(extensions[ext])
+            temp_ext[ext] = tmp
+            
+            # if (
+            #     ".".join(ext.split(".")[:3]) not in dependencies
+            #     and ".".join(ext.split(".")[:3]) != pkg_full_path
+            # ):
+            #     depend_name = ".".join(ext.split(".")[:3])
+            #     print_warning("Adding depndency {}".format(depend_name))
+            #     dependencies.append(depend_name)
+            # if sylk_json is not None:
+            #     pkg_path = "protos/{0}/{1}/{2}/{1}.proto".format(
+            #         ext.split(".")[0], ext.split(".")[1], ext.split(".")[2]
+            #     )
+            #     if sylk_json.get("packages"):
+            #         ext_package = sylk_json.get("packages").get(pkg_path)
+            #         ext_msg = next(
+            #             (
+            #                 m
+            #                 for m in ext_package.get("messages")
+            #                 if m.get("fullName") == ".".join(ext.split(".")[:-1])
+            #             ),
+            #             None,
+            #         )
+            #         if ext_msg is not None:
+            #             ext_field = next(
+            #                 (
+            #                     f_ext
+            #                     for f_ext in ext_msg.get("fields")
+            #                     if f_ext.get("fullName") == ext
+            #                 ),
+            #                 None,
+            #             )
+            #             if ext_field is not None:
+            #                 temp_ext = parse_proto_extension(
+            #                     ext_field.get("fieldType"),
+            #                     ext_field.get("label"),
+            #                     ext_field,
+            #                     extensions[ext],
+            #                     temp_ext,
+            #                     sylk_json=sylk_json,
+            #                 )
+            # else:
+            #     print_error(
+            #         "Cannot parse extension value without context to sylk.json file !"
+            #     )
+            #     exit(1)
 
     package = SylkPackage_pb2.SylkPackage(
         # uri=get_uri_package(path, pkg_full_path),
@@ -677,6 +681,7 @@ def generate_enum(
         temp_values.append(
             SylkEnumValue_pb2.SylkEnumValue(
                 # uri=ev_uri,
+                full_name=ev.get('fullName'),
                 name=ev.get("name"),
                 number=ev.get("number"),
                 index=index,

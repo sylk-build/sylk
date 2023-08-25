@@ -3,7 +3,7 @@ python:
   - "3.7"
 # command to install dependencies
 install:
-  - pip install -r webezyio.egg-info/requires.txt
+  - pip install -r sylk.egg-info/requires.txt
 # command to run tests
 script:
   - pytest tests/unit-test.py 

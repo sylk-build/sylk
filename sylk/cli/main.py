@@ -31,6 +31,7 @@ import re
 from sylk import __version__, config
 from sylk.architect import SylkArchitect
 from sylk.cli import theme, prompter
+from sylk.cli.commands.weave import weave
 from sylk.commons import (
     helpers,
     file_system,
@@ -219,6 +220,12 @@ def main(args=None):
         choices=["pull", "push", "build"],
     )
     # group_cloud.add_argument('push', help='Set you sylk cli to default organization via personal access token')
+    """Weave command"""
+    parse_weave = subparsers.add_parser("weave", help="Translate protobuf files into sylk schema")
+    parse_weave.add_argument("--proto-path", required=False, help="Base protos file directory path relative to root project")
+    parse_weave.add_argument("--dry-run", action="store_true", required=False, help="Dont make any affect yet")
+    parse_weave.add_argument("-b","--build", action="store_true", required=False, help="Auto build proto files after weave")
+    parse_weave.add_argument("-y","--yes", action="store_true", required=False, help="Auto confirm all prompts")
 
     """New command"""
     parser_new = subparsers.add_parser("new", help="Create new project")
@@ -462,6 +469,10 @@ def main(args=None):
     )
     parser_build.add_argument(
         "--code", action="store_true", help="Build resources code classes files only"
+    )
+    parser_build.add_argument(
+        "-y",
+        "--yes", action="store_true", help="Auto confirm for all questions"
     )
 
     """Call command"""
@@ -847,13 +858,13 @@ def main(args=None):
                 """Build command process"""
                 if args.code:
                     print_info("🔨 Building project resources code files")
-                    build.build_code(sylk_json_path)
+                    build.build_code(sylk_json_path, pass_all=args.yes)
                 elif args.protos:
                     print_info("🔨 Building project resources proto's files")
-                    build.build_protos(sylk_json_path)
+                    build.build_protos(sylk_json_path, pass_all=args.yes)
                 elif args.code == False and args.protos == False:
                     print_info("🔨 Building project resources")
-                    build.build_all(sylk_json_path)
+                    build.build_all(sylk_json_path, pass_all=args.yes)
 
             elif args.purge:
                 """Purge command process"""
@@ -875,6 +886,15 @@ def main(args=None):
 
                 run.run_server(SYLK_JSON, args.log_level)
 
+            elif hasattr(args, "proto_path"):
+                """Weave command"""
+                ARCHITECT = SylkArchitect(
+                    path=sylk_json_path,
+                    domain=SYLK_JSON.domain,
+                    project_name=SYLK_JSON.project.get("name"),
+                )
+                weave(args, SYLK_JSON, ARCHITECT)
+
             elif hasattr(args, "name") and hasattr(args, "extension") == False:
                 """Edit command process"""
 
@@ -885,7 +905,6 @@ def main(args=None):
                     domain=SYLK_JSON.domain,
                     project_name=SYLK_JSON.project.get("name"),
                 )
-                print(type)
 
                 if type == "packages":
                     edit.edit_package(resource, args.action, SYLK_JSON, ARCHITECT)
@@ -1028,6 +1047,9 @@ def main(args=None):
             elif hasattr(args, "path"):
                 """Templates command"""
                 template_commands(args)
+            elif hasattr(args, "proto_path"):
+                """Weave command"""
+                weave(args)
             elif hasattr(args, "organization"):
                 """Cloud commands - login"""
                 sylk_project_config = prj_conf.parse_project_config(os.getcwd())
