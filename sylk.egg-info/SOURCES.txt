@@ -71,6 +71,7 @@ sylk/cli/commands/package.py
 sylk/cli/commands/plugin.py
 sylk/cli/commands/run.py
 sylk/cli/commands/template.py
+sylk/cli/commands/weave.py
 sylk/commons/__init__.py
 sylk/commons/client_wrapper.py
 sylk/commons/config.py
@@ -80,6 +81,7 @@ sylk/commons/helpers.py
 sylk/commons/interceptors.py
 sylk/commons/parser.py
 sylk/commons/pretty.py
+sylk/commons/proto_comparison.py
 sylk/commons/resources.py
 sylk/commons/sylk.py
 sylk/commons/modules/__init__.py
