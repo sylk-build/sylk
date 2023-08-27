@@ -132,7 +132,6 @@ def create_new_project(
             token=token if token is not None else configs.token if configs is not None else None,
             org_id=project_id.split(".")[0],
         )
-
         # If no options passed
         if server_language is None and clients == None and domain is None and code_base is None and base_proto_path is None:
             results = ask_user_question(questions=sylk_neq_q)
@@ -178,7 +177,7 @@ def create_new_project(
                     results["base_proto_path"] = base_proto_path
                 if code_base is None:
                     tmp_code_base_path = ask_user_question([code_base_q(results.get("server"))])
-                    results["code_base_path"] = tmp_code_base.get('code_base_path')
+                    results["code_base_path"] = tmp_code_base_path.get('code_base_path')
                 else:
                     results["code_base_path"] = code_base
         else:
@@ -247,7 +246,7 @@ def create_new_project(
         # print_info(server_language)
         ARCHITECT.SetConfig({"host": host, "port": int(port), "protoBasePath": results["base_proto_path"], "codeBasePath": results["code_base_path"]})
         ARCHITECT.AddProject(
-            project_name, project.project.server.language if server_language is None else server_language, project.project.clients if len(results["clients"]) == 0 else list(map(lambda c: {"language": SylkClient_pb2.SylkClientLanguages.Name(c)}, results["clients"]))
+            project_name, project.project.server.language if server_language is None else server_language, project.project.clients if len(results["clients"]) == 0 else list(map(lambda c: {"language": SylkClient_pb2.SylkClientLanguages.Name(c) if type(c) != str else c}, results["clients"]))
         )
         # ARCHITECT._sylk = project
         ARCHITECT.SetSylkVersion()
@@ -361,12 +360,12 @@ def create_new_project(
         for k in results:
             if k == "server":
                 if type(results[k]) == str:
-                    server_langugae = results[k]
+                    server_language = results[k]
                 else:
-                    server_langugae = SylkServer_pb2.SylkServerLanguages.Name(
+                    server_language = SylkServer_pb2.SylkServerLanguages.Name(
                         results[k]
                     )
-                print_info(f"Server language: {server_langugae}")
+                print_info(f"Server language: {server_language}")
             if k == "clients":
                 for c in results[k]:
                     if type(c) == str:
@@ -439,13 +438,13 @@ def create_new_project(
             )
             # ARCHITECT = SylkArchitect(
             # path=sylk_json_path, domain=domain_name, project_name=project_name)
-            # ARCHITECT.AddProject(server_language=server_langugae, clients=clients)
-            # ARCHITECT.AddProject(server_language=server_langugae, clients=clients)
+            # ARCHITECT.AddProject(server_language=server_language, clients=clients)
+            # ARCHITECT.AddProject(server_language=server_language, clients=clients)
             # ARCHITECT.SetDomain(domain_name)
             exit(1)
 
         
-        ARCHITECT.AddProject(server_language=server_langugae, clients=clients)
+        ARCHITECT.AddProject(server_language=server_language, clients=clients)
         ARCHITECT.SetSylkVersion()
         ARCHITECT.Save()
 

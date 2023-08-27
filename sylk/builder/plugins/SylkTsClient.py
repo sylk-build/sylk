@@ -145,13 +145,13 @@ def init_project_structure(
         )
         file_system.wFile(
             file_system.join_path(sylk_json.path, "bin", "proto.js"),
-            protos_compile_script_ts,
+            protos_compile_script_ts(sylk_json.code_base_path),
         )
 
         # tsconfig.json
         if sylk_json.get_server_language() != "typescript":
             file_system.wFile(
-                file_system.join_path(sylk_json.path, "tsconfig.json"),
+                file_system.join_path(sylk_json.path, sylk_json.code_base_path, "tsconfig.json"),
                 main_ts_config_client_only,
             )
             file_system.wFile(

@@ -86,16 +86,17 @@ def init_project_structure(
         )
         file_system.wFile(
             file_system.join_path(sylk_json.path, "bin", "proto.js"),
-            protos_compile_script_ts,
+            protos_compile_script_ts(sylk_json.code_base_path),
         )
 
         # tsconfig.json
         file_system.wFile(
-            file_system.join_path(sylk_json.path, "tsconfig.json"), main_ts_config
+            file_system.join_path(sylk_json.path, "tsconfig.json"), main_ts_config(sylk_json.code_base_path)
         )
         file_system.wFile(
-            file_system.join_path(sylk_json.path, "services", sylk_json._root_protos, "tsconfig.json"),
-            protos_ts_config(sylk_json.domain),
+            file_system.join_path(sylk_json.path, sylk_json.code_base_path, "services", sylk_json._root_protos, "tsconfig.json"),
+            protos_ts_config(sylk_json.domain, sylk_json.code_base_path),
+            force=True
         )
 
         if sylk_json.get_server_language() == "typescript":
@@ -122,7 +123,7 @@ def write_services(sylk_json: helpers.SylkJson, sylk_context: helpers.SylkContex
         else:
             svc_ver = ''
         svc_path = file_system.join_path(
-            sylk_json.path, "services", svc_name, svc_ver, f"{svc_name}.ts"
+            sylk_json.path, sylk_json.code_base_path, "services", svc_name, svc_ver, f"{svc_name}.ts"
         )
         if file_system.check_if_file_exists(svc_path) == False:
             service_code = helpers.SylkServiceTs(
@@ -134,11 +135,6 @@ def write_services(sylk_json: helpers.SylkJson, sylk_context: helpers.SylkContex
                 sylk_json=sylk_json,
             ).to_str()
             file_system.wFile(svc_path, service_code, overwrite=True, force=True)
-        # else:
-        #     pretty.print_info("Make sure you are editing the {0} file\n - See how to edit service written in Typescript".format(file_system.join_path(
-        #         sylk_json.path, 'services', f'{svc}.ts')))
-        # return (f'{svc}.ts',)
-
 
 @builder.hookimpl
 def compile_protos(sylk_json: helpers.SylkJson, sylk_context: helpers.SylkContext):
@@ -409,7 +405,7 @@ async function startServer() {_OPEN_BRCK}\n\
 \tserver.bindAsync(_ADDR, ServerCredentials.createInsecure(), (err: Error | null, bindPort: number) => {_OPEN_BRCK}\n\tif (err) {_OPEN_BRCK}\n\t\tthrow err;\n\t{_CLOSING_BRCK}\n\n\tconsole.log(`[sylk.build] Starting gRPC:server:${_OPEN_BRCK}bindPort{_CLOSING_BRCK}`,`at -> ${_OPEN_BRCK}new Date().toLocaleString(){_CLOSING_BRCK})`);\n\tserver.start();\n\t{_CLOSING_BRCK});\n{_CLOSING_BRCK}\n\nstartServer().then(res => console.log(\"Service Start Up...\")).catch(err => console.log(err));"
 
     file_system.wFile(
-        file_system.join_path(sylk_json.path, "server.ts"),
+        file_system.join_path(sylk_json.path, sylk_json.code_base_path, "server.ts"),
         server_code,
         overwrite=overwrite,
     )

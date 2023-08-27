@@ -828,7 +828,7 @@ def rpc(
     svc = results.get('service') if results.get('service') is not None else sylk_json.domain+'.'+'.'.join(rpc.split('.')[:-1])
     pkg_path = '.'.join(svc.split('.')[:-1])
     full_name = "{0}.{1}".format(svc, rpc)
-    if sylk_json.get_rpc(full_name) is not None:
+    if sylk_json.get_rpc(rpc) is not None:
         print_error(f'RPC [{rpc}] is already defined under "{svc}" service')
         exit(1)
     
@@ -900,7 +900,7 @@ def rpc(
     architect.AddRPC(
         package,
         service,
-        rpc,
+        svc+'.'+rpc.split('.')[-1],
         pkgs,
         [
             (results["type"][0], inputs_outputs["input_type"]),

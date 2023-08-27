@@ -18,7 +18,9 @@
 # LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION
 # OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION
 # WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+import sys
 
+from collections import defaultdict, deque
 from typing import List
 from sylk.architect import CommandMap, SylkArchitect
 from sylk.cli import prompter
@@ -33,7 +35,7 @@ from sylk.commons.pretty import (
     print_note,
 )
 from sylk.commons.proto_comparison import compare_proto_files, sylk_to_files
-from grpc_tools import _protoc_compiler
+from grpc_tools import _protoc_compiler, protoc
 import pkg_resources
 from google.protobuf import descriptor_pb2
 from google.protobuf.json_format import ParseDict, MessageToDict
@@ -49,6 +51,8 @@ from sylk.commons.protos.sylk.SylkService.v2 import SylkService_pb2
 from google.protobuf.struct_pb2 import Struct, Value as pbValue
 from google.protobuf.any_pb2 import Any
 from google.protobuf.message import EncodeError
+from google.protobuf.message_factory import GetMessages, GetMessageClassesForFiles
+from google.protobuf.descriptor_pool import Default
 
 
 def parse_file_descriptor_set(file_path):
@@ -170,6 +174,7 @@ def parse_field_to_sylk_field(
         field_desc.type
     )  # Assuming direct mapping; adjust if necessary
     sylk_field.index = field_desc.number
+    sylk_field.label = SylkField_pb2.SylkFieldLabels.Name(field_desc.label)
 
     # Handling field type for enum or message
     if field_desc.type == descriptor_pb2.FieldDescriptorProto.TYPE_ENUM:
@@ -191,17 +196,19 @@ def parse_field_to_sylk_field(
             and referenced_package != file_desc.package
         ):
             sylk_package.dependencies.append(referenced_package)
+    
     # Check if it's a map type
     if (
         field_desc.type == descriptor_pb2.FieldDescriptorProto.TYPE_MESSAGE
-        and field_desc.type_name
+        and field_desc.type_name.split('.')[-1]
         in [nested_type.name for nested_type in message_desc.nested_type]
     ):
+        
         # Retrieve the nested message representing the map
         map_message = next(
             nested_type
             for nested_type in message_desc.nested_type
-            if nested_type.name == field_desc.type_name
+            if nested_type.name == field_desc.type_name.split('.')[-1]
         )
         if map_message.options.map_entry:
             # It's a map type
@@ -211,6 +218,17 @@ def parse_field_to_sylk_field(
             sylk_field.value_type = (
                 value_field.type
             )  # Assuming direct mapping for value type
+            sylk_field.field_type = SylkField_pb2.TYPE_MAP
+            sylk_field.label = SylkField_pb2.LABEL_OPTIONAL
+            if value_field.type == descriptor_pb2.FieldDescriptorProto.TYPE_MESSAGE:
+                sylk_field.message_type = value_field.type_name.lstrip('.')
+            
+            elif value_field.type == descriptor_pb2.FieldDescriptorProto.TYPE_ENUM:
+                sylk_field.enum_type = value_field.type_name.lstrip('.')
+                sylk_field.ClearField('message_type')
+
+            else:
+                sylk_field.ClearField('message_type')
 
     # Check for oneof fields
     if field_desc.HasField("oneof_index"):
@@ -219,7 +237,6 @@ def parse_field_to_sylk_field(
         oneof_field.name = oneof_descriptor.name
         # Add any other necessary mappings for oneof fields
         sylk_field.oneof_fields.append(oneof_field)
-    sylk_field.label = SylkField_pb2.SylkFieldLabels.Name(field_desc.label)
     sylk_field.kind = "field"
     sylk_field.type = "descriptor"
     return sylk_field
@@ -243,14 +260,15 @@ def parse_descriptor_to_sylk_package(
     sylk_package: SylkPackage_pb2.SylkPackage
 ) -> SylkPackage_pb2.SylkPackage:
     
-
+    
     # Convert messages
     for idx, message in enumerate(file.message_type):
-        sylk_message = parse_message_to_sylk_message(
-            message, file.package, file.source_code_info, idx, file, sylk_package
-        )
-        sylk_message.tag = file.name.split("/")[-1].split(".")[0]
-        sylk_package.messages.append(sylk_message)
+        if message.options.map_entry != True:
+            sylk_message = parse_message_to_sylk_message(
+                message, file.package, file.source_code_info, idx, file, sylk_package
+            )
+            sylk_message.tag = file.name.split("/")[-1].split(".")[0]
+            sylk_package.messages.append(sylk_message)
 
     # Convert enums
     for idx, enum in enumerate(file.enum_type):
@@ -336,6 +354,7 @@ def parse_field_options_to_sylk_extensions(
         extensions["google.protobuf.FieldOptions"] = extensions_map
     return extensions
 
+
 def parse_message_options_to_sylk_extensions(
     message_opts: descriptor_pb2.MessageOptions,
 ) -> dict:
@@ -347,7 +366,6 @@ def parse_message_options_to_sylk_extensions(
     # Handling custom extensions (dynamic options)
     # Let's assume that the extensions are stored in the `uninterpreted_option` field of the options
     for option in message_opts.uninterpreted_option:
-        print(option)
         # Building the extension's name from its components
         option_name = ".".join([name_part.name for name_part in option.name])
 
@@ -366,6 +384,8 @@ def parse_message_options_to_sylk_extensions(
         # Add other fields as necessary
     if len(extensions_map.keys()) > 0:
         extensions["google.protobuf.MessageOptions"] = extensions_map
+    else:
+        extensions = None
     return extensions
 
 
@@ -376,8 +396,12 @@ def dict_to_struct(data: dict) -> Struct:
     struct = Struct()
 
     for key, value in data.items():
-        if isinstance(value, (int, float, bool, str)):
+        if isinstance(value, (str)):
             struct.fields[key].CopyFrom(pbValue(string_value=str(value)))
+        elif isinstance(value, (bool)):
+            struct.fields[key].CopyFrom(pbValue(bool_value=value))
+        elif isinstance(value, (int, float)):
+            struct.fields[key].CopyFrom(pbValue(number_value=value))
         # Handle other types as necessary, such as lists, nested dictionaries, etc.
 
     return struct
@@ -401,7 +425,7 @@ def parse_message_to_sylk_message(
     sylk_message = SylkMessage_pb2.SylkMessage()
     sylk_message.name = message_desc.name
     sylk_message.full_name = f"{package}.{message_desc.name}"
-
+    
     # Parsing fields
     for field_desc in message_desc.field:
         
@@ -409,7 +433,6 @@ def parse_message_to_sylk_message(
             field_desc, message_desc, sylk_message.full_name, file_desc, sylk_package
         )
         field_opts = parse_field_options_to_sylk_extensions(field_desc.options)
-        print(field_opts)
         set_sylk_extensions(sylk_field, field_opts)
 
         sylk_message.fields.append(sylk_field)
@@ -417,8 +440,8 @@ def parse_message_to_sylk_message(
     # Handling nested types (e.g., nested messages or enums)
     # TODO
     opts = parse_message_options_to_sylk_extensions(message_desc.options)
-
-    set_sylk_extensions(sylk_message, opts)
+    if opts is not None:
+        set_sylk_extensions(sylk_message, opts)
     # Handling protobuf options:
     for extension in message_desc.extension:
         # Assuming extension.name gives the full path for the option
@@ -539,7 +562,9 @@ def adapt_descriptor_to_sylkpackage(
 def adapt_descriptor_to_sylkenum(
     descriptor: descriptor_pb2.EnumDescriptorProto,
     file: descriptor_pb2.FileDescriptorProto,
-    enum_index
+    enum_index,
+    inline_name: str = None,
+    inline_i: int = None
 ):
     """
     Adapts a protobuf enum descriptor object into a SylkEnum.
@@ -559,7 +584,7 @@ def adapt_descriptor_to_sylkenum(
         ev_index
     ):
         """Converts a field descriptor to a SylkEnumValue."""
-
+        ev_desc = extract_description_for_enum_value(source_code, enum_index, ev_index)
         return {
             "index": value_descriptor.number
             if hasattr(value_descriptor, "number")
@@ -570,7 +595,7 @@ def adapt_descriptor_to_sylkenum(
             # "extensions": field_descriptor.extensions if hasattr(field_descriptor, 'extensions') else {},
             "full_name": enum_name + "." + value_descriptor.name,
             "kind": "enum_value",
-            "description": extract_description_for_enum_value(source_code, enum_index, ev_index).strip(),
+            "description": ev_desc.strip() if ev_desc is not None else None,
             "name": value_descriptor.name if hasattr(value_descriptor, "name") else "",
             "type": "descriptor",
         }
@@ -590,6 +615,8 @@ def adapt_descriptor_to_sylkenum(
         else ""
     )
     enum_full_name = file.package + "." + descriptor.name
+    if inline_name is not None:
+        enum_full_name = inline_name + '.' + descriptor.name
     enum_values = []
     ev_index = 0
     for ev in descriptor.value:
@@ -600,7 +627,7 @@ def adapt_descriptor_to_sylkenum(
         "tag": tag,
         "values": enum_values,
         "kind": "enum",
-        "description": extract_description_for_enum(file.source_code_info, enum_index).strip(),
+        "description": extract_description_for_enum(file.source_code_info, enum_index, inline_i=inline_i if inline_name is not None else None).strip(),
         "type": "descriptor",
         "full_name": enum_full_name,
         # "extensions": descriptor.extensions if hasattr(descriptor, 'extensions') else {},
@@ -689,6 +716,8 @@ def adapt_descriptor_to_sylkmessage(
     descriptor: descriptor_pb2.DescriptorProto,
     file: descriptor_pb2.FileDescriptorProto,
     m_index,
+    inline_name: str = None,
+    inline_i: int = None
 ):
     """
     Adapts a protobuf descriptor object into a SylkMessage.
@@ -711,9 +740,12 @@ def adapt_descriptor_to_sylkmessage(
         """Converts a field descriptor to a SylkField."""
         map_type = None
         label = field_descriptor.label
+        message_type = field_descriptor.type_name.lstrip('.') if field_descriptor.type == field_descriptor.Type.TYPE_MESSAGE else None
         if field_descriptor.type == field_descriptor.Type.TYPE_MESSAGE:
             map_type = next((m for m in message_description.nested_type if m.options.map_entry and m.name == field_descriptor.type_name.split('.')[-1]),None)
-            label = SylkField_pb2.LABEL_OPTIONAL
+            if map_type is not None:
+                message_type = map_type.field[1].type_name.lstrip('.') if map_type.field[1].type == field_descriptor.Type.TYPE_MESSAGE else None
+                label = SylkField_pb2.LABEL_OPTIONAL
         field_opts = parse_field_options_to_sylk_extensions(field_descriptor.options)
         return {
             "value_type": map_type.field[1].type if map_type is not None else None,
@@ -725,7 +757,7 @@ def adapt_descriptor_to_sylkmessage(
             "extensions": field_opts,
             "full_name": message_name + "." + field_descriptor.name,
             "kind": "field",
-            "message_type": field_descriptor.type_name.lstrip('.') if field_descriptor.type == field_descriptor.Type.TYPE_MESSAGE else None,
+            "message_type": message_type,
             "field_type": field_descriptor.type if map_type is None else SylkField_pb2.TYPE_MAP
             if hasattr(field_descriptor, "type")
             else "",
@@ -735,6 +767,34 @@ def adapt_descriptor_to_sylkmessage(
             # "oneof_fields": [],  # Placeholder; populate if needed
             # "uri": field_descriptor.uri if hasattr(field_descriptor, 'uri') else '',
             "type": "descriptor",
+        }
+    def convert_oneof_field(
+        message_name,
+        file_descriptor: descriptor_pb2.FileDescriptorProto,
+        message_description: descriptor_pb2.DescriptorProto,
+        field_descriptor: descriptor_pb2.FieldDescriptorProto,
+        m_index,
+    ):
+        """Converts a field descriptor to a SylkField."""
+        # field_opts = parse_field_options_to_sylk_extensions(field_descriptor.options)
+        return {
+            "label": SylkField_pb2.LABEL_OPTIONAL,
+            "index": field_descriptor.number
+            if hasattr(field_descriptor, "number")
+            else 1,
+            # "extensions": field_opts,
+            "full_name": message_name + "." + field_descriptor.name,
+            "kind": "oneof",
+            "message_type": field_descriptor.type_name.lstrip('.') if field_descriptor.type == field_descriptor.Type.TYPE_MESSAGE else None,
+            "field_type": field_descriptor.type 
+            if hasattr(field_descriptor, "type")
+            else "",
+            "enum_type": field_descriptor.type_name.lstrip('.') if field_descriptor.type == field_descriptor.Type.TYPE_ENUM else None,
+            # "description": extract_description_for_field(file_descriptor.source_code_info, m_index, f_index).strip(),
+            "name": field_descriptor.name if hasattr(field_descriptor, "name") else "",
+            # "oneof_fields": [],  # Placeholder; populate if needed
+            # "uri": field_descriptor.uri if hasattr(field_descriptor, 'uri') else '',
+            # "type": "descriptor",
         }
 
     # Check if the message's file name (without extension) is different from the package name
@@ -752,27 +812,70 @@ def adapt_descriptor_to_sylkmessage(
         else ""
     )
     msg_full_name = file.package + "." + descriptor.name
+    if inline_name is not None:
+        msg_full_name = inline_name + '.' + descriptor.name
 
     fields = []
+    inlines = []
     f_index = 0
+    oneofs_groups = {}
     for f in descriptor.field:
-        fields.append(convert_field(msg_full_name, file, descriptor, f, m_index, f_index))
+        if f.HasField('oneof_index') and len(descriptor.oneof_decl) > 0:
+            if oneofs_groups.get(descriptor.oneof_decl[f.oneof_index].name) is None:
+                oneofs_groups[descriptor.oneof_decl[f.oneof_index].name] = []
+            oneofs_groups[descriptor.oneof_decl[f.oneof_index].name].append(f)
+        else:
+            fields.append(convert_field(msg_full_name, file, descriptor, f, m_index, f_index))
+        
         f_index+=1
+        
+    for oneof_field in oneofs_groups:
+        oneofs_fields = []
+        for oneof in oneofs_groups[oneof_field]:
+            oneofs_fields.append(ParseDict(convert_oneof_field(msg_full_name+'.'+oneof_field, file, descriptor, oneof, m_index),SylkField_pb2.SylkOneOfField()))
+        
+        fields.append(MessageToDict(SylkField_pb2.SylkField(
+            name=oneof_field,
+            full_name=msg_full_name+'.'+oneof_field,
+            description=None,
+            index=f.number,
+            label=SylkField_pb2.LABEL_OPTIONAL,
+            type='descriptor',
+            kind='field',
+            oneof_fields=oneofs_fields,
+            field_type=SylkField_pb2.TYPE_ONEOF
+        )))
 
+    inline_e_i = 0
+    for e in descriptor.enum_type:
+        adapted_inline = adapt_descriptor_to_sylkenum(e, file, m_index, msg_full_name, inline_e_i)
+        any_inline = Any()
+        any_inline.Pack(ParseDict(adapted_inline,SylkEnum_pb2.SylkEnum()))
+        inlines.append(MessageToDict(any_inline))
+        inline_e_i+=1
+
+    if inline_i is None:
+        inline_i = 0
+    for m in descriptor.nested_type:
+        if m.options.map_entry == False:
+            adapted_inline = adapt_descriptor_to_sylkmessage(m,file,m_index, msg_full_name, inline_i)
+            any_inline = Any()
+            any_inline.Pack(ParseDict(adapted_inline,SylkMessage_pb2.SylkMessage()))
+            inlines.append(MessageToDict(any_inline))
+        inline_i+=1
     sylk_message = {
-        "inlines": [],
+        "inlines": inlines,
         "tag": tag,
         "fields": fields,
         "kind": "message",
-        "description": extract_description_for_message(source_code_info=file.source_code_info, message_index=m_index).strip(),
+        "description": extract_description_for_message(source_code_info=file.source_code_info, message_index=m_index, inline=inline_i if inline_name is not None else None).strip(),
         "type": "descriptor",
         "full_name": msg_full_name,
-        # "extensions": descriptor.extensions if hasattr(descriptor, 'extensions') else {},
+        # "extensions":  if hasattr(descriptor, 'extensions') else {},
         # "uri": descriptor.uri if hasattr(descriptor, 'uri') else '',
         "name": descriptor.name if hasattr(descriptor, "name") else "",
         # "extension_type": {}  # Placeholder; populate if needed
     }
-
     return sylk_message
 
 
@@ -891,7 +994,8 @@ def enum_diff(
     enum_line_index: int = 0,
     source_code_info=None,
     enm_i: int = 0,
-    new_enum: bool = False
+    new_enum: bool = False,
+    enm_schema: descriptor_pb2.EnumDescriptorProto = None
 ):
     diffs = []
     attr_diffs = []
@@ -946,6 +1050,7 @@ def enum_diff(
                 }
             )
 
+    print(last_state_sylk.values)
     # Check if last_state_sylk has more fields than modified_sylk
     if len(modified_sylk.values) < len(last_state_sylk.values) and new_enum == False:
         for idx in range(len(modified_sylk.values), len(last_state_sylk.values)):
@@ -953,7 +1058,7 @@ def enum_diff(
                 {
                     "type": "-",
                     "line_number": None,
-                    "diff": f"enum value at '{path}.values[{idx}]': {last_state_sylk.values[idx].name} -> {modified_sylk.values[idx].number}",
+                    "diff": f"enum value at '{path}.values[{idx}]': {last_state_sylk.values[idx].name} -> {last_state_sylk.values[idx].number}",
                 }
             )
 
@@ -970,7 +1075,9 @@ def message_diff(
     message_line_index: int = 0,
     source_code_info=None,
     msg_i: int = 0,
-    new_message: bool = False
+    new_message: bool = False,
+    msg_schema: descriptor_pb2.DescriptorProto = None,
+    file_desc: descriptor_pb2.FileDescriptorProto = None
 ):
     """
     Recursively compares two SylkMessage objects and reports the differences.
@@ -1011,6 +1118,24 @@ def message_diff(
     # If there are attribute differences, group them together
     if attr_diffs:
         diffs.extend(attr_diffs)
+
+    extensions = MessageToDict(msg_schema.options)
+    opt_i = 0
+    for ext in extensions:
+        if ext not in last_state_sylk.extensions.get(msg_schema.options.DESCRIPTOR.full_name,{}):
+            msg_ext = next((field for field in descriptor_pb2.MessageOptions.DESCRIPTOR.fields if field.name == to_snake_case(ext)),None)
+            import_line_numbers = None
+            if msg_ext is not None:
+                import_line_numbers = extract_line_for_message_option(file_desc.source_code_info, msg_i, msg_ext.number)
+            ext_value = extensions[ext]
+            diffs.append(
+                    {
+                        "type": "+",
+                        "line_number": import_line_numbers,
+                        "diff": f'\'{path}.options[{opt_i}]\': {to_snake_case(ext)} = {ext_value};',
+                    }
+                )
+        opt_i += 1
 
     # Check fields
     field_diffs = []
@@ -1213,13 +1338,22 @@ def extract_line_for_message(
     return line
 
 def extract_description_for_enum(
-    source_code_info: descriptor_pb2.SourceCodeInfo, enum_index: int
+    source_code_info: descriptor_pb2.SourceCodeInfo, enum_index: int,
+    inline_i: int = None
 ):
     description = None
-    target_path = [
-        descriptor_pb2.FileDescriptorProto.ENUM_TYPE_FIELD_NUMBER,
-        enum_index,
-    ]
+    if inline_i is not None:
+        target_path = [
+            descriptor_pb2.FileDescriptorProto.MESSAGE_TYPE_FIELD_NUMBER,
+            enum_index,
+            descriptor_pb2.DescriptorProto.ENUM_TYPE_FIELD_NUMBER,
+            inline_i
+        ]
+    else:
+        target_path = [
+            descriptor_pb2.FileDescriptorProto.ENUM_TYPE_FIELD_NUMBER,
+            enum_index,
+        ]
     for loc in source_code_info.location:
         if loc.path == target_path:
             description = loc.leading_comments
@@ -1289,18 +1423,43 @@ def extract_description_for_field(
     return description
 
 def extract_description_for_message(
-    source_code_info: descriptor_pb2.SourceCodeInfo, message_index: int
+    source_code_info: descriptor_pb2.SourceCodeInfo, message_index: int, inline: int = None
 ):
     description = None
-    target_path = [
-        descriptor_pb2.FileDescriptorProto.MESSAGE_TYPE_FIELD_NUMBER,
-        message_index,
-    ]
+    if inline is not None:
+        target_path = [
+            descriptor_pb2.FileDescriptorProto.MESSAGE_TYPE_FIELD_NUMBER,
+            message_index,
+            descriptor_pb2.DescriptorProto.NESTED_TYPE_FIELD_NUMBER,
+            inline
+        ]
+    else:
+        target_path = [
+            descriptor_pb2.FileDescriptorProto.MESSAGE_TYPE_FIELD_NUMBER,
+            message_index,
+        ]
     for loc in source_code_info.location:
         if loc.path == target_path:
             description = loc.leading_comments
             break
     return description
+
+def extract_line_for_message_option(
+    source_code_info: descriptor_pb2.SourceCodeInfo, msg_i: int, option_i: int
+):
+    optionals = [
+        # Utils
+        [descriptor_pb2.FileDescriptorProto.MESSAGE_TYPE_FIELD_NUMBER, msg_i, descriptor_pb2.DescriptorProto.OPTIONS_FIELD_NUMBER, descriptor_pb2.MessageOptions.DEPRECATED_FIELD_NUMBER],
+        [descriptor_pb2.FileDescriptorProto.MESSAGE_TYPE_FIELD_NUMBER, msg_i, descriptor_pb2.DescriptorProto.OPTIONS_FIELD_NUMBER, descriptor_pb2.MessageOptions.MAP_ENTRY_FIELD_NUMBER],
+        [descriptor_pb2.FileDescriptorProto.MESSAGE_TYPE_FIELD_NUMBER, msg_i, descriptor_pb2.DescriptorProto.OPTIONS_FIELD_NUMBER, descriptor_pb2.MessageOptions.MESSAGE_SET_WIRE_FORMAT_FIELD_NUMBER],
+        [descriptor_pb2.FileDescriptorProto.MESSAGE_TYPE_FIELD_NUMBER, msg_i, descriptor_pb2.DescriptorProto.OPTIONS_FIELD_NUMBER, descriptor_pb2.MessageOptions.NO_STANDARD_DESCRIPTOR_ACCESSOR_FIELD_NUMBER],
+    ]
+    target = next((f for f in optionals if f[3] == option_i), None)
+    if target is not None:
+        line = parse_locations(target, source_code_info.location)
+    else:
+        line = None
+    return line
 
 def extract_line_for_file_option(
     source_code_info: descriptor_pb2.SourceCodeInfo, option_i: int
@@ -1338,7 +1497,6 @@ def extract_line_for_file_option(
         [descriptor_pb2.FileDescriptorProto.OPTIONS_FIELD_NUMBER, descriptor_pb2.FileOptions.SPEED],
     ]
     target = next((f for f in optionals if f[1] == option_i), None)
-    print(option_i)
     if target is not None:
         line = parse_locations(target, source_code_info.location)
     else:
@@ -1477,8 +1635,6 @@ def package_diff(
                     }
                 )
         opt_i += 1
-        # if  is None or package_schema.extensions.get(ext) != extensions[ext]:
-        #     print(ext,extensions[ext])
 
     for d in file_desc.dependency:
         import_line_numbers = extract_line_for_import(file_desc.source_code_info, dep_i)
@@ -1497,6 +1653,87 @@ def package_diff(
         "diffs": diffs,
     }
 
+def parse_message(
+    message: descriptor_pb2.DescriptorProto,
+    f: descriptor_pb2.FileDescriptorProto,
+    pkg_schema: SylkPackage_pb2.SylkPackage,
+    adapted_pkg: SylkPackage_pb2.SylkPackage,
+    removed_msgs,
+    sylk_json: SylkJson,
+    architect: SylkArchitect,
+    msg_i: int
+):
+    adapted = ParseDict(
+        adapt_descriptor_to_sylkmessage(message, f, msg_i),
+        SylkMessage(),
+    )
+
+    opts = parse_message_options_to_sylk_extensions(message.options)
+    if opts is not None:
+        ext = adapted.extensions.get_or_create("google.protobuf.MessageOptions")
+        ext.update(opts.get('google.protobuf.MessageOptions'))
+    msg_schema = next(
+        (
+            m
+            for m in pkg_schema.messages
+            if m.full_name == adapted.full_name
+        ),
+        {},
+    )
+    message_line_number = extract_line_for_message(
+        f.source_code_info, msg_i
+    )
+    update_msg = False
+    if len(removed_msgs) > 0 and msg_i in list(map(lambda x: x[0],removed_msgs)):
+        update_msg = True
+        rm_msg = next((m for m in removed_msgs if m[0] == msg_i),None)
+        msg_schema = rm_msg[1]
+        print_error(msg_schema.full_name,True,"message removal:")
+        removed_msgs.remove(rm_msg)
+    elif hasattr(msg_schema,'name') == False:
+        msg_schema = SylkMessage()
+    else:
+        update_msg = True
+    diffs = message_diff(
+        adapted,
+        msg_schema,
+        message_line_index=message_line_number,
+        source_code_info=f.source_code_info,
+        msg_i=msg_i,
+        new_message=update_msg==False,
+        msg_schema=message,
+        file_desc=f
+    )
+    if len(diffs) > 0:
+        print(display_diffs(diffs, "message"))
+        if len(msg_schema.name)>0:
+            architect.ReplaceMessage(
+                package_path=f.package,
+                message_name=msg_schema.name,
+                message=adapted,
+            )
+        else:
+            fields = []
+            for field in adapted.fields:
+                fields.append(MessageToDict(field))
+            architect.AddMessage(
+                package=adapted_pkg,
+                name=adapted.name,
+                fields=fields,
+                description=adapted.description,
+                tag=adapted.tag,
+                order_pkg=[
+                    adapted_pkg.package,
+                    *list(
+                        map(
+                            lambda x: x.replace(".", "/"),
+                            sylk_json.packages.keys(),
+                        )
+                    ),
+                ]
+                if sylk_json.packages is not None
+                else [adapted_pkg.package]
+            )
 
 def weave(args, sylk_json: SylkJson = None, architect: SylkArchitect = None):
     well_known_protos = pkg_resources.resource_filename("grpc_tools", "_proto")
@@ -1508,7 +1745,6 @@ def weave(args, sylk_json: SylkJson = None, architect: SylkArchitect = None):
         proto_compare, new_files = proto_comparison.compare_proto_files(
             sylk_json._root_protos, sylk_json
         )
-        
         files = sylk_to_files(sylk_json)
         include_dirs = [
             "-I{}".format(well_known_protos),
@@ -1551,10 +1787,11 @@ def weave(args, sylk_json: SylkJson = None, architect: SylkArchitect = None):
                         if len(pkg_diffs) > 0:
                             print(display_diffs(pkg_diffs, "package"))
                             architect.ReplacePackage(package=adapted_pkg)
-                        for i, svc in enumerate([m for m in pkg_schema.services if m.tag == f.name.split('/')[-1].split('.')[0] or (m.tag == '' and f.name.split('/')[-1].split('.')[0] == pkg_schema.name)]):
+                        
+                        for i, svc in enumerate([s for s in pkg_schema.services if s.tag == f.name.split('/')[-1].split('.')[0] or (s.tag == '' and f.name.split('/')[-1].split('.')[0] == pkg_schema.name)]):
                             if svc.name not in list(map(lambda x: x.name, f.service)):
                                 removed_svcs.append((i, svc))
-
+    
                         svc_i = 0
                         for svc in f.service:
                             adapted = ParseDict(
@@ -1569,19 +1806,31 @@ def weave(args, sylk_json: SylkJson = None, architect: SylkArchitect = None):
                                 ),
                                 {},
                             )
+
                             update_svc = False
-                            if len(removed_svcs) > 0 and svc_i in list(map(lambda x: x[0],removed_svcs)):
-                                update_svc = True
-                                rm_svc = next((s for s in removed_svcs if s[0] == svc_i),None)
-                                svc_schema = ParseDict(rm_svc[1],SylkService_pb2())
-                                print_error(svc_schema.full_name,True,"service removal:")
-                                removed_svcs.remove(rm_svc)
-                            elif hasattr(svc_schema,'name') == False:
-                                svc_schema = SylkService_pb2.SylkService()
+                            
+
+                            # if len(removed_svcs) > 0 and svc_i in list(map(lambda x: x[0],removed_svcs)):
+                            #     update_svc = True
+                            #     rm_svc = next((s for s in removed_svcs if s[0] == svc_i),None)
+                            #     svc_schema = ParseDict(rm_svc[1],SylkService_pb2())
+                            #     print_error(svc_schema.full_name,True,"service removal:")
+                            #     removed_svcs.remove(rm_svc)
+                            # elif hasattr(svc_schema,'name') == False:
+                            #     svc_schema = SylkService_pb2.SylkService()
                             # print_note('[-/+] found the following diffs:\n\t '+'\n\t '.join())
                             svc_line_num = extract_line_for_service(
                                 f.source_code_info, svc_i
                             )
+
+                            if len(removed_svcs) > 0 and svc_i in list(map(lambda x: x[0],removed_svcs)):
+                                rm_svc = next((m for m in removed_svcs if m[0] == svc_i),None)
+                                svc_schema = rm_svc[1]
+                                print_error(svc_schema.full_name,True,"service removal:")
+                                removed_svcs.remove(rm_svc)
+                            elif hasattr(svc_schema,'name') == False:
+                                svc_schema = SylkService_pb2.SylkService()
+
                             diffs = service_diff(
                                 modified_sylk=adapted,
                                 last_state_sylk=svc_schema,
@@ -1592,67 +1841,13 @@ def weave(args, sylk_json: SylkJson = None, architect: SylkArchitect = None):
                             )
                             if len(diffs) > 0:
                                 print(display_diffs(diffs, "service"))
-                                architect.ReplaceService(
-                                    service=adapted,
-                                )
-
-                            svc_i += 1
-                        msg_i = 0
-                        for i, msg in enumerate([m for m in pkg_schema.messages if m.tag == f.name.split('/')[-1].split('.')[0] or (m.tag == '' and f.name.split('/')[-1].split('.')[0] == pkg_schema.name)]):
-                            if msg.name not in list(map(lambda x: x.name, f.message_type)):
-                                removed_msgs.append((i, msg))
-                       
-                        for message in f.message_type:
-                            adapted = ParseDict(
-                                adapt_descriptor_to_sylkmessage(message, f, msg_i),
-                                SylkMessage(),
-                            )
-                            msg_schema = next(
-                                (
-                                    m
-                                    for m in pkg_schema.messages
-                                    if m.full_name == adapted.full_name
-                                ),
-                                {},
-                            )
-                            message_line_number = extract_line_for_message(
-                                f.source_code_info, msg_i
-                            )
-                            update_msg = False
-                            if len(removed_msgs) > 0 and msg_i in list(map(lambda x: x[0],removed_msgs)):
-                                update_msg = True
-                                rm_msg = next((m for m in removed_msgs if m[0] == msg_i),None)
-                                msg_schema = rm_msg[1]
-                                print_error(msg_schema.full_name,True,"message removal:")
-                                removed_msgs.remove(rm_msg)
-                            elif hasattr(msg_schema,'name') == False:
-                                msg_schema = SylkMessage()
-                            diffs = message_diff(
-                                adapted,
-                                msg_schema,
-                                message_line_index=message_line_number,
-                                source_code_info=f.source_code_info,
-                                msg_i=msg_i,
-                                new_message=update_msg==False
-                            )
-                            if len(diffs) > 0:
-                                print(display_diffs(diffs, "message"))
-                                if len(msg_schema.name)>0:
-                                    architect.ReplaceMessage(
-                                        package_path=f.package,
-                                        message_name=msg_schema.name,
-                                        message=adapted,
-                                    )
-                                else:
-                                    fields = []
-                                    for field in adapted.fields:
-                                        fields.append(MessageToDict(field))
-                                    architect.AddMessage(
-                                        package=adapted_pkg,
+                                if len(pkg_schema.services) == 0:
+                                    architect.AddService(
                                         name=adapted.name,
-                                        fields=fields,
+                                        dependencies=adapted.dependencies,
                                         description=adapted.description,
-                                        tag=adapted.tag,
+                                        extensions=adapted.extensions,
+                                        methods=list(map(lambda r: MessageToDict(r), adapted.methods)),
                                         order_pkg=[
                                             adapted_pkg.package,
                                             *list(
@@ -1663,9 +1858,32 @@ def weave(args, sylk_json: SylkJson = None, architect: SylkArchitect = None):
                                             ),
                                         ]
                                         if sylk_json.packages is not None
-                                        else [adapted_pkg.package]
+                                        else [adapted_pkg.package],
+                                        package=adapted_pkg,
+                                        tag=adapted.tag
+                                    )
+                                else:
+                                    architect.ReplaceService(
+                                        service=adapted,
                                     )
 
+                            svc_i += 1
+                        msg_i = 0
+                        for i, msg in enumerate([m for m in pkg_schema.messages if m.tag == f.name.split('/')[-1].split('.')[0] or (m.tag == '' and f.name.split('/')[-1].split('.')[0] == pkg_schema.name)]):
+                            if msg.name not in list(map(lambda x: x.name, f.message_type)):
+                                removed_msgs.append((i, msg))
+                       
+                        for message in f.message_type:
+                            parse_message(
+                                message=message,
+                                adapted_pkg=adapted_pkg,
+                                architect=architect,
+                                f=f,
+                                msg_i=msg_i,
+                                pkg_schema=pkg_schema,
+                                removed_msgs=removed_msgs,
+                                sylk_json=sylk_json
+                            )
                             msg_i += 1
 
                         for i, enm in enumerate([m for m in pkg_schema.enums if m.tag == f.name.split('/')[-1].split('.')[0] or (m.tag == '' and f.name.split('/')[-1].split('.')[0] == pkg_schema.name)]):
@@ -1694,6 +1912,9 @@ def weave(args, sylk_json: SylkJson = None, architect: SylkArchitect = None):
                                 removed_enms.remove(rm_enm)
                             elif hasattr(enm_schema,'name') == False:
                                 enm_schema = SylkEnum_pb2.SylkEnum()
+                            else:
+                                update_enm = True
+
                             # enm_schema = ParseDict(enm_schema, SylkEnum_pb2.SylkEnum())
                             # print_note('[-/+] found the following diffs:\n\t '+'\n\t '.join())
                             enum_line_num = extract_line_for_enum(
@@ -1752,38 +1973,81 @@ def weave(args, sylk_json: SylkJson = None, architect: SylkArchitect = None):
             if file_system.check_if_file_exists(".sylk/descriptor.pb"):
                 files = parse_file_descriptor_set(".sylk/descriptor.pb")
                 diffs = files_diff_add(new_files, files)
+                package_to_files = {}
                 unique_pkgs = list(set([tmp_file.package for tmp_file in files.file]))
-                for pkg in unique_pkgs:
-                    sylk_package = SylkPackage_pb2.SylkPackage()
-                    for f in [tmp_f for tmp_f in files.file if tmp_f.package == pkg]:
-                        sylk_package = parse_descriptor_to_sylk_package(files, f, sylk_package)
 
-                    architect._sylk.execute(
-                        CommandMap._ADD_RESOURCE,
-                        {
-                            "packages": {
-                                f"{sylk_package.package.replace('.','/')}": MessageToDict(
-                                    sylk_package
-                                )
-                            }
-                        },
-                        [
-                            sylk_package.package,
-                            *list(
-                                map(
-                                    lambda x: x.replace(".", "/"),
-                                    sylk_json.packages.keys(),
-                                )
-                            ),
-                        ]
-                        if sylk_json.packages is not None
-                        else [*list(
-                                map(
-                                    lambda x: x.replace(".", "/"),
-                                    unique_pkgs,
-                                )
-                            )],
-                    )
+                dependency_graph = defaultdict(list)
+                for pkg in unique_pkgs:
+                    for f in [tmp_f for tmp_f in files.file if tmp_f.package == pkg]:
+                        # Dependency graph as an adjacency list.
+                        # Key is the proto file, value is a list of files it depends on.
+                        dependency_graph[f.name] = f.dependency
+
+                # Perform topological sort
+                # Create an in-degree dictionary
+                in_degree = {node: 0 for node in dependency_graph}
+                for dependencies in dependency_graph.values():
+                    for dep in dependencies:
+                        in_degree[dep] += 1
+
+                # Initialize queue and result list
+                queue = deque()
+                result = []
+
+                # Add nodes with in-degree 0 to the queue
+                for node, degree in in_degree.items():
+                    if degree == 0:
+                        queue.append(node)
+
+                # Perform the topological sort
+                while queue:
+                    current_node = queue.popleft()
+                    result.append(current_node)
+
+                    for neighbor in dependency_graph[current_node]:
+                        in_degree[neighbor] -= 1
+                        if in_degree[neighbor] == 0:
+                            queue.append(neighbor)
+
+                # Check if graph had cycles
+                if len(result) != len(dependency_graph):
+                    print_error("The graph contains a cycle. Topological sort is not possible.")
+
+
+                # Step 1: Create a dictionary mapping .proto filenames back to their packages
+                file_to_package = {}
+                for package in unique_pkgs:
+                    for dep_file in [tmp_f.name for tmp_f in files.file if tmp_f.package == package]:
+                        file_to_package[dep_file] = package
+
+                # Step 2: Create a list of packages in the order they should be resolved
+                sorted_packages = []
+                seen_packages = set()
+
+                for file in result:
+                    package = file_to_package.get(file)
+                    if package is not None and package not in seen_packages:
+                        sorted_packages.append(package)
+                        seen_packages.add(package)
+
+
+                for pkg in sorted_packages:
+                    if pkg.split('.')[0] == sylk_json.domain: 
+                        sylk_package = SylkPackage_pb2.SylkPackage()
+                        for f in [tmp_f for tmp_f in files.file if tmp_f.package == pkg]:
+                            sylk_package = parse_descriptor_to_sylk_package(files, f, sylk_package)
+
+                        architect._sylk.execute(
+                            CommandMap._ADD_RESOURCE,
+                            {
+                                "packages": {
+                                    f"{sylk_package.package.replace('.','/')}": MessageToDict(
+                                        sylk_package
+                                    )
+                                }
+                            },
+                            sorted_packages[::-1],
+                        )
 
                 if len(diffs) > 0:
                     for f_diff in diffs:
@@ -1833,6 +2097,8 @@ def weave(args, sylk_json: SylkJson = None, architect: SylkArchitect = None):
                 if confirm_unsaved_code_change.get("confirm") == False:
                     print_error("exiting weave process, must pass a valid confirmation")
                     exit(1)
+                for rm_svc in removed_svcs:
+                    architect.RemoveService(rm_svc[1].full_name)
 
         print("")
         if args.dry_run == False:

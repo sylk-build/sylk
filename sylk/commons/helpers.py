@@ -43,10 +43,11 @@ from sylk.commons.protos.sylk.SylkCommons.v1 import SylkCommons_pb2
 from itertools import groupby
 from google.protobuf.struct_pb2 import Value
 from google.protobuf.json_format import ParseDict, MessageToDict, MessageToJson
-from google.protobuf import text_format
+from google.protobuf import text_format, descriptor_pool, message_factory
 from google.protobuf.any_pb2 import Any
-
 from google.protobuf.timestamp_pb2 import Timestamp
+from google.protobuf.descriptor_pb2 import FileDescriptorProto, DESCRIPTOR as ProtobufDescriptor
+
 from platform import platform
 from inquirer import errors as inquirerErrors
 
@@ -662,8 +663,15 @@ class SylkPackage:
 class SylkJson:
     def __init__(self, sylk_json):
         self._sylk_json = sylk_json
+
         self._parse_json()
         self._parse_proto_tree()
+        self._parse_protobuf_messages()
+
+    def _parse_protobuf_messages(self):
+        proto = FileDescriptorProto()
+        ProtobufDescriptor.CopyToProto(proto)
+        self._pb_messages = message_factory.GetMessages([proto],descriptor_pool.Default())
 
     def _topological_sort(self,packages):
         def dfs(package, visited, stack):
@@ -1212,7 +1220,7 @@ def proto_struct_to_dict(proto_struct):
         elif value.HasField("string_value"):
             result[key] = value.string_value
         elif value.HasField("bool_value"):
-            result[key] = value.bool_value
+            result[key] = bool(value.bool_value)
         elif value.HasField("struct_value"):
             result[key] = proto_struct_to_dict(value.struct_value)
         elif value.HasField("list_value"):
@@ -1247,15 +1255,41 @@ class SylkProtoFile:
             file_ver = ''
 
         metadata = []
+        # Workaround for weave command integration: We check if 'goPackage' option is existing on project level
+        # If its not and the project uses go we must verify that the override of goPackage option is existing
+        # On the package level as an extension
+        must_override_go = False
+        if self._sylk_json.is_language("go") and self._sylk_json.project.get('goPackage') is None:
+            must_override_go = True
         for k in self._package.extensions.keys():
             # TODO move to a defind protobuf message
             if k == 'files':
                 d = proto_struct_to_dict(self._package.extensions[k])
                 for file_name in d.keys():
                     if file_name == self._file_name:
+                        # Check if goPackage must be provided within the extensions
+                        if must_override_go and 'goPackage' not in d[file_name].keys():
+                            raise errors.SylkProtoError("Must define go_package option on proto file, it seems like you using go in your project but havent specified a project level package")
+                        elif 'goPackage' not in d[file_name].keys() and self._sylk_json.is_language("go"):
+                            metadata.append('option go_package = "{}/{}services/{}{}{}";'.format(
+                                self._sylk_json.project.get('goPackage'),
+                                self._sylk_json.code_base_path + '/' if self._sylk_json.code_base_path is not None and self._sylk_json.code_base_path != '' else '',
+                                base_protos,
+                                pkg_path,
+                                file_ver
+                            ))
                         for file_opt in d[file_name]:
                             metadata.append('option {} = "{}";'.format(to_snake_case(file_opt), d[file_name][file_opt]))
-
+        
+        # Forcing the existance of goPackage when go is in use at the project
+        if self._sylk_json.is_language("go") and len(metadata) == 0:
+            metadata.append('option go_package = "{}/{}services/{}{}{}";'.format(
+                self._sylk_json.project.get('goPackage'),
+                self._sylk_json.code_base_path + '/' if self._sylk_json.code_base_path is not None else '',
+                base_protos,
+                pkg_path,
+                file_ver
+            ))
         metadata = '\n'.join(metadata)
         # go_package = f'\noption go_package = "{self._sylk_json.project.get("goPackage")}/services/{base_protos}{pkg_path}{file_ver}";' if self._sylk_json.project.get("goPackage") is not None else ''
         return "\npackage {};\n\n{}".format(self._package.package,metadata)
@@ -1274,12 +1308,12 @@ class SylkProtoFile:
             for m in msgs:
                 deps = self._sylk_json.get_message_dependencies(m)
                 for d in deps:
-                    if d not in dependencies and current_file_path not in d:
+                    if d not in dependencies and current_file_path.lstrip('/') not in d:
                         dependencies.append(d)
             for s in svcs:
                 deps = self._sylk_json.get_service_dependencies(s)
                 for d in deps:
-                    if d not in dependencies and  current_file_path not in d:
+                    if d not in dependencies and  current_file_path.lstrip('/') not in d:
                         dependencies.append(d)
             # for i in refs:
             #     references = self._sylk_json._proto_tree.get_references(i)
@@ -1312,12 +1346,12 @@ class SylkProtoFile:
             for m in msgs:
                 deps = self._sylk_json.get_message_dependencies(m)
                 for d in deps:
-                    if d not in dependencies and current_file_path not in d:
+                    if d not in dependencies and current_file_path.lstrip('/') not in d:
                         dependencies.append(d)
             for s in svcs:
                 deps = self._sylk_json.get_service_dependencies(s)
                 for d in deps:
-                    if d not in dependencies and  current_file_path not in d:
+                    if d not in dependencies and  current_file_path.lstrip('/') not in d:
                         dependencies.append(d)
 
         return "\n\n" + "\n".join(dependencies) if len(dependencies) > 0 else ""
@@ -1401,6 +1435,20 @@ class SylkProtoFile:
             )
 
             field_extensions = ""
+            field_opts = []
+            if f.extensions is not None:
+                for ext in f.extensions:
+                    ext_data = proto_struct_to_dict(f.extensions.get(ext))
+                    for k in ext_data:
+                        val = ext_data[k]
+                        if isinstance(val, (bool)):
+                            if val:
+                                val = "true"
+                            else:
+                                val = "false"
+                        field_opts.append(f"{k} = {val}")
+
+            field_opts = ',\n\t\t'.join(field_opts)
             format_desc =  f.description.split('\n') if f.description.split('\n')[-1]!='' else f.description.split('\n')[:-1]
             if inline == False and len(format_desc)>0:
                 fields.append(
@@ -1410,7 +1458,7 @@ class SylkProtoFile:
                 )
             elif len(format_desc)>0:
                 inline_fields.append(
-                    "\t\t// {}".format(
+                    "\t// {}".format(
                        '\n\t//'.join(format_desc)
                     )
                 )
@@ -1470,11 +1518,14 @@ class SylkProtoFile:
                     )
                 else:
                     inline_fields.append(
-                        "\t\t{} {} {};".format(
+                        "\t{} {} {};".format(
                             field_type, f.name, field_extensions
                         )
                     )
             else:
+                if len(field_opts)>0:
+                    field_extensions = f" [{field_opts}]"
+
                 if inline == False:
                     fields.append(
                        "\t{}{} {} = {}{};".format(
@@ -1483,11 +1534,43 @@ class SylkProtoFile:
                     )
                 else:
                     inline_fields.append(
-                        "\t\t{}{} {} = {}{};".format(
+                        "\t{}{} {} = {}{};".format(
                         field_label, field_type, f.name, f.index, field_extensions
                         )
                     )
             return inline_fields
+
+        def _process_inline(self, inline, temp_inlines,level=1):
+            if 'SylkMessage' in inline.type_url:
+                msg = SylkMessage_pb2.SylkMessage()
+                inline.Unpack(msg)
+                inline_fields = []
+                for f in msg.fields:
+                    inline_fields = inline_fields + _process_field(self,f,True)
+                format_desc =  msg.description.split('\n') if msg.description.split('\n')[-1]!='' else msg.description.split('\n')[:-1]
+                if format_desc is not None and len(format_desc) > 0:
+                    temp_inlines.append("\n{}// {}".format('\t'*level,'\n//'.join(format_desc)))
+                nested_inline_tmp = []
+                for nested_inline in msg.inlines:
+                   _process_inline(self,nested_inline,nested_inline_tmp,level+1)
+                temp_inlines.append(
+                    "{6}message {0} {3}{1}\n{6}{2}\n{6}{4}\n".format(
+                        msg.name, '\n'+"\n".join(nested_inline_tmp) if len(nested_inline_tmp) >0 else '' ,"\n".join(inline_fields), _OPEN_BRCK, _CLOSING_BRCK, msg.full_name,'\t'* level
+                    )
+                )
+            else:
+                enm = SylkEnum_pb2.SylkEnum()
+                inline.Unpack(enm)
+                values = "\n\t".join(self._process_enum(enm))
+                format_desc =  enm.description.split('\n') if enm.description.split('\n')[-1]!='' else enm.description.split('\n')[:-1]
+                if format_desc is not None and len(format_desc) > 0:
+                    temp_inlines.append("\n{}// {}".format('\t'*level,'\n//'.join(format_desc)))
+                temp_inlines.append(
+                    "{5}enum {0} {2}\n{5}{1}\n{5}{3}\n".format(
+                        enm.name, values, _OPEN_BRCK, _CLOSING_BRCK, enm.full_name, '\t'*level
+                    )
+                )
+            return temp_inlines
 
         if self._file_name != self._package.name or self._is_tag == True:
             msgs = [m for m in self._package.messages if m.tag == self._file_name]
@@ -1497,33 +1580,8 @@ class SylkProtoFile:
             fields = []
             temp_inlines = []
             for inline in m.inlines:
-                if 'SylkMessage' in inline.type_url:
-                    msg = SylkMessage_pb2.SylkMessage()
-                    inline.Unpack(msg)
-                    inline_fields = []
-                    for f in msg.fields:
-                        inline_fields = inline_fields + _process_field(self,f,True)
-                    format_desc =  msg.description.split('\n') if msg.description.split('\n')[-1]!='' else msg.description.split('\n')[:-1]
-                    if format_desc is not None and len(format_desc) > 0:
-                        temp_inlines.append("\n\t// {}".format('\n//'.join(format_desc)))
-                    temp_inlines.append(
-                        "\n\tmessage {0} {2}\n{1}\n\t{3}\n".format(
-                            msg.name, "\n".join(inline_fields), _OPEN_BRCK, _CLOSING_BRCK, msg.full_name, 
-                        )
-                    )
-                else:
-                    enm = SylkEnum_pb2.SylkEnum()
-                    inline.Unpack(enm)
-                    values = "\n\t".join(self._process_enum(enm))
-                    format_desc =  enm.description.split('\n') if enm.description.split('\n')[-1]!='' else enm.description.split('\n')[:-1]
-                    if format_desc is not None and len(format_desc) > 0:
-                        temp_inlines.append("\n\t// {}".format('\n//'.join(format_desc)))
-                    temp_inlines.append(
-                        "\n\tenum {0} {2}\n{1}\n\t{3}\n".format(
-                            enm.name, values, _OPEN_BRCK, _CLOSING_BRCK, enm.full_name
-                        )
-                    )
-                        
+                temp_inlines=_process_inline(self,inline,temp_inlines)
+
             for f in m.fields:
                 _process_field(self,f)
             temp_inlines = "\n".join(temp_inlines)
@@ -1533,12 +1591,32 @@ class SylkProtoFile:
                 temp_msgs.append("\n// {}".format('\n//'.join(format_desc)))
             else:
                 temp_msgs.append("")
+
+            msg_opts = []
+            
+            if m.extensions is not None:
+                for ext in m.extensions:
+                    pb_message = self._sylk_json._pb_messages.get(ext)
+                    ext_data = proto_struct_to_dict(m.extensions.get(ext))
+                    for k in ext_data:
+                        if pb_message:
+                            ext_field = next((f for f in pb_message.DESCRIPTOR.fields if f.name == k),None)
+
+                        val = ext_data[k]
+                        if isinstance(val, (bool)):
+                            if val:
+                                val = "true"
+                            else:
+                                val = "false"
+                        msg_opts.append(f"\toption {k} = {val};\n")
+
+            msg_opts = '\n'+''.join(msg_opts)
             temp_msgs.append(
-                "message {0} {3}\n{1}{2}\n{4}".format(
-                    m.name, temp_inlines, fields, _OPEN_BRCK, _CLOSING_BRCK
+                "message {0} {4}{1}{2}\n{3}\n{5}".format(
+                    m.name, msg_opts, temp_inlines, fields, _OPEN_BRCK, _CLOSING_BRCK
                 )
             )
-        return "\n\n" + "\n".join(temp_msgs) if len(temp_msgs) > 0 else ""
+        return "\n" + "\n".join(temp_msgs) if len(temp_msgs) > 0 else ""
     
     def _process_enum(self,e):
         values = []
@@ -2207,7 +2285,7 @@ if proto_module not in sys.path:\n\
             if mod_path.split('.')[0] != self._sylk_json._proto_tree.root.name:
                 base_protos = code_base_path
 
-                imports.append(f"from {base_protos}{mod_path} import {mod_name}_pb2" )
+                imports.append(f"from {mod_path} import {mod_name}_pb2" )
             else:
                 base_protos = f'.{code_base_path}{self._sylk_json._root_protos}.' if self._sylk_json._root_protos is not None and self._sylk_json._root_protos != '' else f'.{code_base_path}'
                 imports.append(f"from {base_protos}{mod_path} import {mod_name}_pb2 as {mod_name}_{version}, {mod_name}_pb2_grpc as {mod_name}_{version}_grpc" )
@@ -2841,6 +2919,7 @@ class SylkClientTs:
                 pkg_ver = f'v{pkg_ver.get("version")}{pkg_ver.get("channel") if pkg_ver.get("channel") is not None else ""}{pkg_ver.get("release") if pkg_ver.get("release") is not None else ""}'
                 pkg_name = parent.full_path.split('.')[-2]
             else:
+                pkg_ver = ''
                 pkg_name = parent.name
             module_name = pkg_name if svc.get('tag') is None and svc.get('tag') != '' else svc.get('tag')
             base_protos = self._sylk_json._root_protos.replace('/','.')
@@ -3338,6 +3417,7 @@ class SylkClientGo:
                 file_system.wFile(
                     file_system.join_path(
                         sylk_json.path,
+                        self._sylk_json.code_base_path,
                         "clients",
                         "go",
                         svc_name,
@@ -3352,6 +3432,7 @@ class SylkClientGo:
                 file_system.wFile(
                     file_system.join_path(
                         self._sylk_json.path,
+                        self._sylk_json.code_base_path,
                         "clients",
                         "go",
                         svc_name,
@@ -3374,6 +3455,7 @@ class SylkClientGo:
         files = self._sylk_json._proto_tree.get_all_file_paths()
         imports = []
         go_package_path = self._sylk_json.project.get("goPackage")
+        code_base_path = self._sylk_json.code_base_path + '/' if self._sylk_json.code_base_path is not None and self._sylk_json.code_base_path != '' else ''
         for mod in files:
             mod_path = '.'.join(mod.split('/')[:-1])
             mod_name = mod.split('/')[-1].split('.')[0]
@@ -3404,7 +3486,7 @@ class SylkClientGo:
                             imports.append(imp_path)
             else:
                 base_protos = f'{self._sylk_json._root_protos}/' if self._sylk_json._root_protos is not None and self._sylk_json._root_protos != '' else ''
-                imp_path = f'"{go_package_path}/services/{base_protos}{mod_path.replace(".","/")}"' 
+                imp_path = f'"{go_package_path}/{code_base_path}services/{base_protos}{mod_path.replace(".","/")}"' 
                 if imp_path not in imports:
                     imports.append(imp_path)
 
@@ -3452,8 +3534,9 @@ class SylkClientGo:
         #                     f'{dep_name}pb "google.golang.org/protobuf/types/known/{dep_name}pb"'
         #                 )
 
-        _sylk_conn_builder = '\tsylkChannel "{}/clients/go/utils"'.format(
-            self._sylk_json.project.get("goPackage")
+        _sylk_conn_builder = '\tsylkChannel "{}/{}clients/go/utils"'.format(
+            self._sylk_json.project.get("goPackage"),
+            code_base_path
         )
         _default_imports = [
             '"fmt"',
@@ -3760,7 +3843,7 @@ class SylkServiceGo:
         list_d = list(map(lambda i: i, _WELL_KNOWN_GO_IMPORTS))
         parent = self._sylk_json._proto_tree.get_parent(self._service.get('fullName'))
         refs = self._sylk_json._proto_tree.get_parents_refs([self._service.get('fullName')])
-        
+        code_base_path = self._sylk_json.code_base_path +'/' if self._sylk_json.code_base_path is not None and self._sylk_json.code_base_path != '' else ''
         deps = self._sylk_json._proto_tree.get_references(self._service.get('fullName'))
        
         pkg_ver = self._sylk_json._proto_tree._parse_version_component(parent.full_path)
@@ -3778,7 +3861,7 @@ class SylkServiceGo:
             if d.split('.')[0] == self._sylk_json._proto_tree.root.name:
                 root = self._sylk_json._proto_tree.root
                 dep_parent = self._sylk_json._proto_tree.get_parent(d)
-                base_path = f'{go_package_name}/services/' if self._sylk_json._root_protos is None or self._sylk_json._root_protos == '' else f'{go_package_name}/services/{base_protos}/'
+                base_path = f'{go_package_name}/{code_base_path}services/' if self._sylk_json._root_protos is None or self._sylk_json._root_protos == '' else f'{go_package_name}/{code_base_path}services/{base_protos}/'
                 msg_dep =self._sylk_json._proto_tree._find_node(d,root) 
                 dep_mod_version = parse_version_component(dep_parent.full_path)
                 if dep_mod_version is not None:
@@ -3812,14 +3895,14 @@ class SylkServiceGo:
                 list_d.append(
                     imp_path
                 )
-        base_path = f'{go_package_name}/services/' if self._sylk_json._root_protos is None or self._sylk_json._root_protos == '' else f'{go_package_name}/services/{base_protos}/'
+        base_path = f'{go_package_name}/{code_base_path}services/' if self._sylk_json._root_protos is None or self._sylk_json._root_protos == '' else f'{go_package_name}/{code_base_path}services/{base_protos}/'
         imp_path = f'{module_name}{pkg_ver} "{base_path}{parent.full_path.replace(".","/")}"'
         
         if imp_path not in list_d:
             list_d.append(
                     imp_path
                 )
-        list_d.append(f'"{go_package_name}/services/utils"')
+        list_d.append(f'"{go_package_name}/{code_base_path}services/utils"')
         list_d = "\n".join(list_d)
         return f"{list_d}"
         # # 

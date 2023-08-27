@@ -277,66 +277,68 @@ then\n\
 \tGRPC_VERBOSITY=INFO GRPC_TRACE=all node {0}\n\
 else\n\
 \tnode {0}\n\
-fi'.format(file_system.join_path('.',code_base_path,'server','server.js'))
+fi'.format(file_system.join_path('.','dist','server.js'))
 
-protos_compile_script_ts = 'const path = require("path");\n\
-const { execSync } = require("child_process");\n\
+def protos_compile_script_ts(code_base_path: str):
+    code_base_path = f"{code_base_path}/" if code_base_path is not None and code_base_path != '' else ''
+    return f'const path = require("path");\n\
+const {_OPEN_BRCK} execSync {_CLOSING_BRCK} = require("child_process");\n\
 const rimraf = require("rimraf");\n\n\
 const PROTO_DIR = path.join(__dirname, "../protos");\n\
-const MODEL_DIR = path.join(__dirname, "../services/protos");\n\
+const MODEL_DIR = path.join(__dirname, "../{code_base_path}services/protos");\n\
 const PROTOC_PATH = path.join(__dirname, "../node_modules/grpc-tools/bin/protoc");\n\
 const PLUGIN_PATH = path.join(__dirname, "../node_modules/.bin/protoc-gen-ts_proto");\n\n\
 const pkgJson = require("../sylk.json");\n\
 let protos = [];\n\n\
-function getUniqueStrings(arr) {\n\
+function getUniqueStrings(arr) {_OPEN_BRCK}\n\
   const uniqueSet = new Set(arr);\n\
   return Array.from(uniqueSet).filter(u => u !== undefined);\n\
-}\n\n\
-for (const pkg in pkgJson.packages) {\n\
-  if (Object.hasOwnProperty.call(pkgJson.packages, pkg)) {\n\
+{_CLOSING_BRCK}\n\n\
+for (const pkg in pkgJson.packages) {_OPEN_BRCK}\n\
+  if (Object.hasOwnProperty.call(pkgJson.packages, pkg)) {_OPEN_BRCK}\n\
     let files = [];\n\
     let standaloneFile = false;\n\
-    if(pkgJson.packages[pkg].services) {\n\
+    if(pkgJson.packages[pkg].services) {_OPEN_BRCK}\n\
       pkgJson.packages[pkg]?.services.map(s => s.tag).map(s => files.push(s))\n\
-      if(pkgJson.packages[pkg]?.services.map(s => !s.tag).includes(true)) {\n\
+      if(pkgJson.packages[pkg]?.services.map(s => !s.tag).includes(true)) {_OPEN_BRCK}\n\
         standaloneFile = true;\n\
-      }\n\
-    }\n\
-    if(pkgJson.packages[pkg].messages) {\n\
+      {_CLOSING_BRCK}\n\
+    {_CLOSING_BRCK}\n\
+    if(pkgJson.packages[pkg].messages) {_OPEN_BRCK}\n\
       pkgJson.packages[pkg]?.messages.map(m => m.tag).map(m => files.push(m))\n\
-      if(pkgJson.packages[pkg]?.messages.map(m => !m.tag).includes(true)) {\n\
+      if(pkgJson.packages[pkg]?.messages.map(m => !m.tag).includes(true)) {_OPEN_BRCK}\n\
         standaloneFile = true;\n\
-      }\n\
-    }\n\
-    if(pkgJson.packages[pkg].enums) {\n\
+      {_CLOSING_BRCK}\n\
+    {_CLOSING_BRCK}\n\
+    if(pkgJson.packages[pkg].enums) {_OPEN_BRCK}\n\
       pkgJson.packages[pkg]?.enums.map(e => e.tag).map(e => files.push(e))\n\
-      if(pkgJson.packages[pkg]?.enums.map(e => !e.tag).includes(true)) {\n\
+      if(pkgJson.packages[pkg]?.enums.map(e => !e.tag).includes(true)) {_OPEN_BRCK}\n\
         standaloneFile = true;\n\
-      }\n\
-    }\n\
-    if(files.length>0) {\n\
-      getUniqueStrings(files).map(f => protos.push(`${pkg}/${f}.proto`))\n\
-      if(standaloneFile) {\n\
-        protos.push(`${pkg}/${pkgJson.packages[pkg].name}.proto`)  \n\
-      }\n\
-    } else {\n\
-      protos.push(`${pkg}/${pkgJson.packages[pkg].name}.proto`)\n\
-    }\n\
-  }\n\
-}\n\
-rimraf.sync(`${MODEL_DIR}/*.ts`, {\n\
-  glob: { ignore: `${MODEL_DIR}/tsconfig.json` },\n\
-});\n\n\
+      {_CLOSING_BRCK}\n\
+    {_CLOSING_BRCK}\n\
+    if(files.length>0) {_OPEN_BRCK}\n\
+      getUniqueStrings(files).map(f => protos.push(`${_OPEN_BRCK}pkg{_CLOSING_BRCK}/${_OPEN_BRCK}f{_CLOSING_BRCK}.proto`))\n\
+      if(standaloneFile) {_OPEN_BRCK}\n\
+        protos.push(`${_OPEN_BRCK}pkg{_CLOSING_BRCK}/${_OPEN_BRCK}pkgJson.packages[pkg].name{_CLOSING_BRCK}.proto`)  \n\
+      {_CLOSING_BRCK}\n\
+    {_CLOSING_BRCK} else {_OPEN_BRCK}\n\
+      protos.push(`${_OPEN_BRCK}pkg{_CLOSING_BRCK}/${_OPEN_BRCK}pkgJson.packages[pkg].name{_CLOSING_BRCK}.proto`)\n\
+    {_CLOSING_BRCK}\n\
+  {_CLOSING_BRCK}\n\
+{_CLOSING_BRCK}\n\
+rimraf.sync(`${_OPEN_BRCK}MODEL_DIR{_CLOSING_BRCK}/*.ts`, {_OPEN_BRCK}\n\
+  glob: {_OPEN_BRCK} ignore: `${_OPEN_BRCK}MODEL_DIR{_CLOSING_BRCK}/tsconfig.json` {_CLOSING_BRCK},\n\
+{_CLOSING_BRCK});\n\n\
 const protoConfig = [\n\
-  `--plugin=${PLUGIN_PATH}`,\n\n\
+  `--plugin=${_OPEN_BRCK}PLUGIN_PATH{_CLOSING_BRCK}`,\n\n\
   // https://github.com/stephenh/ts-proto/blob/main/README.markdown\n\
   "--ts_proto_opt=outputServices=grpc-js,env=node,useOptionals=messages,exportCommonSymbols=false,esModuleInterop=true",\n\n\
-  `--ts_proto_out=${MODEL_DIR}`,\n\
-  `--proto_path ${PROTO_DIR} ${protos.join(" ")}`,\n\
+  `--ts_proto_out=${_OPEN_BRCK}MODEL_DIR{_CLOSING_BRCK}`,\n\
+  `--proto_path ${_OPEN_BRCK}PROTO_DIR{_CLOSING_BRCK} ${_OPEN_BRCK}protos.join(" "){_CLOSING_BRCK}`,\n\
 ];\n\n\
 // https://github.com/stephenh/ts-proto#usage\n\
-execSync(`${PROTOC_PATH} ${protoConfig.join(" ")}`);\n\
-console.log(`> Proto models created: ${MODEL_DIR}`);'
+execSync(`${_OPEN_BRCK}PROTOC_PATH{_CLOSING_BRCK} ${_OPEN_BRCK}protoConfig.join(" "){_CLOSING_BRCK}`);\n\
+console.log(`> Proto models created: ${_OPEN_BRCK}MODEL_DIR{_CLOSING_BRCK}`);'
 
 
 def interceptors_js(version):
@@ -435,27 +437,27 @@ def js_package_json(prj_name):
     )
 
 def package_json(prj_name: str,code_base_path: str):
- return '{\n\
-    "name": "{0}",\n\
+ return f'{_OPEN_BRCK}\n\
+    "name": "{prj_name}",\n\
     "version": "1.0.0",\n\
     "description": "This project has been generated thanks to ```Sylk.build``` CLI. For start using it please run  ```sylk run --build```  and see the magic in action. For more information please visit https://docs.sylk.build",\n\
     "main": "bin/proto.js",\n\
-    "scripts": {\n\
+    "scripts": {_OPEN_BRCK}\n\
         "test": "echo \\"Error: no test specified\\" && exit 1",\n\
         "lint": "eslint --ext .ts .",\n\
-        "build": "node bin/proto && rimraf {1}/clients/typescript/protos && rimraf {1}/clients/typescript/index.* && rimraf {1}/server && tsc -b",\n\
+        "build": "node bin/proto && rimraf {code_base_path}/clients/typescript/protos && rimraf {code_base_path}/clients/typescript/index.* && rimraf {code_base_path}/server && tsc -b",\n\
         "build:webpack": "bash bin/webpack.sh",\n\
         "start": "node clients/typescript/server",\n\
         "client": "node clients/typescript/client",\n\
         "health": "node clients/typescript/health"\n\
-    },\n\
+    {_CLOSING_BRCK},\n\
     "author": "",\n\
     "license": "ISC",\n\
-    "dependencies": {\n\
+    "dependencies": {_OPEN_BRCK}\n\
         "@grpc/grpc-js": "^1.6.12",\n\
         "rxjs": "^7.5.6"\n\
-    },\n\
-    "devDependencies": {\n\
+    {_CLOSING_BRCK},\n\
+    "devDependencies": {_OPEN_BRCK}\n\
         "@types/node": "^18.7.14",\n\
         "@typescript-eslint/eslint-plugin": "^5.36.1",\n\
         "@typescript-eslint/parser": "^5.36.1",\n\
@@ -469,8 +471,8 @@ def package_json(prj_name: str,code_base_path: str):
         "ts-proto": "^1.123.1",\n\
         "typescript": "^4.8.2",\n\
         "ts-node": "^10.9.1"\n\
-    }\n\
-}'.format(prj_name, code_base_path)
+    {_CLOSING_BRCK}\n\
+{_CLOSING_BRCK}'
 
 package_json_webpack = '{\n\
   "name": "REPLACEME",\n\
@@ -527,12 +529,14 @@ export type ApiType<T> = Api<T> & {\n\
 \n\
 }"
 
-main_ts_config = '{\n\
-    "compilerOptions": {\n\
+def main_ts_config(code_base_path: str):
+    code_base_path = f"{code_base_path}/" if code_base_path is not None and code_base_path != '' else ''
+    return  f'{_OPEN_BRCK}\n\
+    "compilerOptions": {_OPEN_BRCK}\n\
         "baseUrl": ".",\n\
-        "paths": {},\n\
+        "paths": {_OPEN_BRCK}{_CLOSING_BRCK},\n\
         "target": "ES2019",\n\
-        "outDir": "server",\n\
+        "outDir": "dist",\n\
         "module": "commonjs",\n\
         "moduleResolution": "node",\n\
         "incremental": true,\n\
@@ -552,22 +556,22 @@ main_ts_config = '{\n\
         "forceConsistentCasingInFileNames": true,\n\
         "esModuleInterop": true,\n\
         "skipLibCheck": true\n\
-    },\n\
+    {_CLOSING_BRCK},\n\
     "include": [\n\
-        "services/**/*",\n\
-        "services/*.ts",\n\
-        "*.ts"\n\
+        "{code_base_path}services/**/*",\n\
+        "{code_base_path}services/*.ts",\n\
+        "{code_base_path}*.ts"\n\
     ],\n\
     "exclude": [\n\
         "node_modules",\n\
-        "services/protos"\n\
+        "{code_base_path}services/protos"\n\
     ],\n\
     "references": [\n\
-        {\n\
-            "path": "services/protos"\n\
-        }\n\
+        {_OPEN_BRCK}\n\
+            "path": "{code_base_path}services/protos"\n\
+        {_CLOSING_BRCK}\n\
     ]\n\
-}'
+{_CLOSING_BRCK}'
 
 clients_ts_configs = '{\n\
     "extends": "../tsconfig.json",\n\
@@ -585,12 +589,17 @@ clients_ts_configs = '{\n\
 }'
 
 
-def protos_ts_config(domain):
+def protos_ts_config(domain, code_base_path: str):
+    _base_tmp_path = ''
+    if code_base_path is not None and code_base_path != '':
+        for p in code_base_path.split('/'):
+            _base_tmp_path += '../'
+    code_base_path = _base_tmp_path if code_base_path is None or code_base_path != '' else ''
     return f'{_OPEN_BRCK}\n\
-    "extends": "../../tsconfig.json",\n\
+    "extends": "{_base_tmp_path}../../tsconfig.json",\n\
     "compilerOptions": {_OPEN_BRCK}\n\
         "composite": true,\n\
-        "outDir": "../../server/services/protos",\n\
+        "outDir": "{_base_tmp_path}../../dist/services/protos",\n\
         "noImplicitReturns": false\n\
     {_CLOSING_BRCK},\n\
     "include": [\n\

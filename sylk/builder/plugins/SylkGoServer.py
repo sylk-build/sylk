@@ -182,6 +182,7 @@ def write_server(
         == False
     ):
         go_package_name = sylk_json.project.get("goPackage")
+        code_base_path = sylk_json.code_base_path +'/' if sylk_json.code_base_path is not None and sylk_json.code_base_path != '' else ''
         imports = ['"log"', '"fmt"', '"flag"', '"net"', '"google.golang.org/grpc"']
         services_bindings = []
         for svc in sylk_json.services:
@@ -198,7 +199,7 @@ def write_server(
                 f'{svc_name}{svc_ver}Servicer "{file_system.join_path(go_package_name, sylk_json.code_base_path, "services", base_protos, svc_path)}"'
             )
             imports.append(
-                f'{svc_name}{svc_ver} "{go_package_name}/services/{svc_name}/{svc_ver}"'
+                f'{svc_name}{svc_ver} "{go_package_name}/{code_base_path}services/{svc_name}/{svc_ver}"'
             )
             temp_svc_name = svc_name[0].capitalize() + svc_name[1:]
             services_bindings.append(

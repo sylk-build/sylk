@@ -320,7 +320,7 @@ def list_all(sylk_json:SylkJson):
     prj_name = sylk_json.project.get('name')
     sylk_ver = sylk_json.sylk_version
     print_info(f'Listing project \'{prj_name}\' resources (sylk version: {sylk_ver})')
-
+    inline_enums = []
     # Services list
     header = ['Service','RPC\'s','Dependencies','Extensions']
     tab = PrettyTable(header)
@@ -374,6 +374,17 @@ def list_all(sylk_json:SylkJson):
                     ext_type = m.get('extensionType') if m.get('extensionType') is not None else '-'
                     ext = ext if len(ext) >0 else '-'
                     add_message_desc(tab,m,package,ext,ext_type)
+                    for im in m.get('inlines', []):
+                        if 'SylkMessage' in im.get('@type'):
+                            ext = []
+                            if im.get('extensions') is not None:
+                                ext = list(map(lambda k: k,im.get('extensions')))
+                            ext_type = im.get('extensionType') if im.get('extensionType') is not None else '-'
+                            ext = ext if len(ext) >0 else '-'
+                            add_message_desc(tab,im,package,ext,ext_type)
+                        else:
+                            inline_enums.append((im,package))
+
     else:
         print_warning("No packages on project")
     
@@ -382,6 +393,8 @@ def list_all(sylk_json:SylkJson):
     # Enums list
     header = ['Enum','Values','Package']
     tab = PrettyTable(header)
+    for inline_enum in inline_enums:
+        add_enum_desc(tab,*inline_enum)
     if sylk_json.packages is not None:
         for pkg in sylk_json.packages:
             package = sylk_json.packages[pkg]
@@ -402,7 +415,7 @@ def add_service_desc(tab,svc_description,extensions=None):
     tab.add_row([svc_description.get('name') + ' [{}]'.format(svc_description.get('fullName')),len(svc_description.get('methods') if svc_description.get('methods') is not None else []),svc_description.get('dependencies'),extensions])
 
 def add_package_desc(tab,package_desc,ext):
-    tab.add_row([package_desc.get('name') + ' [{}]'.format(package_desc.get('package')),len(package_desc.get('messages') if package_desc.get('messages') is not None else []),len(package_desc.get('enums') if package_desc.get('enums') is not None else []),package_desc.get('dependencies'),ext ])
+    tab.add_row([package_desc.get('name') + ' [{}]'.format(package_desc.get('package')),len(package_desc.get('messages') if package_desc.get('messages') is not None else []),len(package_desc.get('enums') if package_desc.get('enums') is not None else []),package_desc.get('dependencies') if package_desc.get('dependencies') is not None and len(package_desc.get('dependencies')) < 3 else f"{len(package_desc.get('dependencies'))} deps" if package_desc.get('dependencies') is not None else None,ext ])
 
 def add_message_desc(tab,msg_desc,package_desc, ext,ext_type ):
     tab.add_row([msg_desc.get('name') + ' [{}]'.format(msg_desc.get('fullName')),len(msg_desc.get('fields') if msg_desc.get('fields') is not None else []),package_desc.get('package'), ext,ext_type ])

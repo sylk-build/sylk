@@ -192,7 +192,6 @@ class SylkArchitect:
         )
         _IN = args[0][0]
         _OUT = args[0][1]
-        print(args)
         RPC = generate_rpc(self._path, name, _IN[0], _OUT[0], _IN[1], _OUT[1], args[1])
         service.methods.append(RPC)
         
@@ -490,6 +489,11 @@ class SylkArchitect:
             description,
         )
         self._sylk.execute(CommandMap._EDIT_RESOURCE, MessageToDict(RPC))
+
+    def RemoveService(self, full_name):
+        self._unsaved_change = True
+        self._sylk.execute(CommandMap._REMOVE_RESOURCE, "service", { "full_name": full_name })
+
 
     def RemoveEnum(self, full_name):
         self._unsaved_change = True

@@ -188,8 +188,8 @@ def main(args=None):
     # Main cli parser
     parser = argparse.ArgumentParser(
         prog="sylk",
-        description="Command line interface for the sylk.build package build awesome gRPC micro-services. For more information please visit https://www.sylk.build there you can find additional documentation and tutorials.",
-        epilog=f"For more information see - https://docs.sylk.build | Created with love by Amit Shmulevitch. 2022 © sylk.build [{__version__.__version__}]",
+        description="Command line interface for sylk build, manage and compile protobuf schema powering gRPC services. For more information please visit https://www.sylk.build there you can find additional documentation and tutorials.",
+        epilog=f"For more information see - https://docs.sylk.build | Created with love by Sylk Team. 2023 © sylk.build [{__version__.__version__}]",
     )
 
     # parser.add_argument('test', help='test')
