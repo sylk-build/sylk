@@ -30,16 +30,6 @@ Install from pip
 ```sh
 pip install sylk
 ```
-# Docs
-
-Go to [sylk.build Docs](https://docs.sylk.build/) for full explanation.
-
-__Useful Resources__:
-
-- [Awesome gRPC - A curated list of useful resources for gRPC](https://github.com/grpc-ecosystem/awesome-grpc)
-
-- [API Design Guide From Google - Matches well into gRPC specific design patterns](https://cloud.google.com/apis/design/)
-
 # Features:
 
 - __CLI__ Well structerd CLI wrapper to create, edit, run and debug a RPC call to gRPC services
@@ -130,10 +120,6 @@ The sylk CLI module is essantially a wrapper to the `Architect API` which is jus
 > __Note__ Each sylk.build CLI command can be called with the abbreviated `sylk`
 
 > __Note__ The CLI has verbose logging system that can be changed accoriding to your needs. we do recommand to keep it to ERROR as default to not overload you with multiple lines for each command - to change the default behaviour run your commands with `sylk --loglevel DEBUG <sub-command>`
-
-# Development
-
-We are welcoming any code contribution and help to maintain and release new fetures as well documenting the library.
 
 ## Contribute
 Your contributions are always welcome! For guidelines on how to contribute, please check our development guidelines.
