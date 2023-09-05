@@ -1013,7 +1013,8 @@ def main(args=None):
                         # List templates execution
                         elif args.templates:
                             sylk_project_config = prj_conf.parse_project_config(
-                                os.getcwd()
+                                os.getcwd(),
+                                proto=True
                             )
                             ls.list_templates(sylk_project_config, SYLK_JSON)
                             # ls.list_cloud_projects(args.full_name,SYLK_JSON)
@@ -1074,9 +1075,8 @@ def main(args=None):
                     ls.list_projects(sylkCloud._org_id, cloud_projects)
                 elif args.templates:
                     """Templates commands - list templates"""
-                    sylk_project_config = prj_conf.parse_project_config(os.getcwd())
+                    sylk_project_config = prj_conf.parse_project_config(os.getcwd(), proto=True)
                     print_info(f"Listing sylk templates")
-
                     ls.list_templates(sylk_project_config, None)
             elif hasattr(args, "edit"):
                 """Configs commands"""

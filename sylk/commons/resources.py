@@ -510,7 +510,7 @@ def generate_message(
                             enum_type=f_oneof.get("enumType")
                             if f_oneof.get("enumType") is not None
                             else f_oneof.get("enum_type"),
-                            type=ResourceTypes.descriptor.value,
+                            # type=ResourceTypes.descriptor.value,
                             kind=ResourceKinds.oneof_field.value,
                             message_type=f_oneof.get("messageType")
                             if f_oneof.get("messageType") is not None

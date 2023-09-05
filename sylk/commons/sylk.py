@@ -157,13 +157,13 @@ class SylkTree:
         for message in messages:
             refs = [
                 field.get('messageType')
-                for field in message.get('fields')
+                for field in message.get('fields', [])
                 if field.get('fieldType') is not None
                 and (field.get('fieldType') == SylkField_pb2.SylkFieldTypes.Name(SylkField_pb2.TYPE_MESSAGE)
                 or field.get('valueType') == SylkField_pb2.SylkFieldTypes.Name(SylkField_pb2.TYPE_ENUM))
             ] + [
                 field.get('enumType')
-                for field in message.get('fields')
+                for field in message.get('fields', [])
                 if field.get('fieldType') is not None
                 and (field.get('fieldType') == SylkField_pb2.SylkFieldTypes.Name(SylkField_pb2.TYPE_ENUM)
                 or field.get('valueType') == SylkField_pb2.SylkFieldTypes.Name(SylkField_pb2.TYPE_ENUM))

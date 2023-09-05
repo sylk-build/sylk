@@ -61,7 +61,7 @@ def display_resource(resource_name,sylk_json:SylkJson,count,level=None,nested=Fa
 
 def list_templates(configs,sylk_json:SylkJson):
     print_note("Sylk templates:")
-    for tmp in configs.get('sylk_templates'):
+    for tmp in configs.sylk_templates:
         print_info(tmp)
     print()
     print_note("In order to create a new project based on template run the following\n\t-> $ sylk new MyTodo --template @sylk/TodoAppPy")
