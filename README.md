@@ -1,6 +1,5 @@
-# Unleashing the Power of Protobuf with Sylk.build CLI
+#Sylk build CLI
 
-![Sylk Logo](https://s3.eu-central-1.amazonaws.com/assets.sylk.build/logo/sylk-logo-full.png) !
 [<img height="34" alt="Sylk Logo" src="https://s3.eu-central-1.amazonaws.com/assets.sylk.build/logo/sylk-logo-full.png">](https://sylk.build)      [<img height="16" alt="Sylk Downloads" src="https://static.pepy.tech/personalized-badge/sylk?period=total&units=international_system&left_color=brightgreen&right_color=grey&left_text=Downloads">](https://pepy.tech/project/sylk)    [<img height="16" alt="Python 3.7+" src="https://img.shields.io/badge/python-3.7+-blue.svg">](https://www.python.org/downloads/release/python-370/)
 
 
