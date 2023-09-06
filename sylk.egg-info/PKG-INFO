@@ -1,6 +1,6 @@
 Metadata-Version: 2.1
 Name: sylk
-Version: 0.4.0
+Version: 0.4.1
 Summary: sylk CLI build, deploy and manage gRPC microservices.
 Author-email: Sylk Developers <contact@sylk.build>
 License: Copyright (c) 2023 sylk.build
@@ -37,52 +37,38 @@ Provides-Extra: dev
 Provides-Extra: build
 License-File: LICENSE
 
-# sylk.build CLI
+#Sylk build CLI
 
 [<img height="34" alt="Sylk Logo" src="https://s3.eu-central-1.amazonaws.com/assets.sylk.build/logo/sylk-logo-full.png">](https://sylk.build)      [<img height="16" alt="Sylk Downloads" src="https://static.pepy.tech/personalized-badge/sylk?period=total&units=international_system&left_color=brightgreen&right_color=grey&left_text=Downloads">](https://pepy.tech/project/sylk)    [<img height="16" alt="Python 3.7+" src="https://img.shields.io/badge/python-3.7+-blue.svg">](https://www.python.org/downloads/release/python-370/)
 
 
-[sylk](https://www.sylk.build) is free and open-source project that aims to be a complete framework for developing micro-services projects.
-The underlying communication protocol is [```HTTP2```](https://en.wikipedia.org/wiki/HTTP/2) and for serialization and deserialization is [```protobuf```](https://developers.google.com/protocol-buffers/docs/pythontutorial).
-It utulize those communication protocol, message serialization / deserialization and code generator with [```gRPC```](https://grpc.io) open-source project by google. 
+[Sylk.build](https://sylk.build) is your go-to toolkit for accelerating Protocol Buffers (protobuf) development across multiple languages. with Sylk.build, you can quickly develop, deploy, and scale your data structures, irrespective of the programming language you're using.
 
-sylk.build has been created to give devlopers quick and structerd way for building gRPC services without pain while keeping thins open for further modifications.
+## Elevate Your Protobuf Development Experience
 
-In result we are trying not to restrict the implemantations themselves but instead applying small restrictions on the project structure for well defined, re-usable structure that can be used by many languages and scenarios.
+Welcome to [sylk.build](https://www.sylk.build), the ultimate toolkit for working with Protocol Buffers (`protobuf`). We're here to simplify your serialization and data interchange tasks using cutting-edge technology stacks like `HTTP2` and `gRPC`.
 
-The current supported languages are:
-|                **Language**               | **Server** | **Client** |  **Status**  |
-|:-----------------------------------------:|:----------:|:----------:|:------------:|
-|     Python     |    **V**   |    **V**   |    Stable    |
-| Typescript |    **V**   |    **V**   |    Stable    |
-|         Go         |    **V**   |    **V**   | Stable |
-| NodeJS |     --     |    **V**   | Stable |
-|                   C#.NET                  |    **X**   |    **X**   |    Planned   |
+### Why Choose Sylk.build?
 
-Get full explanation and many more details on usage at [```sylk.build```](https://www.sylk.build).
+1. **Protobuf-Centric**: Designed to enhance your experience in working with Protocol Buffers for any project.
+2. **Multi-Language Support**: Use Python, TypeScript, Go, or NodeJS for your protobuf implementations. More languages are in the pipeline!
+3. **Flexibility and Efficiency**: Thanks to protobuf, enjoy high-speed, efficient data serialization and deserialization.
 
-The `sylk CLI` is a wrapper for SylkArchitect class which does mainly the processing and execution of creating sylk.jso file.
+| **Language**  | **Server** | **Client** | **Status**  |
+|---------------|------------|------------|-------------|
+| Python        | **V**      | **V**      | Stable      |
+| TypeScript    | **V**      | **V**      | Stable      |
+| Go            | **V**      | **V**      | Stable      |
+| webpack       | --         | **V**      | Stable      |
+| C#.NET        | **X**      | **X**      | Planned     |
 
-You can interact with the SylkArchitect class with two main ways:
-
-- __CLI__ - The most common and easy to get you started creating gRPC services.
-- __Python API__ - Will be useful for more compehransive project creation flows and for developers who wants to understand how sylk works.
+👉 **Learn More**: Dive deeper into the capabilities of sylk.build through our [Official Documentation](https://www.docs.sylk.build).
 
 # Installation
 Install from pip
 ```sh
 pip install sylk
 ```
-# Docs
-
-Go to [sylk.build Docs](https://docs.sylk.build/) for full explanation.
-
-__Useful Resources__:
-
-- [Awesome gRPC - A curated list of useful resources for gRPC](https://github.com/grpc-ecosystem/awesome-grpc)
-
-- [API Design Guide From Google - Matches well into gRPC specific design patterns](https://cloud.google.com/apis/design/)
-
 # Features:
 
 - __CLI__ Well structerd CLI wrapper to create, edit, run and debug a RPC call to gRPC services
@@ -174,10 +160,16 @@ The sylk CLI module is essantially a wrapper to the `Architect API` which is jus
 
 > __Note__ The CLI has verbose logging system that can be changed accoriding to your needs. we do recommand to keep it to ERROR as default to not overload you with multiple lines for each command - to change the default behaviour run your commands with `sylk --loglevel DEBUG <sub-command>`
 
-# Development
+## Contribute
+Your contributions are always welcome! For guidelines on how to contribute, please check our development guidelines.
 
-We are welcoming any code contribution and help to maintain and release new fetures as well documenting the library.
+## Two Modes of Interaction
+- **CLI**: Kick-start your protobuf projects with our easy-to-use CLI.
+- **Python API**: Ideal for advanced customization and control over your protobuf files.
 
+## Additional Resources
+- [Awesome gRPC](https://github.com/grpc-ecosystem/awesome-grpc)
+- [Google's API Design Guide](https://cloud.google.com/apis/design/)
 
 ---
-__Created with love by Sylk team. 2023 © Sylk__
+__Created with love by Sylk team. 2023 © Sylk Tchnologies, Inc.__
