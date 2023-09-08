@@ -5,7 +5,7 @@ build-backend = "setuptools.build_meta"
 [project]
 name = "sylk"
 version = "0.4.1"
-description = "sylk CLI build, deploy and manage gRPC microservices."
+description = "Sylk CLI, Build and Manage your Protocol Buffers."
 readme = "README.md"
 authors = [{ name = "Sylk Developers", email = "contact@sylk.build" }]
 license = { file = "LICENSE" }
@@ -14,7 +14,13 @@ classifiers = [
     "Programming Language :: Python",
     "Programming Language :: Python :: 3",
 ]
-keywords = ["grpc", "micro-services", "cli", "framework"]
+keywords = [
+    "grpc",
+    "micro-services",
+    "cli",
+    "protobuf",
+    "framework"
+]
 dependencies = ["pluggy>=0.3,<1.0","inquirer","prettytable","protobuf<=4.23.2","grpcio==1.54.2","grpcio-tools==1.54.2"]
 requires-python = ">=3.7"
 

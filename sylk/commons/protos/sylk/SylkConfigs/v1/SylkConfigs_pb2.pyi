@@ -34,7 +34,7 @@ class SylkTemplateConfigs(_message.Message):
     def __init__(self, include: _Optional[_Iterable[str]] = ..., exclude: _Optional[_Iterable[str]] = ..., name: _Optional[str] = ..., description: _Optional[str] = ..., out_path: _Optional[str] = ..., include_code: bool = ..., author: _Optional[str] = ...) -> None: ...
 
 class SylkProjectConfigs(_message.Message):
-    __slots__ = ["description", "host", "template", "port", "current_version", "plugins", "proto_base_path", "proto_compiled_path", "code_base_path", "framework"]
+    __slots__ = ["description", "host", "template", "port", "current_version", "plugins", "proto_base_path", "proto_compiled_path", "code_base_path", "framework", "license"]
     DESCRIPTION_FIELD_NUMBER: _ClassVar[int]
     HOST_FIELD_NUMBER: _ClassVar[int]
     TEMPLATE_FIELD_NUMBER: _ClassVar[int]
@@ -45,6 +45,7 @@ class SylkProjectConfigs(_message.Message):
     PROTO_COMPILED_PATH_FIELD_NUMBER: _ClassVar[int]
     CODE_BASE_PATH_FIELD_NUMBER: _ClassVar[int]
     FRAMEWORK_FIELD_NUMBER: _ClassVar[int]
+    LICENSE_FIELD_NUMBER: _ClassVar[int]
     description: str
     host: str
     template: SylkTemplateConfigs
@@ -55,10 +56,11 @@ class SylkProjectConfigs(_message.Message):
     proto_compiled_path: str
     code_base_path: str
     framework: SylkFrameworks
-    def __init__(self, description: _Optional[str] = ..., host: _Optional[str] = ..., template: _Optional[_Union[SylkTemplateConfigs, _Mapping]] = ..., port: _Optional[int] = ..., current_version: _Optional[str] = ..., plugins: _Optional[_Iterable[str]] = ..., proto_base_path: _Optional[str] = ..., proto_compiled_path: _Optional[str] = ..., code_base_path: _Optional[str] = ..., framework: _Optional[_Union[SylkFrameworks, str]] = ...) -> None: ...
+    license: str
+    def __init__(self, description: _Optional[str] = ..., host: _Optional[str] = ..., template: _Optional[_Union[SylkTemplateConfigs, _Mapping]] = ..., port: _Optional[int] = ..., current_version: _Optional[str] = ..., plugins: _Optional[_Iterable[str]] = ..., proto_base_path: _Optional[str] = ..., proto_compiled_path: _Optional[str] = ..., code_base_path: _Optional[str] = ..., framework: _Optional[_Union[SylkFrameworks, str]] = ..., license: _Optional[str] = ...) -> None: ...
 
 class SylkCliConfigs(_message.Message):
-    __slots__ = ["sylk_templates", "port", "token", "analytics", "first_run", "host", "plugins", "proto_base_path", "proto_compiled_path", "template", "code_base_path", "framework"]
+    __slots__ = ["sylk_templates", "port", "token", "analytics", "first_run", "host", "plugins", "proto_base_path", "proto_compiled_path", "template", "code_base_path", "framework", "license"]
     SYLK_TEMPLATES_FIELD_NUMBER: _ClassVar[int]
     PORT_FIELD_NUMBER: _ClassVar[int]
     TOKEN_FIELD_NUMBER: _ClassVar[int]
@@ -71,6 +73,7 @@ class SylkCliConfigs(_message.Message):
     TEMPLATE_FIELD_NUMBER: _ClassVar[int]
     CODE_BASE_PATH_FIELD_NUMBER: _ClassVar[int]
     FRAMEWORK_FIELD_NUMBER: _ClassVar[int]
+    LICENSE_FIELD_NUMBER: _ClassVar[int]
     sylk_templates: _containers.RepeatedScalarFieldContainer[str]
     port: int
     token: str
@@ -83,4 +86,5 @@ class SylkCliConfigs(_message.Message):
     template: SylkTemplateConfigs
     code_base_path: str
     framework: SylkFrameworks
-    def __init__(self, sylk_templates: _Optional[_Iterable[str]] = ..., port: _Optional[int] = ..., token: _Optional[str] = ..., analytics: bool = ..., first_run: bool = ..., host: _Optional[str] = ..., plugins: _Optional[_Iterable[str]] = ..., proto_base_path: _Optional[str] = ..., proto_compiled_path: _Optional[str] = ..., template: _Optional[_Union[SylkTemplateConfigs, _Mapping]] = ..., code_base_path: _Optional[str] = ..., framework: _Optional[_Union[SylkFrameworks, str]] = ...) -> None: ...
+    license: str
+    def __init__(self, sylk_templates: _Optional[_Iterable[str]] = ..., port: _Optional[int] = ..., token: _Optional[str] = ..., analytics: bool = ..., first_run: bool = ..., host: _Optional[str] = ..., plugins: _Optional[_Iterable[str]] = ..., proto_base_path: _Optional[str] = ..., proto_compiled_path: _Optional[str] = ..., template: _Optional[_Union[SylkTemplateConfigs, _Mapping]] = ..., code_base_path: _Optional[str] = ..., framework: _Optional[_Union[SylkFrameworks, str]] = ..., license: _Optional[str] = ...) -> None: ...
