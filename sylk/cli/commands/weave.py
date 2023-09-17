@@ -237,8 +237,13 @@ def parse_field_to_sylk_field(
         oneof_field.name = oneof_descriptor.name
         # Add any other necessary mappings for oneof fields
         sylk_field.oneof_fields.append(oneof_field)
+
+    msg_index = list(file_desc.message_type).index(message_desc)
+    field_index = list(message_desc.field).index(field_desc)
+    sylk_field.description = extract_description_for_field(file_desc.source_code_info, msg_index, field_index).strip()
     sylk_field.kind = "field"
     sylk_field.type = "descriptor"
+    
     return sylk_field
 
 
@@ -1734,6 +1739,7 @@ def parse_message(
                 if sylk_json.packages is not None
                 else [adapted_pkg.package]
             )
+    return diffs
 
 def weave(args, sylk_json: SylkJson = None, architect: SylkArchitect = None):
     well_known_protos = pkg_resources.resource_filename("grpc_tools", "_proto")
@@ -1874,7 +1880,7 @@ def weave(args, sylk_json: SylkJson = None, architect: SylkArchitect = None):
                                 removed_msgs.append((i, msg))
                        
                         for message in f.message_type:
-                            parse_message(
+                            diffs = parse_message(
                                 message=message,
                                 adapted_pkg=adapted_pkg,
                                 architect=architect,

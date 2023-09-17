@@ -77,6 +77,8 @@ _WELL_KNOWN_TS_CLIENT_IMPORTS = [
 _WELL_KNOWN_GO_IMPORTS = ['"context"', '"io"', '"google.golang.org/grpc/metadata"']
 
 _FIELD_TYPES = Literal[
+    "TYPE_UINT64",
+    "TYPE_UINT32",
     "TYPE_INT32",
     "TYPE_INT64",
     "TYPE_STRING",

@@ -28,7 +28,7 @@ import sys,importlib
 from google.protobuf.timestamp_pb2 import Timestamp
 import time
 
-_supported_types = ['TYPE_STRING','TYPE_MESSAGE','TYPE_BOOL','TYPE_INT32','TYPE_INT64','TYPE_FLOAT','TYPE_DOUBLE']
+_supported_types = ['TYPE_STRING','TYPE_MESSAGE','TYPE_BOOL','TYPE_INT32','TYPE_UINT32','TYPE_INT64','TYPE_UINT64','TYPE_FLOAT','TYPE_DOUBLE']
 
 def CallRPC(service_module_path:str,service_rpc_name:str,sylk_json:_helpers.SylkJson,host:str='localhost',port:int=44880,debug:bool=False,timeout=10):
     """

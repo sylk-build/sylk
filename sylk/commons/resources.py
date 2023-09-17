@@ -109,6 +109,8 @@ class ResourceKinds(Enum):
 fields_opt = [
     SylkField_pb2.SylkFieldTypes.Name(SylkField_pb2.SylkFieldTypes.TYPE_DOUBLE),
     SylkField_pb2.SylkFieldTypes.Name(SylkField_pb2.SylkFieldTypes.TYPE_FLOAT),
+    SylkField_pb2.SylkFieldTypes.Name(SylkField_pb2.SylkFieldTypes.TYPE_UINT32),
+    SylkField_pb2.SylkFieldTypes.Name(SylkField_pb2.SylkFieldTypes.TYPE_UINT64),
     SylkField_pb2.SylkFieldTypes.Name(SylkField_pb2.SylkFieldTypes.TYPE_INT64),
     SylkField_pb2.SylkFieldTypes.Name(SylkField_pb2.SylkFieldTypes.TYPE_INT32),
     SylkField_pb2.SylkFieldTypes.Name(SylkField_pb2.SylkFieldTypes.TYPE_BOOL),

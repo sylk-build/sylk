@@ -21,7 +21,9 @@ Welcome to [sylk.build](https://www.sylk.build), the ultimate toolkit for workin
 | TypeScript    | **V**      | **V**      | Stable      |
 | Go            | **V**      | **V**      | Stable      |
 | webpack       | --         | **V**      | Stable      |
+| Java          | **X**      | **X**      | Planned     |
 | C#.NET        | **X**      | **X**      | Planned     |
+| Rust          | **X**      | **X**      | Planned     |
 
 👉 **Learn More**: Dive deeper into the capabilities of sylk.build through our [Official Documentation](https://www.docs.sylk.build).
 

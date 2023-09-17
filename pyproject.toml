@@ -10,6 +10,7 @@ readme = "README.md"
 authors = [{ name = "Sylk Developers", email = "contact@sylk.build" }]
 license = { file = "LICENSE" }
 classifiers = [
+    "Intended Audience :: Developers",
     "License :: OSI Approved :: MIT License",
     "Programming Language :: Python",
     "Programming Language :: Python :: 3",

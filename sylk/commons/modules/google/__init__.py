@@ -54,6 +54,9 @@ def google():
         "google.protobuf.UInt32Value", "message", {"tag": "wrappers"}
     )
     tree.add_node(
+        "google.protobuf.UInt64Value", "message", {"tag": "wrappers"}
+    )
+    tree.add_node(
         "google.protobuf.FieldMask", "message", {"tag": "field_mask"}
     )
     return tree
