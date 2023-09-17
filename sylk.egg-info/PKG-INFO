@@ -1,7 +1,7 @@
 Metadata-Version: 2.1
 Name: sylk
-Version: 0.4.1
-Summary: sylk CLI build, deploy and manage gRPC microservices.
+Version: 0.4.2
+Summary: Sylk CLI, Build and Manage your Protocol Buffers.
 Author-email: Sylk Developers <contact@sylk.build>
 License: Copyright (c) 2023 sylk.build
         
@@ -26,16 +26,27 @@ License: Copyright (c) 2023 sylk.build
 Project-URL: repository, https://github.com/sylk-build/sylk
 Project-URL: homepage, https://www.sylk.build/
 Project-URL: documentation, https://docs.sylk.build
-Keywords: grpc,micro-services,cli,framework
+Keywords: grpc,micro-services,cli,protobuf,framework
+Classifier: Intended Audience :: Developers
 Classifier: License :: OSI Approved :: MIT License
 Classifier: Programming Language :: Python
 Classifier: Programming Language :: Python :: 3
 Requires-Python: >=3.7
 Description-Content-Type: text/markdown
-Provides-Extra: docs
-Provides-Extra: dev
-Provides-Extra: build
 License-File: LICENSE
+Requires-Dist: pluggy<1.0,>=0.3
+Requires-Dist: inquirer
+Requires-Dist: prettytable
+Requires-Dist: protobuf<=4.23.2
+Requires-Dist: grpcio==1.54.2
+Requires-Dist: grpcio-tools==1.54.2
+Provides-Extra: docs
+Requires-Dist: sylk-docs; extra == "docs"
+Provides-Extra: dev
+Requires-Dist: bumpver; extra == "dev"
+Provides-Extra: build
+Requires-Dist: build; extra == "build"
+Requires-Dist: twine; extra == "build"
 
 #Sylk build CLI
 
@@ -60,7 +71,9 @@ Welcome to [sylk.build](https://www.sylk.build), the ultimate toolkit for workin
 | TypeScript    | **V**      | **V**      | Stable      |
 | Go            | **V**      | **V**      | Stable      |
 | webpack       | --         | **V**      | Stable      |
+| Java          | **X**      | **X**      | Planned     |
 | C#.NET        | **X**      | **X**      | Planned     |
+| Rust          | **X**      | **X**      | Planned     |
 
 👉 **Learn More**: Dive deeper into the capabilities of sylk.build through our [Official Documentation](https://www.docs.sylk.build).
 
